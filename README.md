@@ -16,7 +16,7 @@ Applications
 Installation
 ------------
 - `python setup.py install` or `python setup.py develop` will do the job.
-- `Python>=3` is needed, but you can try if `mrf` still works under `python2`.
+- `Python>=3` is needed, but you can try whether `mrf` still works under `python2`.
 - Check out the dependence of `mrf` depends from `requirements.txt`.
 
 TODO
