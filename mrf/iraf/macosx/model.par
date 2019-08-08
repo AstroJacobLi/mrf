@@ -1,0 +1,6 @@
+table,s,a,"",,,isophote table
+output,s,a,"",,,name of output image
+parent,s,a,"",,,name of parent image
+backgr,r,h,0.,,,background level
+highar,b,h,yes,,,add higher harmonics ?
+verbose,b,h,no,,,

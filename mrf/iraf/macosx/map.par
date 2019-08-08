@@ -1,0 +1,4 @@
+image,s,a,"",,,image name
+table,s,a,"",,,isophote table
+output,s,a,"",,,root name of output files
+normalize,i,a,,,,normalize to (0. <= x <= 1.) interval ?

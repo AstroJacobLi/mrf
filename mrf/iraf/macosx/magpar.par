@@ -1,0 +1,4 @@
+mag0,r,h,0.,,,magnitude of reference source
+refer,r,h,1.,1.E-5,,intensity of reference source 
+zerolevel,r,h,0.,,,intensity of zero (bias) level 
+mode,s,h,al

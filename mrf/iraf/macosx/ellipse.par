@@ -1,0 +1,17 @@
+input,s,a,"",,,input image name
+output,s,a,"",,,output table name
+dqf,s,h,".c1h",,,data quality file name or extension 
+inellip,s,h,"",,,table with input ellipses for no-fit mode
+geompar,pset,h,,,,geometric parameters (pset)
+controlpar,pset,h,,,,algorithm control parameters (pset)
+samplepar,pset,h,,,,sampling control parameters (pset)
+magpar,pset,h,,,,magnitude scale parameters (pset)
+interactive,b,h,no,,,interactive ?
+device,s,h,"red","|stdgraph|white|red|green|blue|yellow",,graphics output device
+icommands,*imcur,h,"",,,image cursor
+gcommands,*gcur,h,"",,,graphics cursor
+masksz,i,h,5,1,,pixel square mask size (`m' cursor key)
+region,b,h,no,,,region masking mode ?
+memory,b,h,yes,,,memory-intensive (versus disk-intensive) ?
+verbose,b,h,yes,,,list summary at STDOUT ?
+mode,s,h,al

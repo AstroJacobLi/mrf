@@ -1,0 +1,14 @@
+x0,r,h,INDEF,1.,INDEF,initial isophote center X
+y0,r,h,INDEF,1.,INDEF,initial isophote center Y
+ellip0,r,h,0.2,0.05,1.,initial ellipticity
+pa0,r,h,20.,-90.,90.,initial position angle (degrees)
+sma0,r,h,10.,5.,INDEF,initial semi-major axis lenght
+minsma,r,h,0.,0.,INDEF,minimum semi-major axis lenght
+maxsma,r,h,INDEF,1.,INDEF,maximum semi-major axis lenght
+step,r,h,0.1,1.E-3,INDEF,sma step between successive ellipses
+linear,b,h,no,,,linear sma step ?
+maxrit,r,h,INDEF,0.,INDEF,maximum sma lenght for iterative mode
+recenter,b,h,yes,,,allows finding routine to re-center x0-y0 ?
+xylearn,b,h,yes,,,updates pset with new x0-y0 ?
+physical,b,h,yes,,,physical coordinate system ?
+mode,s,h,al

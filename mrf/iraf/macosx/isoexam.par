@@ -1,0 +1,6 @@
+table,s,a,"",,,isophote table
+dqf,s,h,".c1h",,,data quality file name or extension 
+device,s,h,"red","|stdgraph|white|red|green|blue|yellow",,graphics output device
+icommands,*imcur,h,"",,,image cursor
+gcommands,*gcur,h,"",,,graphics cursor
+mode,s,h,al
