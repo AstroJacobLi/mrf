@@ -58,7 +58,6 @@ def imcopy(image, output, iraf_path=None):
     Command += 'input={} '.format(image)
     Command += 'output={} '.format(output)
     Command += 'verbose={} '.format('yes')
-    print(Command)
     os.system(Command)
     return 
 
@@ -176,6 +175,5 @@ def blkavg(image, output, b1, b2, option="sum", iraf_path=None):
     Command += 'b1={} '.format(b1)
     Command += 'b2={} '.format(b2)
     Command += 'option={} '.format(option)
-    print(Command)
     os.system(Command)
     return

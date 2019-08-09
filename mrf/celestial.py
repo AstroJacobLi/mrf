@@ -373,3 +373,57 @@ class Celestial(object):
                             scale_bar_length=self.scale_bar_length, **kwargs)
         else:
             self.display_image()
+
+class Star(Celestial):
+    def __init__(self, img, header, starobj, halosize=40, padsize=40, mask=None, hscmask=None):
+        """Halosize is the radius!!!
+        RA, DEC are not supported yet!
+        """
+        Celestial.__init__(self, img, mask, header=header)
+        if hscmask is not None:
+            self.hscmask = hscmask
+        self.name = 'star'
+        self.scale_bar_length = 3
+        # Trim the image to star size
+        # starobj should at least contain x, y, (or ra, dec) and 
+        # Position of a star, in numpy convention
+        x_int = int(starobj['x'])
+        y_int = int(starobj['y'])
+        dx = -1.0 * (starobj['x'] - x_int)
+        dy = -1.0 * (starobj['y'] - y_int)
+        halosize = int(halosize)
+        # Make padded image to deal with stars near the edges
+        padsize = int(padsize)
+        ny, nx = self.image.shape
+        im_padded = np.zeros((ny + 2 * padsize, nx + 2 * padsize))
+        im_padded[padsize: ny + padsize, padsize: nx + padsize] = self.image
+        # Star itself, but no shift here.
+        halo = (im_padded[y_int + padsize - halosize: y_int + padsize + halosize + 1, 
+                            x_int + padsize - halosize: x_int + padsize + halosize + 1])
+        self._image = halo
+        self.shape = halo.shape
+        self.cen_xy = [x_int, y_int]
+        self.dx = dx
+        self.dy = dy   
+        # FLux
+        self.flux = starobj['flux']
+        self.fluxann = starobj['flux_ann']
+
+        if hasattr(self, 'mask'):
+            im_padded = np.zeros((ny + 2 * padsize, nx + 2 * padsize))
+            im_padded[padsize: ny + padsize, padsize: nx + padsize] = self.mask
+            # Mask itself, but no shift here.
+            halo = (im_padded[y_int + padsize - halosize: y_int + padsize + halosize + 1, 
+                                x_int + padsize - halosize: x_int + padsize + halosize + 1])
+            self._mask = halo
+        
+        if hasattr(self, 'hscmask'):
+            im_padded = np.zeros((ny + 2 * padsize, nx + 2 * padsize))
+            im_padded[padsize: ny + padsize, padsize: nx + padsize] = self.hscmask
+            # Mask itself, but no shift here.
+            halo = (im_padded[y_int + padsize - halosize: y_int + padsize + halosize + 1, 
+                                x_int + padsize - halosize: x_int + padsize + halosize + 1])
+            self.hscmask = halo
+
+    def centralize(self, method='iraf', order=5, cval=0.0):
+        self.shift_Celestial(self.dx, self.dy, method=method, order=order, cval=cval)

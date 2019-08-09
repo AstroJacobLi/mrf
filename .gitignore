@@ -3,6 +3,9 @@
 */*.DS_store
 */*.vscode
 *.vscode
+/dist
+/build
+/*.egg-info
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
