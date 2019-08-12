@@ -13,7 +13,7 @@ HSC_pixel_scale = 0.168
 DECaLS_pixel_scale = 0.262
 Dragonfly_pixel_scale = 2.5
 SDSS_pixel_scale = 0.395
-CFHT_pixel_scale = 0.3715
+CFHT_pixel_scale = 0.186
 
 # Define zeropoint of different surveys
 HSC_zeropoint = 27.0

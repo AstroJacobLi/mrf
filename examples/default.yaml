@@ -1,9 +1,10 @@
 file:
   df_image: 'n5907_df_g.fits'
-  hi_res_image_blue: 'n5907_cfht_g.fits'
-  hi_res_image_red: 'n5907_cfht_r.fits'
+  hi_res_image_blue: 'CFHT_megapipe_img_G.fits'
+  hi_res_image_red: 'CFHT_megapipe_img_R.fits'
   certain_gal_cat: 'gal_cat.txt'
   hi_res_zp: 30.0
+  hi_res_pixelsize: 0.186
 
 DF:
   band: 'g'
@@ -32,7 +33,7 @@ star:
 fluxmodel:
   gaussian_radius: 1.5     # mask = convolve(mask, Gaussian2DKernel(1.5))
   gaussian_threshold: 0.05 # mask = mask > 0.05
-  unmask_lowsb: False
+  unmask_lowsb: True
   sb_lim: 24.0
   unmask_ratio: 6 # This value is suspicious!!!
 
@@ -67,7 +68,7 @@ starhalo:
 clean:
   clean_img: True
   clean_file: False
-  replace_with_noise: True
+  replace_with_noise: False
   gaussian_radius: 1.5
   gaussian_threshold: 10
   bright_lim: 17.5

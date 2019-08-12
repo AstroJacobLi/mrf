@@ -19,15 +19,9 @@ from mrf.utils import seg_remove_obj, mask_out_certain_galaxy
 
 from mrf.display import display_single, SEG_CMAP, display_multiple, draw_circles
 from mrf.celestial import Celestial, Star
+from mrf.utils import Config
 from reproject import reproject_interp
 
-class Config(object):
-    def __init__(self, d):
-        for a, b in d.items():
-            if isinstance(b, (list, tuple)):
-                setattr(self, a, [Config(x) if isinstance(x, dict) else x for x in b])
-            else:
-                setattr(self, a, Config(b) if isinstance(b, dict) else b)
 
 def main(argv=sys.argv[1:]):
     # In non-script code, use getLogger(__name__) at module scope instead.
@@ -82,7 +76,6 @@ def main(argv=sys.argv[1:]):
     hires_r = Celestial(array, header=df.header)
     hdu.close()
 
-
     # 3. Extract sources on hires images using SEP
     sigma = config.sex.sigma
     minarea = config.sex.minarea
@@ -107,7 +100,7 @@ def main(argv=sys.argv[1:]):
                                 deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, save=True)
     
 
-    # 4. Make color correction to blue band, remove artifacts as well
+    # 4. Make color correction, remove artifacts as well
     logger.info('Make color correction to blue band, remove artifacts as well')
     col_ratio = (b_imflux / r_imflux)
     col_ratio[np.isnan(col_ratio) | np.isinf(col_ratio)] = 0 # remove artifacts
@@ -154,14 +147,12 @@ def main(argv=sys.argv[1:]):
 
     objects[flag].write('_bright_stars_3.fits', format='fits', overwrite=True)
 
-    #seg_gaia = mask_out_stars(segmap, hires_3.image, hires_3.header, 
-    #                          method=config.star.method, bright_lim=config.star.bright_lim)
-    
     # You can Mask out certain galaxy here.
     logger.info('Remove objects from catalog {}'.format(config.file.certain_gal_cat))
     gal_cat = Table.read(config.file.certain_gal_cat, format='ascii')
     seg = mask_out_certain_galaxy(seg, hires_3.header, gal_cat=gal_cat)
-    
+    save_to_fits(seg, '_seg_3.fits', header=hires_3.header)
+
     # 7. Remove artifacts from `hires_3` by color ratio and then smooth it
     # multiply by mask created from ratio of images - this removes all objects that are
     # only in g or r but not in both (artifacts, transients, etc)
@@ -204,7 +195,7 @@ def main(argv=sys.argv[1:]):
         logger.info('Circularize the kernel.')
         from compsub.utils import circularize
         kernel_med = circularize(kernel_med, n=14)
-    save_to_fits(kernel_med, 'kernel_median.fits')
+    save_to_fits(kernel_med, '_kernel_median.fits')
     
     
     # 9. Convolve this kernel to high-res image
@@ -225,8 +216,7 @@ def main(argv=sys.argv[1:]):
 
     # Optinally remove low surface brightness objects from model: 
     if config.fluxmodel.unmask_lowsb:
-        E = hires_fluxmod.image / df_model
-        E[np.isinf(df_model)] = 0.0
+        E = hires_fluxmod.image / image.array
         E[np.isinf(E) | np.isnan(E)] = 0.0
 
         kernel_flux = np.sum(kernel_med)
@@ -239,11 +229,11 @@ def main(argv=sys.argv[1:]):
         im_ratio = E
         im_highres_new =  np.zeros_like(hires_fluxmod.image)
         objects = Table.read('_hires_obj_cat.fits', format='fits')
-        
+
         # calculate SB limit in counts per pixel
-        sb_lim_cpp = 10**((config.fluxmodel.sb_lim - config.DF.zeropoint)/(-2.5)) * (config.DF.pixel_scale * f_magnify)**2
+        sb_lim_cpp = 10**((config.fluxmodel.sb_lim - config.file.hi_res_zp)/(-2.5)) * (config.file.hi_res_pixelsize / f_magnify)**2
         print('# SB limit in counts / pixel = {}'.format(sb_lim_cpp))
-        
+
         im_seg_ind = np.where(im_seg>0)
         im_seg_slice = im_seg[im_seg_ind]
         im_highres_slice = im_highres[im_seg_ind]
@@ -251,19 +241,16 @@ def main(argv=sys.argv[1:]):
         im_ratio_slice = im_ratio[im_seg_ind]
 
         # loop over objects
-        for obj in objects:
+        for obj in objects[:1000]:
             ind = np.where(np.isin(im_seg_slice, obj['index']))
             flux_hires = im_highres_slice[ind]
             flux_ratio = im_ratio_slice[ind]
             if ((np.mean(flux_hires) < sb_lim_cpp) and (np.mean(flux_ratio) < config.fluxmodel.unmask_ratio)) and (np.mean(flux_ratio) != 0):
                 im_highres_new_slice[ind] = 1
                 print('# removed object {}'.format(obj['index']))
-        
         im_highres_new[im_seg_ind] = im_highres_new_slice
         save_to_fits(im_highres_new, '_hires_fluxmode_clean_mask.fits')
-
-        # BLow up
-        # Then blow mask up
+        # BLow up the mask
         smooth_radius = config.fluxmodel.gaussian_radius
         mask_conv = copy.deepcopy(im_highres_new)
         mask_conv[mask_conv > 0] = 1
@@ -294,10 +281,10 @@ def main(argv=sys.argv[1:]):
     logger.info('Compact objects has been subtracted from Dragonfly image! Saved as "res.fits".')
 
 
-    #### Subtract bright star halos! Only work with those left out in flux model!
+    #10. Subtract bright star halos! Only work with those left out in flux model!
     star_cat = Table.read('_bright_stars_3.fits', format='fits')
-    star_cat['x'] /= 3
-    star_cat['y'] /= 3
+    star_cat['x'] /= f_magnify
+    star_cat['y'] /= f_magnify
     ra, dec = res.wcs.wcs_pix2world(star_cat['x'], star_cat['y'], 0)
     star_cat.add_columns([Column(data=ra, name='ra'), Column(data=dec, name='dec')])
 
@@ -407,8 +394,8 @@ def main(argv=sys.argv[1:]):
     img_sub = res.image - im_halos
     df_model.image += im_halos
 
-    save_to_fits(im_halos, 'df_halos.fits', header=df_model.header)
-    save_to_fits(img_sub, 'df_halosub.fits', header=df_model.header)
+    save_to_fits(im_halos, '_df_halos.fits', header=df_model.header)
+    save_to_fits(img_sub, '_df_halosub.fits', header=df_model.header)
     save_to_fits(df_model.image, 'df_model_halos.fits', header=df_model.header)
 
     logger.info('Bright star halos are subtracted! Saved as "df_halosub.fits".')

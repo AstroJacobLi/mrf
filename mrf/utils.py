@@ -972,7 +972,7 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
         deviation = (flux_measured - obj['flux']) / obj['flux']
         print('# Star {0}: flux deviation = {1:.3f}'.format(i, deviation))
         
-        if -0.2 < deviation < 0.2:
+        if -0.2 < deviation < 0.5:
             kernels[i, :, :] = kernel[:, :]
         else:
             kernels[i, :, :] = kernel[:, :] * 0 + extreme_val
@@ -990,14 +990,19 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
     save_to_fits(kernels, '_all_kernels.fits', overwrite=True)
 
     if show_figure:
-        fig, axes = plt.subplots(4, 8, figsize=(17.6, 9))
-        for i in range(4):
-            for j in range(8):
-                ax = axes[i, j]
-                if j >= 4:
-                    display_single(cuts_low[4 * i + j - 4], pixel_scale=2.5, scale_bar=False, ax=ax)
+        fig, axes = plt.subplots(6, 8, figsize=(13, 10))
+        data_set = [cuts_high, cuts_low, kernels]
+        text_set = ['CFHT', 'DF', 'Kernel']
+        for i in range(16):
+            for j in range(3):
+                ax = axes[j + 3 * (i // 8 - 1), i%8]
+                if i == 0 or i == 8:
+                    display_single(data_set[j][i], pixel_scale=2.5, 
+                                   scale_bar=False, ax=ax, 
+                                   add_text=text_set[j], text_fontsize=15)
                 else:
-                    display_single(cuts_high[4 * i + j], pixel_scale=2.5, scale_bar=False, ax=ax)
+                    display_single(data_set[j][i], pixel_scale=2.5, scale_bar=False, ax=ax)
+                        
         plt.subplots_adjust(wspace=0.0, hspace=0.0)
         plt.savefig('./kernel_stars.png', bbox_inches='tight', dpi=150)
 
@@ -1017,7 +1022,7 @@ def bright_star_mask(mask, catalog, bright_lim=17.5, r=2.0):
     import sep
     # Make stars to be zero on segmap
     for obj in catalog:
-        if obj['mag'] < bright_lim:
+        if obj['mag'] < bright_lim and obj['b'] / obj['a'] > 0.6:
             sep.mask_ellipse(mask, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], r=r)
     return mask
 
@@ -1247,3 +1252,14 @@ def tractor_iteration(obj_cat, w, img_data, invvar, psf_obj, pixel_scale, shape_
     return sources, trac_obj, fig
 
 
+#########################################################################
+########################## YAML related #################################
+#########################################################################
+
+class Config(object):
+    def __init__(self, d):
+        for a, b in d.items():
+            if isinstance(b, (list, tuple)):
+                setattr(self, a, [Config(x) if isinstance(x, dict) else x for x in b])
+            else:
+                setattr(self, a, Config(b) if isinstance(b, dict) else b)

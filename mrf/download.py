@@ -6,6 +6,7 @@ from astropy import wcs
 from astropy.io import fits
 from astropy.table import Table, Column
 
+
 from tqdm import tqdm
 class TqdmUpTo(tqdm):
     """Provides `update_to(n)` which uses `tqdm.update(delta_n)`."""
@@ -120,7 +121,7 @@ def wget_cfht(frame, band, output_dir, output_name, overwrite=True):
     return
 
 def download_cfht_megapipe(img, header, band='g', mega_cat_dir='_megapipe_cat.csv', 
-                           output_dir='./', output_name='_CFHT_megapipe_img', overwrite=True):
+                           output_dir='./', output_name='CFHT_megapipe_img', overwrite=True):
     ''' Download CFHT MegaPipe frame catalog of given (ra, dec) and image size. 
         This could be really **TIME CONSUMING**!!!
 
@@ -157,11 +158,11 @@ def download_cfht_megapipe(img, header, band='g', mega_cat_dir='_megapipe_cat.cs
     mega_cat.add_column(Column(data = np.array(overlap), name='overlap'))
     mega_cat.sort('overlap')
     mega_cat.reverse()
-    print(overlap)
     overlap = mega_cat['overlap'].data
-    
-    if np.amax(overlap) >= 0.5:
-        mega_cat = mega_cat[overlap > 0.5]#mega_cat[np.where(overlap == np.amax(overlap))[0]]
+    mega_cat.write(mega_cat_dir, format='pandas.csv')
+
+    if np.amax(overlap) >= 0.6:
+        mega_cat = mega_cat[overlap > 0.6]
         status = 'good'
     else:
         mega_cat = mega_cat[(overlap >= 0.3)]
@@ -170,7 +171,8 @@ def download_cfht_megapipe(img, header, band='g', mega_cat_dir='_megapipe_cat.cs
 
     # Download multiple images
     if any(['MegaPipe' in obj['productID'] for obj in mega_cat]):
-        frame_list = mega_cat
+        flag = ['MegaPipe' in obj['productID'] for obj in mega_cat]
+        frame_list = mega_cat[flag]
         # MegaPipe.xxx image doesn't have an exposure time
         print('# The frame to be downloaded is ', frame_list['productID'].data)
         for i, frame in enumerate(frame_list):
