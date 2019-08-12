@@ -398,8 +398,8 @@ class Star(Celestial):
         im_padded = np.zeros((ny + 2 * padsize, nx + 2 * padsize))
         im_padded[padsize: ny + padsize, padsize: nx + padsize] = self.image
         # Star itself, but no shift here.
-        halo = (im_padded[y_int + padsize - halosize: y_int + padsize + halosize + 1, 
-                            x_int + padsize - halosize: x_int + padsize + halosize + 1])
+        halo = im_padded[y_int + padsize - halosize: y_int + padsize + halosize + 1, 
+                         x_int + padsize - halosize: x_int + padsize + halosize + 1]
         self._image = halo
         self.shape = halo.shape
         self.cen_xy = [x_int, y_int]
@@ -427,3 +427,31 @@ class Star(Celestial):
 
     def centralize(self, method='iraf', order=5, cval=0.0):
         self.shift_Celestial(self.dx, self.dy, method=method, order=order, cval=cval)
+
+    def sub_bkg(self, verbose=True):
+        # Here I subtract local sky background
+        # Evaluate local sky backgroud within `halo_i`
+        # Actually this should be estimated in larger cutuouts.
+        # So make another cutout (larger)!
+        from astropy.convolution import convolve, Box2DKernel
+        from .image import extract_obj, seg_remove_cen_obj
+        from sep import Background
+        img_blur = convolve(abs(self.image), Box2DKernel(2))
+        img_objects, img_segmap = extract_obj(abs(img_blur), b=5, f=4, sigma=4.5, minarea=2, pixel_scale=self.pixel_scale,
+                                                deblend_nthresh=32, deblend_cont=0.0001, 
+                                                sky_subtract=False, show_fig=False, verbose=False)
+        bk = Background(self.image, img_segmap != 0)
+        glbbck = bk.globalback
+        self.globalback = glbbck
+        if verbose:
+            print('# Global background: ', glbbck)
+        self.image -= glbbck
+
+    def get_masked_image(self, cval=np.nan):
+        if not hasattr(self, 'mask'):
+            print("This `Star` object doesn't have a `mask`!")
+            return self.image
+        else:
+            imgcp = copy.copy(self.image)
+            imgcp[self.mask.astype(bool)] = cval
+            return imgcp

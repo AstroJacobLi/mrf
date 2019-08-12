@@ -370,9 +370,9 @@ def azimuthal_average(image, center=None, stddev=True, binsize=0.5, interpnan=Fa
 #########################################################################
 
 # evaluate_sky objects for a given image
-def extract_obj(img, b=30, f=5, sigma=5, pixel_scale=0.168, minarea=5, 
+def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5, 
     deblend_nthresh=32, deblend_cont=0.005, clean_param=1.0, 
-    sky_subtract=False, show_fig=True, verbose=True, flux_auto=True, flux_aper=None):
+    sky_subtract=False, flux_auto=True, flux_aper=None, show_fig=True, verbose=True):
     '''Extract objects for a given image, using `sep`. This is from `slug`.
 
     Parameters:
@@ -381,11 +381,18 @@ def extract_obj(img, b=30, f=5, sigma=5, pixel_scale=0.168, minarea=5,
     b: float, size of box
     f: float, size of convolving kernel
     sigma: float, detection threshold
-    pixel_scale: float
+    pixel_scale: float, default is 0.168 (HSC pixel size)
+    minarea: float, minimum number of connected pixels
+    deblend_nthresh: float, Number of thresholds used for object deblending
+    deblend_cont: float, Minimum contrast ratio used for object deblending. Set to 1.0 to disable deblending. 
+    clean_param: float, Cleaning parameter (see SExtractor manual)
+    sky_subtract: bool, whether subtract sky before extract objects (this will affect the measured flux).
+    flux_auto: bool, whether return AUTO photometry (see SExtractor manual)
+    flux_aper: list, such as [3, 6], which gives flux within [3 pix, 6 pix] annulus.
 
     Returns:
     -------
-    objects: astropy Table, containing the positions,
+    objects: `astropy` Table, containing the positions,
         shapes and other properties of extracted objects.
     segmap: 2-D numpy array, segmentation map
     '''
@@ -444,20 +451,14 @@ def extract_obj(img, b=30, f=5, sigma=5, pixel_scale=0.168, minarea=5,
         objects.add_column(Column(data=kronrad, name='kron_rad'))
         
     if flux_aper is not None:
+        if len(flux_aper) != 2:
+            raise ValueError('"flux_aper" must be a list with length = 2.')
         objects.add_column(Column(data=sep.sum_circle(input_data, objects['x'], objects['y'], flux_aper[0])[0], 
                                   name='flux_aper_1'))
         objects.add_column(Column(data=sep.sum_circle(input_data, objects['x'], objects['y'], flux_aper[1])[0], 
                                   name='flux_aper_2')) 
         objects.add_column(Column(data=sep.sum_circann(input_data, objects['x'], objects['y'], 
                                        flux_aper[0], flux_aper[1])[0], name='flux_ann'))
-        '''
-        objects.add_column(Column(data=sep.sum_circle(input_data, objects['x'], objects['y'], flux_aper[0] * objects['a'])[0], 
-                                  name='flux_aper_1'))
-        objects.add_column(Column(data=sep.sum_circle(input_data, objects['x'], objects['y'], flux_aper[1] * objects['a'])[0], 
-                                  name='flux_aper_2')) 
-        objects.add_column(Column(data=sep.sum_circann(input_data, objects['x'], objects['y'], 
-                                       flux_aper[0] * objects['a'], flux_aper[1] * objects['a'])[0], name='flux_ann'))
-        '''
 
     # plot background-subtracted image
     if show_fig:
@@ -485,7 +486,8 @@ def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3,
         The flux map will be saved as '_flux_' + output_suffix + '.fits', along with segmentation map.
 
     Parameters:
-        img_dir (str): The directory of image
+        img (numpy 2-D array): Image itself
+        header: the header of the image
         sigma (float): We detect objects above this sigma
         minarea (float): minimum area of the object, in pixels
         deblend_cont (float): Minimum contrast ratio used for object deblending. Default is 0.005. 
@@ -500,10 +502,11 @@ def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3,
     """
 
     objects, segmap = extract_obj(img, b=b, f=f, sigma=sigma, minarea=minarea, show_fig=False,
-                                  deblend_nthresh=deblend_nthresh, deblend_cont=deblend_cont)
+                                  deblend_nthresh=deblend_nthresh, deblend_cont=deblend_cont, 
+                                  sky_subtract=False)
     im_seg = segmap
     galid = objects['index'].data.astype(np.float)
-    flux = objects['flux'].data.astype(np.float)
+    flux = objects['flux_auto'].data.astype(np.float)
     im_fluxes = im_seg.astype(float)
     im_seg_slice_ind = np.where(im_seg > 0) # The (x,y) index of non-zero pixels in segmap
     im_seg_slice = im_seg[im_seg > 0] # The index of non-zero pixels in segmap
@@ -517,49 +520,6 @@ def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3,
     if save:
         save_to_fits(im_fluxes, '_flux_' + output_suffix + '.fits', header=header)
         save_to_fits(segmap, '_seg' + output_suffix + '.fits', header=header)
-    return objects, segmap, im_fluxes
-
-# Detect sources and make flux map
-def flux_model(img_dir, sigma=2.5, minarea=3, deblend_cont=0.005, deblend_nthresh=32, output_suffix=None):
-    """ Extract sources from given image and return a flux map (not segmentation map).
-        The flux map will be saved as '_flux_' + output_suffix + '.fits', along with segmentation map.
-
-    Parameters:
-        img_dir (str): The directory of image
-        sigma (float): We detect objects above this sigma
-        minarea (float): minimum area of the object, in pixels
-        deblend_cont (float): Minimum contrast ratio used for object deblending. Default is 0.005. 
-            To entirely disable deblending, set to 1.0.
-        deblend_nthresh (float): Number of thresholds used for object deblending. Default is 32.
-        output_suffix (str): Suffix of output image and segmentation map.
-
-    Returns:
-        objects (astropy.table.Table class): Table of detected objects.
-        segmap (numpy 2-D array): Segmentation map.
-        im_fluxes (numpy 2-D array): Flux map.
-    """
-
-    hdu = fits.open(img_dir)
-    img = hdu[0].data.byteswap().newbyteorder()
-    img_hdr = hdu[0].header
-    objects, segmap = extract_obj(img, b=64, f=3, sigma=sigma, minarea=minarea, show_fig=False,
-                                  deblend_nthresh=deblend_nthresh, deblend_cont=deblend_cont)
-
-    im_seg = segmap
-    galid = objects['index'].data.astype(np.float)
-    flux = objects['flux'].data.astype(np.float)
-    im_fluxes = im_seg.astype(float)
-    im_seg_slice_ind = np.where(im_seg > 0) # The (x,y) index of non-zero pixels in segmap
-    im_seg_slice = im_seg[im_seg > 0] # The index of non-zero pixels in segmap
-    im_fluxes_slice = im_fluxes[im_seg > 0] # The fluxes of non-zero pixels in segmap
-
-    for i in range(len(objects)):
-        ind = np.where(np.isin(im_seg_slice, galid[i]))
-        im_fluxes_slice[ind] = flux[i]
-
-    im_fluxes[im_seg_slice_ind] = im_fluxes_slice # Change the objid to flux of this obj
-    save_to_fits(im_fluxes, '_flux_' + output_suffix + '.fits', header=img_hdr)
-    save_to_fits(segmap, '_seg' + output_suffix + '.fits', header=img_hdr)
     return objects, segmap, im_fluxes
 
 # Simply remove stars by masking them out
@@ -988,7 +948,7 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
     # This excludes those objects who 1) are not stars; 2) are saturated or exotic.
     non_edge_flag = np.logical_and.reduce([(flux > 0.01 * maxflux), (flux < flux_lim), (x > border),
                                             (x < nx - border), (y > border),
-                                            (y < ny - border), (ba > 0.6)]) # (fwhm < 10)
+                                            (y < ny - border), (ba > 0.8)]) # (fwhm < 10)
     good_cat = obj_cat[non_edge_flag]
     good_cat.sort('flux')
     good_cat.reverse()     
@@ -1012,7 +972,7 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
         deviation = (flux_measured - obj['flux']) / obj['flux']
         print('# Star {0}: flux deviation = {1:.3f}'.format(i, deviation))
         
-        if -0.2 < deviation < 0.5:
+        if -0.2 < deviation < 0.2:
             kernels[i, :, :] = kernel[:, :]
         else:
             kernels[i, :, :] = kernel[:, :] * 0 + extreme_val
@@ -1044,37 +1004,22 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
     return kernel_median, good_cat
 
 # Generate a star mask, different from `mask_out_star` function
-def star_mask(segmap, img, header, method='gaia', bright_lim=15.5, catalog_dir=None):
+def bright_star_mask(mask, catalog, bright_lim=17.5, r=2.0):
     """ Mask out bright stars on the segmentation map of high resolution image, 
         before degrading to low resolution.
 
     Parameters:
-        segmap (2-D numpy array): segmentation map, on which bright stars will be masked.
-        img (2-D numpy array): image itselt.
-        header: the header of this image.
-        method (str): here three methods are provided: 'gaia', 'apass' or 'usno'.
-        bright_lim (float): the magnitude limit of stars to be masked out. 
-        catalog_dir (str): optional, you can provide local catalog here.
+        
 
     Returns:
         segmap_cp: segmentation map after removing bright stars.
     """
-    catalog = query_star(img, header, method=method, bright_lim=bright_lim)
-    segmap_cp = copy.deepcopy(segmap)
-    starmask = np.zeros_like(segmap_cp)
-    if method == 'gaia':
-        xys, nx, ny = readStarCatalog(catalog, img, header, bright_lim=bright_lim, 
-                            ra_dec_name=['ra', 'dec'], mag_name='phot_bp_mean_mag')
-    else:
-        xys, nx, ny = readStarCatalog(catalog, img, header, bright_lim=bright_lim)
+    import sep
     # Make stars to be zero on segmap
-    for obj in Table(xys):
-        obj_id = segmap_cp[int(obj['y']), int(obj['x'])]
-        if obj_id != 0:
-            llim = obj_id - 0.05
-            ulim = obj_id + 0.05
-            starmask[(segmap_cp < ulim) & (segmap_cp > llim)] = 1
-    return starmask
+    for obj in catalog:
+        if obj['mag'] < bright_lim:
+            sep.mask_ellipse(mask, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], r=r)
+    return mask
 
 # Subtract background of PSF
 def psf_bkgsub(psf, edge):

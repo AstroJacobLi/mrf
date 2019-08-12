@@ -14,11 +14,11 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 from astropy.table import Table, Column, hstack
 from mrf.utils import (save_to_fits, Flux_Model, mask_out_stars, extract_obj, \
-                        star_mask, Autokernel, query_star, psf_bkgsub)
+                       bright_star_mask, Autokernel, psf_bkgsub)
 from mrf.utils import seg_remove_obj, mask_out_certain_galaxy
 
 from mrf.display import display_single, SEG_CMAP, display_multiple, draw_circles
-from mrf.celestial import Celestial #, Star
+from mrf.celestial import Celestial, Star
 from reproject import reproject_interp
 
 class Config(object):
@@ -65,7 +65,7 @@ def main(argv=sys.argv[1:]):
     logger.info('Magnify Dragonfly image with a factor of %.1f:', f_magnify)
     df.resize_image(f_magnify, method=resize_method);
     df.save_to_fits('_df_{}.fits'.format(int(f_magnify)));
-    logger.info('Register high resolution image {} with Dragonfly image'.format(hi_res_image_blue))
+    logger.info('Register high resolution image {0} with {1}'.format(hi_res_image_blue, df_image))
     hdu = fits.open(hi_res_image_blue)
     if 'hsc' in hi_res_image_blue:
         array, _ = reproject_interp(hdu[1], df.header)
@@ -73,7 +73,7 @@ def main(argv=sys.argv[1:]):
         array, _ = reproject_interp(hdu[0], df.header)
     hires_b = Celestial(array, header=df.header)
     hdu.close()
-    logger.info('Register high resolution image {} with Dragonfly image'.format(hi_res_image_red))
+    logger.info('Register high resolution image {0} with {1}'.format(hi_res_image_red, df_image))
     hdu = fits.open(hi_res_image_red)
     if 'hsc' in hi_res_image_red:
         array, _ = reproject_interp(hdu[1], df.header)
@@ -114,17 +114,17 @@ def main(argv=sys.argv[1:]):
     save_to_fits(col_ratio, '_colratio.fits', header=hires_b.header)
     
     color_term = config.DF.color_term
-    logger.info('### color_term = ' + str(color_term))
+    logger.info('### color_term = {}'.format(color_term))
     median_col = np.nanmedian(col_ratio[col_ratio != 0])
-    logger.info('### median_color (b/r) = ' + str(round(median_col, 5)))
+    logger.info('### median_color (blue/red) = {:.5f}'.format(median_col))
 
     fluxratio = col_ratio / median_col
-    fluxratio[(fluxratio < 0.1) | (fluxratio > 10)] = 1 # does this make sense?
+    fluxratio[(fluxratio < 0.1) | (fluxratio > 10)] = 1 # remove extreme values
     col_correct = np.power(fluxratio, color_term) # how to improve this correction?
     save_to_fits(col_correct, '_colcorrect.fits', header=hires_b.header)
 
     if config.DF.band == 'r':
-        hires_3 = Celestial(hires_r.image, header=hires_b.header)
+        hires_3 = Celestial(hires_r.image * col_correct, header=hires_r.header)
     elif config.DF.band == 'g':
         hires_3 = Celestial(hires_b.image * col_correct, header=hires_b.header)
     else:
@@ -151,6 +151,8 @@ def main(argv=sys.argv[1:]):
     flag = np.where(mag < config.star.bright_lim)
     for obj in objects[flag]:
         seg = seg_remove_obj(seg, obj['x'], obj['y'])
+
+    objects[flag].write('_bright_stars_3.fits', format='fits', overwrite=True)
 
     #seg_gaia = mask_out_stars(segmap, hires_3.image, hires_3.header, 
     #                          method=config.star.method, bright_lim=config.star.bright_lim)
@@ -220,7 +222,6 @@ def main(argv=sys.argv[1:]):
                             nx=hires_3.shape[1], 
                             ny=hires_3.shape[0])
     save_to_fits(image.array, '_df_model_{}.fits'.format(int(f_magnify)), header=hires_3.header)
-    df_model = image.array
 
     # Optinally remove low surface brightness objects from model: 
     if config.fluxmodel.unmask_lowsb:
@@ -286,21 +287,20 @@ def main(argv=sys.argv[1:]):
     res.save_to_fits('_res_{}.fits'.format(f_magnify))
     
     df_model.resize_image(1 / f_magnify, method=resize_method)
-    df.save_to_fits('_df_model.fits')
+    df_model.save_to_fits('_df_model.fits')
     
     res.resize_image(1 / f_magnify, method=resize_method)
     res.save_to_fits('res.fits')
     logger.info('Compact objects has been subtracted from Dragonfly image! Saved as "res.fits".')
-    
-    return 
 
-    #### Subtract bright star halos!
-    star_cat = query_star(res.image, res.header, method=config.starhalo.method, 
-                          bright_lim=config.star.bright_lim + 0.5)
-    x, y = res.wcs.wcs_world2pix(star_cat['ra'], star_cat['dec'], 0)
-    fov_mask = (x < res.shape[1]) & (x > 0) & (y < res.shape[0]) & (y > 0)
-    star_cat = star_cat[fov_mask]
-    # Extract stars from image
+
+    #### Subtract bright star halos! Only work with those left out in flux model!
+    star_cat = Table.read('_bright_stars_3.fits', format='fits')
+    star_cat['x'] /= 3
+    star_cat['y'] /= 3
+    ra, dec = res.wcs.wcs_pix2world(star_cat['x'], star_cat['y'], 0)
+    star_cat.add_columns([Column(data=ra, name='ra'), Column(data=dec, name='dec')])
+
     sigma = config.starhalo.sigma
     minarea = config.starhalo.minarea
     deblend_cont = config.starhalo.deblend_cont
@@ -323,13 +323,19 @@ def main(argv=sys.argv[1:]):
     logger.info('Match detected objects with {} catalog to ensure they are stars.'.format(config.starhalo.method))
     temp = match_coordinates_sky(SkyCoord(ra=star_cat['ra'], dec=star_cat['dec'], unit='deg'),
                                  SkyCoord(ra=objects['ra'], dec=objects['dec'], unit='deg'))[0]
-    psf_cat = hstack([objects[temp], star_cat], join_type='exact') # here's the final star catalog
-    psf_cat = psf_cat[psf_cat['fwhm_custom'] < config.starhalo.fwhm_lim] # FWHM selection
-    psf_cat = psf_cat[psf_cat['phot_g_mean_mag'] < config.starhalo.bright_lim]
+    bright_star_cat = objects[np.unique(temp)]
+    mag = float(df.header['MEDIANZP']) - 2.5 * np.log10(bright_star_cat['flux'])
+    bright_star_cat.add_column(Column(data=mag, name='mag'))
+    bright_star_cat.write('_bright_star_cat.fits', format='fits', overwrite=True)
+
+    # Extract stars from image
+    psf_cat = bright_star_cat[bright_star_cat['fwhm_custom'] < config.starhalo.fwhm_lim] # FWHM selection
+    psf_cat = psf_cat[psf_cat['mag'] < config.starhalo.bright_lim]
     psf_cat.sort('flux')
     psf_cat.reverse()
     psf_cat = psf_cat[:int(config.starhalo.n_stack)]
     logger.info('You get {} stars to be stacked!'.format(len(psf_cat)))
+
     # Construct and stack `Stars`!!!.
     halosize = config.starhalo.halosize
     padsize = config.starhalo.padsize
@@ -339,10 +345,10 @@ def main(argv=sys.argv[1:]):
     logger.info('Stacking stars!')
     for i, obj in enumerate(psf_cat):
         try:
-            sstar = StackStar(res.image, header=res.header, starobj=obj, 
-                              halosize=halosize, padsize=padsize)
-            sstar.mask_out_contam(method='sep', show_fig=False, verbose=False)
-            sstar.centralize(order=5)
+            sstar = Star(res.image, header=res.header, starobj=obj, 
+                        halosize=halosize, padsize=padsize)
+            #sstar.mask_out_contam(method='sep', show_fig=False, verbose=False)
+            sstar.centralize(method='iraf')
             #sstar.sub_bkg(verbose=False)
             cval = config.starhalo.cval
             if isinstance(cval, str) and 'nan' in cval.lower():
@@ -363,21 +369,16 @@ def main(argv=sys.argv[1:]):
     stack_set = np.delete(stack_set, bad_indices, axis=0)
     median_psf = np.nanmedian(stack_set, axis=0)
     median_psf = psf_bkgsub(median_psf, int(config.starhalo.edgesize))
+    from astropy.convolution import convolve, Box2DKernel
+    median_psf = convolve(median_psf, Box2DKernel(3))
     save_to_fits(median_psf, 'median_psf.fits');
     logger.info('Stars are stacked in to a PSF and saved as "median_psf.fits"!')
-    
+    save_to_fits(stack_set, '_stack_bright_stars.fits')
+
     ## Build starhalo models and then subtract
     logger.info('Draw star halo models onto the image, and subtract them!')
     zp = df.header['MEDIANZP'] 
-    objects = objects[objects['flux'] > 0]
-    objects.sort('flux')
-    objects.reverse()
 
-    flux = objects['flux'].data
-    flux_annulus = objects['flux_ann'].data
-    fwhm = objects['fwhm_custom'].data
-    mag = zp - 2.5 * np.log10(np.abs(flux))
-    sel = np.where((mag < 19.5) & (fwhm < 25))[0]
     # Make an extra edge, move stars right
     ny, nx = res.image.shape
     im_padded = np.zeros((ny + 2 * halosize, nx + 2 * halosize))
@@ -385,8 +386,8 @@ def main(argv=sys.argv[1:]):
     im_padded[halosize: ny + halosize, halosize: nx + halosize] = res.image
     im_halos_padded = np.zeros_like(im_padded)
 
-    for i, obj in enumerate(objects[sel]):
-        spsf = Stack(median_psf, header=df.header)
+    for i, obj in enumerate(bright_star_cat):
+        spsf = Celestial(median_psf, header=df_model.header)
         x = obj['x']
         y = obj['y']
         x_int = x.astype(np.int)
@@ -404,22 +405,25 @@ def main(argv=sys.argv[1:]):
 
     im_halos = im_halos_padded[halosize: ny + halosize, halosize: nx + halosize]
     img_sub = res.image - im_halos
-    save_to_fits(img_sub, 'df_halosub.fits')
+    df_model.image += im_halos
+
+    save_to_fits(im_halos, 'df_halos.fits', header=df_model.header)
+    save_to_fits(img_sub, 'df_halosub.fits', header=df_model.header)
+    save_to_fits(df_model.image, 'df_model_halos.fits', header=df_model.header)
+
     logger.info('Bright star halos are subtracted! Saved as "df_halosub.fits".')
 
     # Mask out dirty things!
     if config.clean.clean_img:
         logger.info('Clean the image! Replace relics with noise.')
         model_mask = convolve(df_model.image, Gaussian2DKernel(config.clean.gaussian_radius))
-        model_mask[model_mask < 10] = 0
+        model_mask[model_mask < config.clean.gaussian_threshold] = 0
         model_mask[model_mask != 0] = 1
-        strmask = star_mask(segmap, res.image, res.header, 
-                            method=config.clean.star_method, bright_lim=config.clean.bright_lim)
-        #strmask = convolve(strmask, Box2DKernel(10))
+        totmask = bright_star_mask(model_mask.astype(bool), bright_star_cat, 
+                                    bright_lim=config.clean.bright_lim, r=config.clean.r)
+
         # Total mask with noise
-        totmask = model_mask + strmask
-        totmask[totmask > 0] = 1
-        totmask = convolve(totmask, Box2DKernel(2))
+        totmask = convolve(totmask.astype(float), Box2DKernel(2))
         totmask[totmask > 0] = 1
         if config.clean.replace_with_noise:
             from compsub.utils import img_replace_with_noise

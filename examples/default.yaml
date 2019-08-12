@@ -1,22 +1,22 @@
 file:
-  df_image: 'n5907_df_r.fits'
+  df_image: 'n5907_df_g.fits'
   hi_res_image_blue: 'n5907_cfht_g.fits'
   hi_res_image_red: 'n5907_cfht_r.fits'
   certain_gal_cat: 'gal_cat.txt'
   hi_res_zp: 30.0
 
 DF:
-  band: 'r'
+  band: 'g'
   pixel_scale: 2.5
   sub_bkgval: True # highly recommend True
   magnify_factor: 3.0
   resize_method: 'iraf'
-  zeropoint: 27.0  # don't be very accurate
-  color_term: 0    # -0.15
+  zeropoint: 27.0  # don't need to be very accurate
+  color_term: -0.05    # -0.15
 
 sex:
   sigma: 2.5
-  minarea: 3
+  minarea: 2
   b: 64
   f: 3
   deblend_cont: 0.0005
@@ -32,41 +32,44 @@ star:
 fluxmodel:
   gaussian_radius: 1.5     # mask = convolve(mask, Gaussian2DKernel(1.5))
   gaussian_threshold: 0.05 # mask = mask > 0.05
-  unmask_lowsb: True
+  unmask_lowsb: False
   sb_lim: 24.0
-  unmask_ratio: 0.1 # This value is suspicious!!!
+  unmask_ratio: 6 # This value is suspicious!!!
 
 kernel:
   kernel_size: 8 # In original coordinate, before magnification
   kernel_edge: 1
   nkernel: 25
   cval: 0.0
-  frac_maxflux: 0.05
+  frac_maxflux: 0.1
   circularize: False
   show_fig: True
 
 starhalo:
-  method: 'apass'
-  bright_lim: 15 # only stack stars brighter than bright_lim
+  method: 'manual'
+  bright_lim: 17.5 # only stack stars brighter than bright_lim
   fwhm_lim: 20 # only stack stars whose FWHM < fwhm_lim
   n_stack: 30
-  halosize: 45 # radial size, in pixel
+  halosize: 24 # radial size, in pixel, original size. Star cutout size will be 2 * halosize + 1
   padsize: 50
   edgesize: 3
-  norm: 'flux_ann' # or 'flux_ann'
-  sigma: 4.5
+  norm: 'flux_ann' # or 'flux' or 'flux_auto'
+  sigma: 4
   minarea: 5
   deblend_cont: 0.005
   deblend_nthresh: 32
   sky_subtract: False
   flux_aper: [3, 6]
   show_fig: False
-  cval: np.nan
+  cval: 0.0
+
 
 clean:
   clean_img: True
-  clean_file: True
+  clean_file: False
   replace_with_noise: True
-  gaussian_radius: 2.5
-  star_method: 'usno'
-  bright_lim: 20
+  gaussian_radius: 1.5
+  gaussian_threshold: 10
+  bright_lim: 17.5
+  r: 10.0
+  
