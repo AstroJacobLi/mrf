@@ -37,7 +37,7 @@ Then import `mrf` in Python:
 
 ```python
 import mrf
-print(mrf.iraf_path) 
+print(mrf.__file__.rstrip('__init__.py') + 'iraf/macosx/') 
 # It should be "<install dir>/mrf/mrf/iraf/macosx/"
 # otherwise the environmental variable is not set correctly.
 ```
@@ -50,7 +50,7 @@ TODO
 
 Acknowledgement
 ---------------
-Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io) and [Jiaxuan Li](http://astrojacobli.github.io)). Here we acknowledge @dr-guangtou for his help!
+Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io) and [Jiaxuan Li](http://astrojacobli.github.io)). Here we acknowledge [@dr-guangtou](https://github.com/dr-guangtou) for his help!
 
 
 Citation
