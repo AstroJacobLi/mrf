@@ -28,6 +28,13 @@ python setup.py install
 
 If you don't have `git` configured, you can also download the `zip` file directly from https://github.com/AstroJacobLi/mrf/archive/master.zip, then unzip it and install in the same way. 
 
+Then import `mrs` in Python:
+
+```python
+import mrf
+print(mrf.__version__)
+```
+
 `Python>=3` is needed, but you can try whether `mrf` still works under `python2`. Check out the dependence of `mrf` depends from `requirements.txt`.
 
 TODO
