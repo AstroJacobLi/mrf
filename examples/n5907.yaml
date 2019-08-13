@@ -2,7 +2,7 @@ file:
   df_image: 'n5907_df_g.fits'
   hi_res_image_blue: 'CFHT_megapipe_img_G.fits'
   hi_res_image_red: 'CFHT_megapipe_img_R.fits'
-  certain_gal_cat: 'gal_cat.txt'
+  certain_gal_cat: 'gal_cat_n5907.txt'
   hi_res_zp: 30.0
   hi_res_pixelsize: 0.186
 

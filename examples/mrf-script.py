@@ -33,6 +33,7 @@ def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(description='This script subtract compact objects from Dragonfly image.')
     parser.add_argument('--config', '-c', required=True, help='configuration file')
     args = parser.parse_args()
+    
     #############################################################
     #############################################################
     logger.info('Open configuration file {}'.format(args.config))
@@ -59,7 +60,7 @@ def main(argv=sys.argv[1:]):
     logger.info('Magnify Dragonfly image with a factor of %.1f:', f_magnify)
     df.resize_image(f_magnify, method=resize_method);
     df.save_to_fits('_df_{}.fits'.format(int(f_magnify)));
-    logger.info('Register high resolution image "{0}" with "{1}"'.format(hi_res_image_blue, df_image))
+    logger.info('Register high resolution image {0} with {1}'.format(hi_res_image_blue, df_image))
     hdu = fits.open(hi_res_image_blue)
     if 'hsc' in hi_res_image_blue:
         array, _ = reproject_interp(hdu[1], df.header)
@@ -67,7 +68,7 @@ def main(argv=sys.argv[1:]):
         array, _ = reproject_interp(hdu[0], df.header)
     hires_b = Celestial(array, header=df.header)
     hdu.close()
-    logger.info('Register high resolution image "{0}" with "{1}"'.format(hi_res_image_red, df_image))
+    logger.info('Register high resolution image {0} with {1}'.format(hi_res_image_red, df_image))
     hdu = fits.open(hi_res_image_red)
     if 'hsc' in hi_res_image_red:
         array, _ = reproject_interp(hdu[1], df.header)
@@ -141,6 +142,7 @@ def main(argv=sys.argv[1:]):
     logger.info('Bright star limit = {}'.format(config.star.bright_lim))
     seg = copy.deepcopy(segmap)
     mag = config.file.hi_res_zp - 2.5 * np.log10(abs(objects['flux']))
+    objects.add_column(Column(data=mag, name='mag'))
     flag = np.where(mag < config.star.bright_lim)
     for obj in objects[flag]:
         seg = seg_remove_obj(seg, obj['x'], obj['y'])
@@ -168,6 +170,7 @@ def main(argv=sys.argv[1:]):
     seg_mask = (mask_conv >= config.fluxmodel.gaussian_threshold)
 
     hires_fluxmod = Celestial(seg_mask * hires_3.image, header=hires_3.header)
+    hires_fluxmod.image[np.isnan(hires_fluxmod.image)] = 0
     _ = hires_fluxmod.save_to_fits('_hires_fluxmod.fits')
     logger.info('Flux model from high resolution image has been built!')
     
@@ -241,7 +244,7 @@ def main(argv=sys.argv[1:]):
         im_ratio_slice = im_ratio[im_seg_ind]
 
         # loop over objects
-        for obj in objects[:1000]:
+        for obj in objects:
             ind = np.where(np.isin(im_seg_slice, obj['index']))
             flux_hires = im_highres_slice[ind]
             flux_ratio = im_ratio_slice[ind]
@@ -311,7 +314,7 @@ def main(argv=sys.argv[1:]):
     temp = match_coordinates_sky(SkyCoord(ra=star_cat['ra'], dec=star_cat['dec'], unit='deg'),
                                  SkyCoord(ra=objects['ra'], dec=objects['dec'], unit='deg'))[0]
     bright_star_cat = objects[np.unique(temp)]
-    mag = float(df.header['MEDIANZP']) - 2.5 * np.log10(bright_star_cat['flux'])
+    mag = config.DF.zeropoint- 2.5 * np.log10(bright_star_cat['flux'])
     bright_star_cat.add_column(Column(data=mag, name='mag'))
     bright_star_cat.write('_bright_star_cat.fits', format='fits', overwrite=True)
 
@@ -365,8 +368,6 @@ def main(argv=sys.argv[1:]):
 
     ## Build starhalo models and then subtract
     logger.info('Draw star halo models onto the image, and subtract them!')
-    zp = df.header['MEDIANZP'] 
-
     # Make an extra edge, move stars right
     ny, nx = res.image.shape
     im_padded = np.zeros((ny + 2 * halosize, nx + 2 * halosize))
@@ -425,6 +426,18 @@ def main(argv=sys.argv[1:]):
         logger.info('Delete all temporary files!')
         os.system('rm -rf _*.fits')
 
+
+    plt.rcParams['text.usetex'] = False
+    fig, [ax1, ax2, ax3] = plt.subplots(1, 3, figsize=(15, 8))
+    df_image = fits.open(config.file.df_image)[0].data
+    ax1 = display_single(df_image, ax=ax1, scale_bar_length=10, scale_bar_y_offset=0.3,
+                            add_text='Dragonfly', text_y_offset=0.7)
+    ax1 = display_single(df_model.image, ax=ax2, scale_bar_length=10, scale_bar_y_offset=0.3,
+                            add_text='Model', text_y_offset=0.7)
+    ax3 = display_single(final_image, ax=ax3, scale_bar_length=10, scale_bar_y_offset=0.3,
+                            add_text='Residual', text_y_offset=0.7)
+    plt.subplots_adjust(wspace=0)
+    plt.savefig('mrf_result.png', bbox_inches='tight')
     logger.info('Mission finished!')
 
 if __name__ == "__main__":

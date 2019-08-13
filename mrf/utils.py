@@ -981,7 +981,7 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
             print('\t Rejected ' + str(i))
 
     stack_set = np.delete(kernels, bad_indices, axis=0)
-    print('You have {} good kernels to generate the median kernel'.format(len(stack_set)))
+    print('You have {} good stars to generate the median kernel'.format(len(stack_set)))
     # median of kernels is final kernel
     kernel_median = np.nanmedian(stack_set, axis=0)
     #save_to_fits(kernel_median, 'kernel_median.fits')
