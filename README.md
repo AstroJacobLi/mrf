@@ -19,7 +19,7 @@ This example shows the tidal feature of NGC 5907, described in [van Dokkum et al
 
 ![MRF on NGC 5907](https://github.com/AstroJacobLi/mrf/raw/master/n5907-demo.png)
 
-This example shows how powerful MRF is in extracting low surface brightness features. The ultra-diffuse galaxy M101-DF3 is revealed by MRF after subtracting compact objects and bright star halos according to [van Dokkum et al. (in prep)](van Dokkum et al, in prep). 
+This example shows how powerful MRF is in extracting low surface brightness features. The ultra-diffuse galaxy M101-DF3 is revealed by MRF after subtracting compact objects and bright star halos according to [van Dokkum et al. (in prep)](https://www.pietervandokkum.com). 
 
 ![MRF on M101-DF3](https://github.com/AstroJacobLi/mrf/raw/master/m101-df3-demo.png)
 
