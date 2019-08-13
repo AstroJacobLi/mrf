@@ -52,4 +52,6 @@ Citation
 -------
 If you use this code, please reference the `doi` below, and make sure to cite the dependencies as listed in [requirements](https://github.com/AstroJacobLi/mrf/blob/master/requirements.txt). 
 
-`mrf` is a free software made available under MIT License. For details see the LICENSE file. Copyright 2019 [Pieter van Dokkum](http://pietervandokkum.com) and [Jiaxuan Li](http://astrojacobli.github.io). 
+`mrf` is a free software made available under MIT License. For details see the LICENSE file. 
+
+Copyright 2019 [Pieter van Dokkum](http://pietervandokkum.com) and [Jiaxuan Li](http://astrojacobli.github.io). 
