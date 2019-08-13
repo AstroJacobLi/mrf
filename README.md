@@ -30,7 +30,7 @@ python setup.py install
 
 If you don't have `git` configured, you can also download the `zip` file directly from https://github.com/AstroJacobLi/mrf/archive/master.zip, then unzip it and install in the same way. 
 
-You need to export the path of `mrf` as an environment variable, so open `~/.bash_profile` (or `~/.bashrc`), and write `export PYTHONPATH=$PYTHONPATH:"<install dir>"` to it. Don't forget to validate it by `. ~/.bash_profile`.
+**You need to export the path of `mrf` as an environment variable**, so open `~/.bash_profile` (or `~/.bashrc`), and write `export PYTHONPATH=$PYTHONPATH:"<install dir>"` to it. Don't forget to validate it by `. ~/.bash_profile`.
 
 Then import `mrf` in Python:
 
