@@ -14,7 +14,7 @@ Applications
 
 ## Example
 
-![MRF on NGC 5907](/Users/jiaxuanli/Research/Packages/mrf/demo.png)
+![MRF on NGC 5907](https://github.com/AstroJacobLi/mrf/raw/master/demo.png)
 
 Installation
 ------------
