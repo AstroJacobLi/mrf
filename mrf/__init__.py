@@ -7,6 +7,7 @@ __all__ = ["utils", "profile", "display", "celestial", "imtools"]
 # Version
 __version__ = "0.7.0"
 __name__ = 'mrf'
+iraf_path = mrf.__file__.rstrip('__init__.py') + 'iraf/macosx/'
 
 # Define pixel scale of different surveys, unit = arcsec / pixel
 HSC_pixel_scale = 0.168

@@ -30,11 +30,13 @@ python setup.py install
 
 If you don't have `git` configured, you can also download the `zip` file directly from https://github.com/AstroJacobLi/mrf/archive/master.zip, then unzip it and install in the same way. 
 
-Then import `mrs` in Python:
+You need to export the path of `mrf` as an environment variable, so open `~/.bash_profile` (or `~/.bashrc`), and write `export PYTHONPATH=$PYTHONPATH:"<install dir>"` to it. Don't forget to validate it by `. ~/.bash_profile`.
+
+Then import `mrf` in Python:
 
 ```python
 import mrf
-print(mrf.__version__)
+print(mrf.iraf_path) # It should be "<install dir>/mrf/mrf/iraf/macosx/", otherwise the environmental variable is not set correctly.
 ```
 
 `Python>=3` is needed, but you can try whether `mrf` still works under `python2`. Check out the dependence of `mrf` depends from `requirements.txt`.
