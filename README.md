@@ -14,6 +14,8 @@ Applications
 
 ## Example
 
+This example shows the tidal feature of NGC 5907, described in [van Dokkum et al. (2019)](https://ui.adsabs.harvard.edu/abs/2019arXiv190611260V/abstract). The images presented there just used this algorithm. Full resolution Dragonfly images and MRF results can be found [here](https://www.pietervandokkum.com/ngc5907).
+
 ![MRF on NGC 5907](https://github.com/AstroJacobLi/mrf/raw/master/demo.png)
 
 Installation
