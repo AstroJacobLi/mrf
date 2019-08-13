@@ -20,7 +20,7 @@ sex:
   minarea: 2
   b: 64
   f: 3
-  deblend_cont: 0.0005
+  deblend_cont: 0.005
   deblend_nthresh: 32
   sky_subtract: False
   flux_aper: [3, 6]
@@ -63,14 +63,13 @@ starhalo:
   flux_aper: [3, 6]
   show_fig: False
   cval: 0.0
-
+  mask_contam: True
 
 clean:
   clean_img: True
-  clean_file: False
+  clean_file: True
   replace_with_noise: False
   gaussian_radius: 1.5
   gaussian_threshold: 10
   bright_lim: 17.5
-  r: 10.0
-  
+  r: 13.0

@@ -455,3 +455,20 @@ class Star(Celestial):
             imgcp = copy.copy(self.image)
             imgcp[self.mask.astype(bool)] = cval
             return imgcp
+
+    def mask_out_contam(self, blowup=True, show_fig=True, verbose=True):
+        from astropy.convolution import convolve, Box2DKernel
+        from .utils import extract_obj, seg_remove_cen_obj
+        img_blur = convolve(abs(self.image), Box2DKernel(2))
+        img_objects, img_segmap = extract_obj(abs(img_blur), b=5, f=4, sigma=4.5, minarea=2, pixel_scale=self.pixel_scale,
+                                                deblend_nthresh=32, deblend_cont=0.0005, 
+                                                sky_subtract=False, show_fig=show_fig, verbose=verbose)
+        # remove central object from segmap
+        img_segmap = seg_remove_cen_obj(img_segmap) 
+        detect_mask = (img_segmap != 0).astype(float)
+        if blowup is True:
+            from astropy.convolution import convolve, Gaussian2DKernel
+            cv = convolve(detect_mask, Gaussian2DKernel(1.5))
+            detect_mask = (cv > 0.1).astype(float)
+        self.mask = detect_mask
+        return 
