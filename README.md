@@ -36,7 +36,9 @@ Then import `mrf` in Python:
 
 ```python
 import mrf
-print(mrf.iraf_path) # It should be "<install dir>/mrf/mrf/iraf/macosx/", otherwise the environmental variable is not set correctly.
+print(mrf.iraf_path) 
+# It should be "<install dir>/mrf/mrf/iraf/macosx/"
+# otherwise the environmental variable is not set correctly.
 ```
 
 `Python>=3` is needed, but you can try whether `mrf` still works under `python2`. Check out the dependence of `mrf` depends from `requirements.txt`.
