@@ -436,8 +436,10 @@ def main(argv=sys.argv[1:]):
                             add_text='Model', text_y_offset=0.7)
     ax3 = display_single(final_image, ax=ax3, scale_bar_length=10, scale_bar_y_offset=0.3,
                             add_text='Residual', text_y_offset=0.7)
-    plt.subplots_adjust(wspace=0)
-    plt.savefig('mrf_result.png', bbox_inches='tight')
+    for ax in [ax1, ax2, ax3]:
+        ax.axis('off')
+    plt.subplots_adjust(wspace=0.02)
+    plt.savefig('mrf_result.png', bbox_inches='tight', facecolor='silver')
     logger.info('Mission finished!')
 
 if __name__ == "__main__":
