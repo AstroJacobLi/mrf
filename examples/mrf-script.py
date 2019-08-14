@@ -1,5 +1,6 @@
 import sys
 import os
+import gc
 import math
 import logging
 import copy
@@ -202,20 +203,12 @@ def main(argv=sys.argv[1:]):
     
     
     # 9. Convolve this kernel to high-res image
-    # Two options: if you have `galsim` installed, use galsim, it's much faster. 
-    # Otherwise, use `fconvolve` from iraf.
-    # Galsim solution:
-    import galsim
-    psf = galsim.InterpolatedImage(galsim.Image(kernel_med), 
-                                   scale=config.DF.pixel_scale / f_magnify)
-    gal = galsim.InterpolatedImage(galsim.Image(hires_fluxmod.image), 
-                                   scale=config.DF.pixel_scale / f_magnify)
+    from astropy.convolution import convolve_fft
     logger.info('Convolving image, this will be a bit slow @_@ ###')
-    final = galsim.Convolve([gal, psf])
-    image = final.drawImage(scale=config.DF.pixel_scale / f_magnify, 
-                            nx=hires_3.shape[1], 
-                            ny=hires_3.shape[0])
-    save_to_fits(image.array, '_df_model_{}.fits'.format(int(f_magnify)), header=hires_3.header)
+    model = convolve_fft(hires_fluxmod.image, kernel_med, boundary='fill', 
+                         fill_value=0, nan_treatment='fill', normalize_kernel=False)
+
+    save_to_fits(model, '_df_model_{}.fits'.format(int(f_magnify)), header=hires_3.header)
 
     # Optinally remove low surface brightness objects from model: 
     if config.fluxmodel.unmask_lowsb:
@@ -261,16 +254,10 @@ def main(argv=sys.argv[1:]):
         seg_mask = (mask_conv >= config.fluxmodel.gaussian_threshold)
         im_highres[seg_mask] = 0
 
-        psf = galsim.InterpolatedImage(galsim.Image(kernel_med), 
-                                    scale=config.DF.pixel_scale / f_magnify)
-        gal = galsim.InterpolatedImage(galsim.Image(im_highres), 
-                                    scale=config.DF.pixel_scale / f_magnify)
         logger.info('Convolving image, this will be a bit slow @_@ ###')
-        final = galsim.Convolve([gal, psf])
-        image = final.drawImage(scale=config.DF.pixel_scale / f_magnify, 
-                                nx=hires_3.shape[1], 
-                                ny=hires_3.shape[0])
-        save_to_fits(image.array, '_df_model_clean_{}.fits'.format(f_magnify), header=hires_3.header)
+        model = convolve_fft(im_highres, kernel_med, boundary='fill', 
+                        fill_value=0, nan_treatment='fill', normalize_kernel=False)
+        save_to_fits(model, '_df_model_clean_{}.fits'.format(f_magnify), header=hires_3.header)
 
     df_model = Celestial(image.array, header=hires_3.header)
     res = Celestial(df.image - df_model.image, header=df.header)
@@ -416,9 +403,9 @@ def main(argv=sys.argv[1:]):
         totmask[totmask > 0] = 1
         if config.clean.replace_with_noise:
             from compsub.utils import img_replace_with_noise
-            final_image = img_replace_with_noise(res.image.byteswap().newbyteorder(), totmask)
+            final_image = img_replace_with_noise(img_sub.byteswap().newbyteorder(), totmask)
         else:
-            final_image = res.image * (~totmask.astype(bool))
+            final_image = img_sub * (~totmask.astype(bool))
         save_to_fits(final_image, 'final_image.fits', header=res.header)
         logger.info('The final result is saved as "final_image.fits"!')
     # Delete temp files
@@ -430,12 +417,13 @@ def main(argv=sys.argv[1:]):
     plt.rcParams['text.usetex'] = False
     fig, [ax1, ax2, ax3] = plt.subplots(1, 3, figsize=(15, 8))
     df_image = fits.open(config.file.df_image)[0].data
-    ax1 = display_single(df_image, ax=ax1, scale_bar_length=10, scale_bar_y_offset=0.3,
-                            add_text='Dragonfly', text_y_offset=0.7)
-    ax1 = display_single(df_model.image, ax=ax2, scale_bar_length=10, scale_bar_y_offset=0.3,
-                            add_text='Model', text_y_offset=0.7)
-    ax3 = display_single(final_image, ax=ax3, scale_bar_length=10, scale_bar_y_offset=0.3,
-                            add_text='Residual', text_y_offset=0.7)
+    ax1 = display_single(df_image, ax=ax1, scale_bar_length=10, 
+                        scale_bar_y_offset=0.3, pixel_scale=config.DF.pixel_scale, 
+                        add_text='Dragonfly', text_y_offset=0.7)
+    ax1 = display_single(df_model.image, ax=ax2, scale_bar=False, 
+                        add_text='Model', text_y_offset=0.7)
+    ax3 = display_single(final_image, ax=ax3, scale_bar=False, 
+                        add_text='Residual', text_y_offset=0.7)
     for ax in [ax1, ax2, ax3]:
         ax.axis('off')
     plt.subplots_adjust(wspace=0.02)

@@ -948,7 +948,7 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
     # This excludes those objects who 1) are not stars; 2) are saturated or exotic.
     non_edge_flag = np.logical_and.reduce([(flux < flux_lim), (x > border),
                                             (x < nx - border), (y > border),
-                                            (y < ny - border), (ba > 0.8)]) # (fwhm < 10)
+                                            (y < ny - border), (ba > 0.6)]) # (fwhm < 10)
     good_cat = obj_cat[non_edge_flag]
     good_cat.sort('flux')
     good_cat.reverse()     
