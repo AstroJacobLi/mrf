@@ -372,7 +372,8 @@ def azimuthal_average(image, center=None, stddev=True, binsize=0.5, interpnan=Fa
 # evaluate_sky objects for a given image
 def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5, 
     deblend_nthresh=32, deblend_cont=0.005, clean_param=1.0, 
-    sky_subtract=False, flux_auto=True, flux_aper=None, show_fig=True, verbose=True):
+    sky_subtract=False, flux_auto=True, flux_aper=None, show_fig=True, 
+    verbose=True, logger=None):
     '''Extract objects for a given image, using `sep`. This is from `slug`.
 
     Parameters:
@@ -418,8 +419,10 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
                                   clean=True,
                                   clean_param=clean_param,
                                   minarea=minarea)
-    if verbose:                              
+    if verbose and logger is None:                              
         print("# Detect %d objects" % len(objects))
+    if logger is not None:
+        logger.info("    - Detect %d objects" % len(objects))
     objects = Table(objects)
     objects.add_column(Column(data=np.arange(len(objects)) + 1, name='index'))
     # Maximum flux, defined as flux within six 'a' in radius.
@@ -750,7 +753,7 @@ def mask_out_stars(segmap, img, header, method='gaia', bright_lim=15.5, catalog_
     return segmap_cp
 
 # Mask certain galaxy
-def mask_out_certain_galaxy(segmap, header, gal_cat=None):
+def mask_out_certain_galaxy(segmap, header, gal_cat=None, logger=None):
     """ Mask out certain galaxy on segmentation map.
 
     Parameters:
@@ -787,7 +790,10 @@ def mask_out_certain_galaxy(segmap, header, gal_cat=None):
                 raise ValueError("Wrong catalog format!")
             
             obj_id = np.int(segmap_cp[int(y), int(x)])
-            print('### Removing object ' + str(obj_id) + ' from mask ###')
+            if logger is not None:
+                logger.info('    - Removing object {} from flux model'.format(obj_id))
+            else:
+                print('### Removing object ' + str(obj_id) + ' from mask ###')
             llim = obj_id - 0.1
             ulim = obj_id + 0.1
             segmap_cp[(segmap_cp < ulim) & (segmap_cp > llim)] = 0
@@ -901,7 +907,8 @@ def Makekernel(img_hires, img_lowres, obj, s, d, cval=np.nan, window=CosineBellW
 
 # new version of autokernel using `Celestial` object
 def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None, 
-              frac_maxflux=0.1, fwhm_upper=14, nkernels=20, border=50, cval=np.nan, show_figure=True):
+              frac_maxflux=0.1, fwhm_upper=14, nkernels=20, 
+              border=50, cval=np.nan, show_figure=True, logger=None):
     """ Automatically generate kernel from an image, 
         by detecting star position and make kernel from them.
         Here all images are subsampled, and all coordinates are in 
@@ -928,7 +935,8 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
     if object_cat_dir is None:
         data = img_hires.image.byteswap().newbyteorder()
         obj_cat, _ = extract_obj(data, b=64, f=3, sigma=2.5, minarea=3, show_fig=False,
-                                 deblend_nthresh=32, deblend_cont=0.0005, flux_aper=[3, 6])
+                                 deblend_nthresh=32, deblend_cont=0.0005, flux_aper=[3, 6], 
+                                 verbose=False)
     else:
         obj_cat = Table.read(object_cat_dir, format='fits')
     obj_cat.sort(keys='flux')
@@ -965,23 +973,26 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
         kernel, hires_cut, lowres_cut = Makekernel(img_hires, img_lowres, obj, s, d, cval=cval)
         cuts_low[i, :, :] = lowres_cut
         cuts_high[i, :, :] = hires_cut
-
         # discard this one if flux deviates too much.
         flux_measured = np.nansum(hires_cut)
         # test if measured flux is approximately expected flux
         deviation = (flux_measured - obj['flux']) / obj['flux']
-        print('# Star {0}: flux deviation = {1:.3f}'.format(i, deviation))
-        
         if -0.2 < deviation < 0.5:
             kernels[i, :, :] = kernel[:, :]
         else:
             kernels[i, :, :] = kernel[:, :] * 0 + extreme_val
             bad_indices.append(i)
             extreme_val = -1 * extreme_val
-            print('\t Rejected ' + str(i))
+            if logger is not None:
+                logger.info('    - Rejected Object {0}: flux deviation = {1:.3f}'.format(i, deviation))
+            else:
+                print('# Rejected Star {0}: flux deviation = {1:.3f}'.format(i, deviation))
 
     stack_set = np.delete(kernels, bad_indices, axis=0)
-    print('You have {} good stars to generate the median kernel'.format(len(stack_set)))
+    if logger is not None:
+        logger.info('    - You have {} good stars to generate the median kernel'.format(len(stack_set)))
+    else:
+        print('# You have {} good stars to generate the median kernel'.format(len(stack_set)))
     # median of kernels is final kernel
     kernel_median = np.nanmedian(stack_set, axis=0)
     #save_to_fits(kernel_median, 'kernel_median.fits')
@@ -1005,6 +1016,7 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
                         
         plt.subplots_adjust(wspace=0.0, hspace=0.0)
         plt.savefig('./kernel_stars.png', bbox_inches='tight', dpi=150)
+        plt.close()
 
     return kernel_median, good_cat
 
@@ -1048,6 +1060,70 @@ def psf_bkgsub(psf, edge):
     psf_sub = psf - d
     return psf_sub
 
+def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir, 
+                 SB_lim=24.0, zeropoint=30.0, pixel_size=0.83, unmask_ratio=6, 
+                 gaussian_radius=1.5, gaussian_threshold=0.01, logger=None):
+    from astropy.convolution import convolve, Gaussian2DKernel
+
+    E = flux_model / conv_model
+    E[np.isinf(E) | np.isnan(E)] = 0.0
+
+    kernel_flux = np.sum(kernel)
+    E *= kernel_flux
+    if logger is not None:
+        logger.info('    - Kernel flux = {}'.format(kernel_flux))
+        logger.info('    - Maximum of flux_model / conv_model = {:.3f}'.format(np.nanmax(E)))
+    else:
+        print('# Kernel flux = {}'.format(kernel_flux))
+        print('# Maximum of flux_model / conv_model = {:.3f}'.format(np.nanmax(E)))
+
+    im_seg = copy.deepcopy(segmap)
+    im_highres = copy.deepcopy(flux_model)
+    im_ratio = E
+    im_highres_new =  np.zeros_like(flux_model)
+    objects = Table.read(objcat_dir, format='fits')
+
+    # calculate SB limit in counts per pixel
+    sb_lim_cpp = 10**((SB_lim - zeropoint)/(-2.5)) * (pixel_size)**2
+    if logger is not None:
+        logger.info('    - SB limit in counts / pixel = {}'.format(sb_lim_cpp))
+    else:
+        print('# SB limit in counts / pixel = {}'.format(sb_lim_cpp))
+
+    im_seg_ind = np.where(im_seg>0)
+    im_seg_slice = im_seg[im_seg_ind]
+    im_highres_slice = im_highres[im_seg_ind]
+    im_highres_new_slice = im_highres_new[im_seg_ind]
+    im_ratio_slice = im_ratio[im_seg_ind]
+
+    # loop over objects
+    num = 0
+    for obj in objects:
+        ind = np.where(np.isin(im_seg_slice, obj['index']))
+        flux_hires = im_highres_slice[ind]
+        flux_ratio = im_ratio_slice[ind]
+        if ((np.mean(flux_hires) < sb_lim_cpp) and (np.mean(flux_ratio) < unmask_ratio)) and (np.mean(flux_ratio) != 0):
+            im_highres_new_slice[ind] = 1
+            num += 1
+    im_highres_new[im_seg_ind] = im_highres_new_slice
+
+    if logger is not None:
+        logger.info('    - Removed {} low surface brightness objects from flux model.'.format(num))
+    else:
+        print('Totally removed {} objects'.format(num))
+
+    save_to_fits(im_highres_new, '_hires_fluxmode_clean_mask.fits')
+    # BLow up the mask
+    smooth_radius = gaussian_radius
+    mask_conv = copy.deepcopy(im_highres_new)
+    mask_conv[mask_conv > 0] = 1
+    mask_conv = convolve(mask_conv.astype(float), Gaussian2DKernel(smooth_radius))
+    seg_mask = (mask_conv >= gaussian_threshold)
+    im_highres[seg_mask] = 0
+
+    return im_highres
+
+    
 
 #########################################################################
 ########################## The Tractor related ##########################
