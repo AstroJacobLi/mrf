@@ -66,10 +66,13 @@ class MrfTask():
             dir_lowres: string, directory of input low-resolution image.
             dir_hires_b: string, directory of input high-resolution blue-band image (typically g-band).
             dir_hires_r: string, directory of input high-resolution red-band image (typically r-band).
-            certain_gal_cat: string, directory of a catalog (in ascii format) which contains RA and DEC of galaxies which you want to retain during MRF.
-        Returns:
+            certain_gal_cat: string, directory of a catalog (in ascii format) which contains 
+                RA and DEC of galaxies which you want to retain during MRF.
+            output_name: string, which will be the prefix of output files.
+            verbose: bool. If True, it will make a log file recording the process. 
 
-        SHall I halt all "save_to_fits"? 
+        Returns:
+            results: `Results` class, containing key results of this task.
         
         """
         from astropy.coordinates import SkyCoord, match_coordinates_sky

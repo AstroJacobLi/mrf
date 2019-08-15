@@ -1088,9 +1088,9 @@ def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir,
     # calculate SB limit in counts per pixel
     sb_lim_cpp = 10**((SB_lim - zeropoint)/(-2.5)) * (pixel_size)**2
     if logger is not None:
-        logger.info('    - SB limit in counts / pixel = {}'.format(sb_lim_cpp))
+        logger.info('    - SB limit in counts / pixel = {:.4f}'.format(sb_lim_cpp))
     else:
-        print('# SB limit in counts / pixel = {}'.format(sb_lim_cpp))
+        print('# SB limit in counts / pixel = {:.4f}'.format(sb_lim_cpp))
 
     im_seg_ind = np.where(im_seg>0)
     im_seg_slice = im_seg[im_seg_ind]
