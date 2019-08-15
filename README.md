@@ -26,7 +26,8 @@ This example shows how powerful MRF is in extracting low surface brightness feat
 You can also use [this script](https://github.com/AstroJacobLi/mrf/blob/master/examples/mrf-task.py) to run the MRF task. Take NGC 5907 as an example:
 
 ```bash
-python mrf-task.py n5907_df_g.fits ngc5907_cfht_g.fits ngc5907_cfht_r.fits ngc5907-task.yaml --gal='gal_cat_n5907.txt' --output='n5907_g'
+python mrf-task.py n5907_df_g.fits ngc5907_cfht_g.fits ngc5907_cfht_r.fits \ 
+ngc5907-task.yaml --gal='gal_cat_n5907.txt' --output='n5907_g'
 ```
 
 Installation
