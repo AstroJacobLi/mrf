@@ -7,7 +7,6 @@
 /build
 /*.egg-info
 */_*
-/examples/*.png
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
