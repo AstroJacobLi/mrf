@@ -1005,7 +1005,7 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
     if show_figure:
         fig, axes = plt.subplots(6, 8, figsize=(13, 10))
         data_set = [cuts_high, cuts_low, kernels]
-        text_set = ['CFHT', 'DF', 'Kernel']
+        text_set = ['Hires', 'Lowres', 'Kernel']
         for i in range(16):
             for j in range(3):
                 ax = axes[j + 3 * (i // 8 - 1), i%8]

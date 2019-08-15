@@ -25,12 +25,15 @@ class Config(object):
         Config.config = d
 
 class Results():
+    """
+    Results class.
+    """
     def __init__(self, config):
         self.config = config
     
 class MrfTask():
     '''
-    MRF task class
+    MRF task class. This class implements `mrf`.
     '''
     def __init__(self, config_file):
         # Open configuration file
@@ -60,7 +63,10 @@ class MrfTask():
         Run MRF task.
 
         Parameters:
-
+            dir_lowres: string, directory of input low-resolution image.
+            dir_hires_b: string, directory of input high-resolution blue-band image (typically g-band).
+            dir_hires_r: string, directory of input high-resolution red-band image (typically r-band).
+            certain_gal_cat: string, directory of a catalog (in ascii format) which contains RA and DEC of galaxies which you want to retain during MRF.
         Returns:
 
         SHall I halt all "save_to_fits"? 
@@ -82,7 +88,9 @@ class MrfTask():
         results = Results(config)
 
         logger.info('Running Multi-Resolution Filtering (MRF) on "{0}" and "{1}" images!'.format(config.hires.dataset, config.lowres.dataset))
-        
+        setattr(results, 'lowres_name', config.lowres.dataset)
+        setattr(results, 'hires_name', config.hires.dataset)
+
         # 1. subtract background of lowres, if desired
         assert isinstance(dir_lowres, str), 'Input "img_lowres" must be string!'
         hdu = fits.open(dir_lowres)
@@ -97,8 +105,8 @@ class MrfTask():
         # 2. Create magnified low-res image, and register high-res images with subsampled low-res ones
         f_magnify = config.lowres.magnify_factor
         logger.info('Magnify Dragonfly image with a factor of %.1f:', f_magnify)
-        lowres.resize_image(f_magnify);
-        lowres.save_to_fits('_lowres_{}.fits'.format(int(f_magnify)));
+        lowres.resize_image(f_magnify)
+        lowres.save_to_fits('_lowres_{}.fits'.format(int(f_magnify)))
         logger.info('Register high resolution image "{0}" with "{1}"'.format(dir_hires_b, dir_lowres))
         hdu = fits.open(dir_hires_b)
         if 'hsc' in dir_hires_b:

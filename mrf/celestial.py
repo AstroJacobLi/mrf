@@ -20,8 +20,6 @@ class Celestial(object):
     '''
     def __init__(self, img, mask=None, header=None, dataset='Dragonfly'):
         '''Initialize `Celestial` object'''
-        self.header = header
-        self.wcs = wcs.WCS(header)
         try:
             self.pixel_scale = abs(header['CD1_1'] * 3600)
         except:
@@ -35,11 +33,14 @@ class Celestial(object):
         ny, nx = img.shape
         self.ny = ny
         self.nx = nx
-        self.ra_cen, self.dec_cen = list(map(float, self.wcs.wcs_pix2world(ny // 2, nx // 2, 0)))
-        # This follows lower-left, lower-right, upper-right, upper-left.
-        self.ra_bounds, self.dec_bounds = self.wcs.wcs_pix2world([0, img.shape[1], img.shape[1], 0], 
-                                            [0, 0, img.shape[0], img.shape[0]], 0)
-        self.sky_bounds = np.append(self.ra_bounds[2:], self.dec_bounds[1:3])
+        if header is not None:
+            self.header = header
+            self.wcs = wcs.WCS(header)
+            self.ra_cen, self.dec_cen = list(map(float, self.wcs.wcs_pix2world(ny // 2, nx // 2, 0)))
+            # This follows lower-left, lower-right, upper-right, upper-left.
+            self.ra_bounds, self.dec_bounds = self.wcs.wcs_pix2world([0, img.shape[1], img.shape[1], 0], 
+                                                [0, 0, img.shape[0], img.shape[0]], 0)
+            self.sky_bounds = np.append(self.ra_bounds[2:], self.dec_bounds[1:3])
         self.scale_bar_length = 5 # initial length for scale bar when displaying
 
     @property
