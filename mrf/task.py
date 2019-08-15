@@ -40,15 +40,22 @@ class MrfTask():
         self.config_file = config_file
         self.config = config
 
-    def set_logger(self):
-        log_filename = self.config_file.rstrip('yaml') + 'log'
-        logging.basicConfig(format='%(asctime)s %(message)s', level=logging.DEBUG, 
-                            handlers=[logging.StreamHandler(sys.stdout),
-                                      logging.FileHandler(log_filename, mode='w')])
-        self.logger = logging.getLogger(log_filename)
+    def set_logger(self, verbose=True):
+        
+        if verbose:
+            log_filename = self.config_file.rstrip('yaml') + 'log'
+            logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO, 
+                                handlers=[logging.StreamHandler(sys.stdout),
+                                          logging.FileHandler(log_filename, mode='w')])
+            self.logger = logging.getLogger(log_filename)                              
+        else:
+            logger = logging.getLogger('mylogger')
+            logger.propagate = False
+            self.logger = logger
         return self.logger
 
-    def run(self, dir_lowres, dir_hires_b, dir_hires_r, certain_gal_cat, output_name='mrf'):
+    def run(self, dir_lowres, dir_hires_b, dir_hires_r, certain_gal_cat, 
+            output_name='mrf', verbose=True):
         """
         Run MRF task.
 
@@ -71,7 +78,7 @@ class MrfTask():
         from reproject import reproject_interp
 
         config = self.config
-        logger = self.set_logger()
+        logger = self.set_logger(verbose=verbose)
         results = Results(config)
 
         logger.info('Running Multi-Resolution Filtering (MRF) on "{0}" and "{1}" images!'.format(config.hires.dataset, config.lowres.dataset))
@@ -85,7 +92,7 @@ class MrfTask():
             lowres.image -= float(lowres.header['BACKVAL'])
         hdu.close()
 
-        setattr(results, 'lowres_input', lowres)
+        setattr(results, 'lowres_input', copy.deepcopy(lowres))
         
         # 2. Create magnified low-res image, and register high-res images with subsampled low-res ones
         f_magnify = config.lowres.magnify_factor
@@ -125,13 +132,15 @@ class MrfTask():
         logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
         logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
         _, _, b_imflux = Flux_Model(hires_b.image, hires_b.header, sigma=sigma, minarea=minarea, 
-                                    deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, save=True)
+                                    deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, 
+                                    save=True, logger=logger)
         
         logger.info('Build flux models on high-resolution images: Red band')
         logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
         logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
         _, _, r_imflux = Flux_Model(hires_r.image, hires_b.header, sigma=sigma, minarea=minarea, 
-                                    deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, save=True)
+                                    deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, 
+                                    save=True, logger=logger)
         
 
         # 4. Make color correction, remove artifacts as well
@@ -170,7 +179,7 @@ class MrfTask():
         objects, segmap = extract_obj(hires_3.image, b=b, f=f, sigma=sigma, minarea=minarea, 
                                       show_fig=False, flux_aper=flux_aper, 
                                       deblend_nthresh=deblend_nthresh, 
-                                      deblend_cont=deblend_cont)
+                                      deblend_cont=deblend_cont, logger=logger)
         objects.write('_hires_obj_cat.fits', format='fits', overwrite=True)
         
         # 6. Remove bright stars and certain galaxies
@@ -234,13 +243,14 @@ class MrfTask():
 
         # 9. Convolve this kernel to high-res image
         from astropy.convolution import convolve_fft
-        logger.info('Convolving image, this could be a bit slow @_@')
+        logger.info('    - Convolving image, this could be a bit slow @_@')
         conv_model = convolve_fft(hires_fluxmod.image, kernel_med, boundary='fill', 
                             fill_value=0, nan_treatment='fill', normalize_kernel=False)
         save_to_fits(conv_model, '_lowres_model_{}.fits'.format(int(f_magnify)), header=hires_3.header)
         
         # Optinally remove low surface brightness objects from model: 
         if config.fluxmodel.unmask_lowsb:
+            logger.info('    - Removing low-SB objects from flux model.')
             from .utils import remove_lowsb
             hires_flxmd = remove_lowsb(hires_fluxmod.image, conv_model, kernel_med, seg, 
                                         "_hires_obj_cat.fits", 
@@ -252,7 +262,7 @@ class MrfTask():
                                         gaussian_threshold=config.fluxmodel.gaussian_threshold, 
                                         logger=logger)
 
-            logger.info('Convolving image, this could be a bit slow @_@')
+            logger.info('    - Convolving image, this could be a bit slow @_@')
             conv_model = convolve_fft(hires_flxmd, kernel_med, boundary='fill', 
                                  fill_value=0, nan_treatment='fill', normalize_kernel=False)
             save_to_fits(conv_model, '_lowres_model_clean_{}.fits'.format(f_magnify), header=hires_3.header)
@@ -270,7 +280,7 @@ class MrfTask():
         res.save_to_fits(output_name + '_res.fits')
         setattr(results, 'res', res)
 
-        logger.info('Compact objects has been subtracted from low-resolution image! Saved as "res.fits".')
+        logger.info('Compact objects has been subtracted from low-resolution image! Saved as "{}".'.format(output_name + '_res.fits'))
 
 
         #10. Subtract bright star halos! Only for those left out in flux model!
@@ -295,12 +305,14 @@ class MrfTask():
                                     deblend_nthresh=deblend_nthresh, 
                                     deblend_cont=deblend_cont, 
                                     sky_subtract=sky_subtract, show_fig=False, 
-                                    flux_aper=flux_aper, verbose=False)
+                                    flux_aper=flux_aper, logger=logger)
         
         ra, dec = res.wcs.wcs_pix2world(objects['x'], objects['y'], 0)
         objects.add_columns([Column(data=ra, name='ra'), Column(data=dec, name='dec')])
+        
         # Match two catalogs
-        logger.info('Match detected objects with previously discard stars')
+        logger.info('Stack stars to get PSF model!')
+        logger.info('    - Match detected objects with previously discard stars')
         temp = match_coordinates_sky(SkyCoord(ra=star_cat['ra'], dec=star_cat['dec'], unit='deg'),
                                      SkyCoord(ra=objects['ra'], dec=objects['dec'], unit='deg'))[0]
         bright_star_cat = objects[np.unique(temp)]
@@ -314,7 +326,7 @@ class MrfTask():
         psf_cat.sort('flux')
         psf_cat.reverse()
         psf_cat = psf_cat[:int(config.starhalo.n_stack)]
-        logger.info('You get {} stars to be stacked!'.format(len(psf_cat)))
+        logger.info('    - Get {} stars to be stacked!'.format(len(psf_cat)))
 
         # Construct and stack `Stars`.
         halosize = config.starhalo.halosize
@@ -353,7 +365,7 @@ class MrfTask():
         save_to_fits(median_psf, '_median_psf.fits');
         setattr(results, 'PSF', median_psf)
 
-        logger.info('Stars are stacked successfully!')
+        logger.info('    - Stars are stacked successfully!')
         save_to_fits(stack_set, '_stack_bright_stars.fits')
 
         # 11. Build starhalo models and then subtract from "res" image
@@ -394,12 +406,12 @@ class MrfTask():
         save_to_fits(lowres_model.image, output_name + '_model_halos.fits', 
                      header=lowres_model.header)
         
-        logger.info('Bright star halos are subtracted! Saved as "lowres_halosub.fits".')
+        logger.info('Bright star halos are subtracted!')
 
 
         # 11. Mask out dirty things!
         if config.clean.clean_img:
-            logger.info('Clean the image! Replace relics with noise.')
+            logger.info('Clean the image!')
             model_mask = convolve(lowres_model.image, 
                                   Gaussian2DKernel(config.clean.gaussian_radius))
             model_mask[model_mask < config.clean.gaussian_threshold] = 0
@@ -411,9 +423,11 @@ class MrfTask():
             totmask = convolve(totmask.astype(float), Box2DKernel(2))
             totmask[totmask > 0] = 1
             if config.clean.replace_with_noise:
+                logger.info('    - Replace artifacts with noise.')
                 from compsub.utils import img_replace_with_noise
                 final_image = img_replace_with_noise(img_sub.byteswap().newbyteorder(), totmask)
             else:
+                logger.info('    - Replace artifacts with void.')
                 final_image = img_sub * (~totmask.astype(bool))
             
             save_to_fits(final_image, output_name + '_final.fits', header=res.header)
@@ -441,6 +455,6 @@ class MrfTask():
         plt.subplots_adjust(wspace=0.02)
         plt.savefig(output_name + '_result.png', bbox_inches='tight', facecolor='silver')
         plt.close()
-        logger.info('Mission finished!')
+        logger.info('Mission finished! (⁎⁍̴̛ᴗ⁍̴̛⁎)')
 
         return results

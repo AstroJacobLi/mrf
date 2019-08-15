@@ -2,7 +2,6 @@ import sys
 import os
 import gc
 import math
-import logging
 import copy
 import yaml
 import argparse
@@ -135,7 +134,7 @@ def main(argv=sys.argv[1:]):
     objects, segmap = extract_obj(hires_3.image, b=b, f=f, sigma=sigma, minarea=minarea, 
                                   show_fig=False, flux_aper=flux_aper, 
                                   deblend_nthresh=deblend_nthresh, 
-                                  deblend_cont=deblend_cont)
+                                  deblend_cont=deblend_cont, logger=logger)
     objects.write('_hires_obj_cat.fits', format='fits', overwrite=True)
     
     # 6. Remove bright stars (and certain galaxies)
@@ -212,7 +211,7 @@ def main(argv=sys.argv[1:]):
 
     # Optinally remove low surface brightness objects from model: 
     if config.fluxmodel.unmask_lowsb:
-        E = hires_fluxmod.image / image.array
+        E = hires_fluxmod.image / model
         E[np.isinf(E) | np.isnan(E)] = 0.0
 
         kernel_flux = np.sum(kernel_med)
@@ -259,7 +258,7 @@ def main(argv=sys.argv[1:]):
                         fill_value=0, nan_treatment='fill', normalize_kernel=False)
         save_to_fits(model, '_df_model_clean_{}.fits'.format(f_magnify), header=hires_3.header)
 
-    df_model = Celestial(image.array, header=hires_3.header)
+    df_model = Celestial(model, header=hires_3.header)
     res = Celestial(df.image - df_model.image, header=df.header)
     res.save_to_fits('_res_{}.fits'.format(f_magnify))
     
@@ -293,7 +292,7 @@ def main(argv=sys.argv[1:]):
                                   deblend_nthresh=deblend_nthresh, 
                                   deblend_cont=deblend_cont, 
                                   sky_subtract=sky_subtract, show_fig=show_fig, 
-                                  flux_aper=flux_aper)
+                                  flux_aper=flux_aper, logger=logger)
     ra, dec = res.wcs.wcs_pix2world(objects['x'], objects['y'], 0)
     objects.add_columns([Column(data=ra, name='ra'), Column(data=dec, name='dec')])
     # Match two catalogs
@@ -389,7 +388,7 @@ def main(argv=sys.argv[1:]):
 
     logger.info('Bright star halos are subtracted! Saved as "df_halosub.fits".')
 
-    # Mask out dirty things!
+    # 11. Mask out dirty things!
     if config.clean.clean_img:
         logger.info('Clean the image! Replace relics with noise.')
         model_mask = convolve(df_model.image, Gaussian2DKernel(config.clean.gaussian_radius))
@@ -420,7 +419,7 @@ def main(argv=sys.argv[1:]):
     ax1 = display_single(df_image, ax=ax1, scale_bar_length=10, 
                         scale_bar_y_offset=0.3, pixel_scale=config.DF.pixel_scale, 
                         add_text='Dragonfly', text_y_offset=0.7)
-    ax1 = display_single(df_model.image, ax=ax2, scale_bar=False, 
+    ax2 = display_single(df_model.image, ax=ax2, scale_bar=False, 
                         add_text='Model', text_y_offset=0.7)
     ax3 = display_single(final_image, ax=ax3, scale_bar=False, 
                         add_text='Residual', text_y_offset=0.7)

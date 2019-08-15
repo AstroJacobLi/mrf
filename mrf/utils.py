@@ -419,10 +419,11 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
                                   clean=True,
                                   clean_param=clean_param,
                                   minarea=minarea)
-    if verbose and logger is None:                              
-        print("# Detect %d objects" % len(objects))
-    if logger is not None:
-        logger.info("    - Detect %d objects" % len(objects))
+    if verbose:
+        if logger is not None:
+            logger.info("    - Detect %d objects" % len(objects))
+        else:
+            print("# Detect %d objects" % len(objects))
     objects = Table(objects)
     objects.add_column(Column(data=np.arange(len(objects)) + 1, name='index'))
     # Maximum flux, defined as flux within six 'a' in radius.
@@ -484,7 +485,8 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
 
 # Detect sources and make flux map
 def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3, 
-                deblend_cont=0.005, deblend_nthresh=32, save=False, output_suffix='flux_model'):
+                deblend_cont=0.005, deblend_nthresh=32, save=False, 
+                output_suffix='flux_model', logger=None):
     """ Extract sources from given image and return a flux map (not segmentation map).
         The flux map will be saved as '_flux_' + output_suffix + '.fits', along with segmentation map.
 
@@ -506,7 +508,7 @@ def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3,
 
     objects, segmap = extract_obj(img, b=b, f=f, sigma=sigma, minarea=minarea, show_fig=False,
                                   deblend_nthresh=deblend_nthresh, deblend_cont=deblend_cont, 
-                                  sky_subtract=False)
+                                  sky_subtract=False, logger=logger)
     im_seg = segmap
     galid = objects['index'].data.astype(np.float)
     flux = objects['flux_auto'].data.astype(np.float)
