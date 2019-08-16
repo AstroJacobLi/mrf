@@ -42,7 +42,7 @@ def phys_size(redshift, is_print=True, H0=70, Omegam=0.3):
     '''
     from astropy.cosmology import FlatLambdaCDM
     cosmos = FlatLambdaCDM(H0=H0, Om0=Omegam) 
-    physical_size = 1 / cosmos.arcsec_per_kpc_comoving(0.1).value # kpc/arcsec
+    physical_size = 1 / cosmos.arcsec_per_kpc_comoving(redshift).value # kpc/arcsec
     if is_print:
         print ('At redshift', redshift, ', 1 arcsec =', physical_size, 'kpc')
     return physical_size
