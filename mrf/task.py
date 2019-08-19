@@ -184,7 +184,7 @@ class MrfTask():
         gc.collect()
         
         # 5. Extract sources on hi-res corrected image
-        logger.info('Extracting objects from color-corrected high resolution image with:')
+        logger.info('Extract objects from color-corrected high resolution image with:')
         logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
         logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
         objects, segmap = extract_obj(hires_3.image, b=b, f=f, sigma=sigma, minarea=minarea, 
@@ -308,7 +308,7 @@ class MrfTask():
         sky_subtract = config.starhalo.sky_subtract
         flux_aper = config.starhalo.flux_aper
 
-        logger.info('Extracting objects from compact-object-subtracted low-resolution image with:')
+        logger.info('Extract objects from compact-object-subtracted low-resolution image with:')
         logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
         logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
         objects, segmap = extract_obj(res.image.byteswap().newbyteorder(), 
