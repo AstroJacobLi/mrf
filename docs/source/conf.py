@@ -12,25 +12,30 @@
 #
 # import os
 # import sys
-# sys.path.insert(0, os.path.abspath('.'))
-
+# sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
+from mrf import __version__
 
 project = 'mrf'
 copyright = '2019, Pieter van Dokkum, Jiaxuan Li'
 author = 'Pieter van Dokkum, Jiaxuan Li'
 
 # The full version, including alpha/beta/rc tags
-release = '0.7.0'
-
+release = __version__
+version = __version__
 
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.napoleon', 'recommonmark'] #'sphinx.ext.autodoc', 
+extensions = [
+    'sphinx.ext.napoleon', 
+    'recommonmark',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.mathjax'
+    ] #'sphinx.ext.autodoc', 
  
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -40,15 +45,24 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+pygments_style = 'sphinx'
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'alabaster'   #'sphinx_rtd_theme'   
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+#html_favicon = "_static/favicon.png"
+html_logo = "_static/df-logo.png"
+
+html_sidebars = {
+    'index':    ['sidebarintro.html', 'searchbox.html'],
+    '**':       ['sidebarintro.html', 'localtoc.html', 'relations.html',
+                 'searchbox.html']
+}

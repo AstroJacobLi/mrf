@@ -9,6 +9,7 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
+
 with open('requirements.txt') as infd:
     INSTALL_REQUIRES = [x.strip('\n') for x in infd.readlines()]
     print(INSTALL_REQUIRES)
