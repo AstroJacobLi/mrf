@@ -9,11 +9,10 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
-# let's be lazy and put requirements in one place
-# what could possibly go wrong?
 with open('requirements.txt') as infd:
     INSTALL_REQUIRES = [x.strip('\n') for x in infd.readlines()]
     print(INSTALL_REQUIRES)
+
 
 
 setup(name='mrf', 
