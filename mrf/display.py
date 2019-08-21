@@ -1,4 +1,3 @@
-# Import packages
 from __future__ import division, print_function
 import os
 
@@ -25,30 +24,31 @@ from palettable.colorbrewer.sequential import (Greys_9,
                                                Purples_9,
                                                YlGn_9)
 
+__all__ = [
+    "display_single", "display_multiple", "draw_rectangles", 
+    "draw_circles", "display_isophote", "SBP_single", "random_cmap"
+    ]
 
 def random_cmap(ncolors=256, background_color='white'):
-    """Random color maps.
+    """Random color maps, from ``kungpao`` https://github.com/dr-guangtou/kungpao. 
 
     Generate a matplotlib colormap consisting of random (muted) colors.
     A random colormap is very useful for plotting segmentation images.
 
     Parameters
-    ----------
-    ncolors : int, optional
-        The number of colors in the colormap.  The default is 256.
-    random_state : int or `~numpy.random.RandomState`, optional
-        The pseudo-random number generator state used for random
-        sampling.  Separate function calls with the same
-        ``random_state`` will generate the same colormap.
+        ncolors : int, optional
+            The number of colors in the colormap.  The default is 256.
+        random_state : int or ``~numpy.random.RandomState``, optional
+            The pseudo-random number generator state used for random
+            sampling.  Separate function calls with the same
+            ``random_state`` will generate the same colormap.
 
     Returns
-    -------
-    cmap : `matplotlib.colors.Colormap`
-        The matplotlib colormap with random colors.
+        cmap : `matplotlib.colors.Colormap`
+            The matplotlib colormap with random colors.
 
     Notes
-    -----
-    Based on: colormaps.py in photutils
+        Based on: colormaps.py in photutils
 
     """
     prng = np.random.mtrand._rand
@@ -110,19 +110,41 @@ def display_single(img,
                    text_fontsize=30,
                    text_y_offset=0.80,
                    text_color='w'):
-    """Display single image. From `kungpao`.
+    """
+    Display single image using ``arcsinh`` stretching, "zscale" scaling and ``viridis`` colormap as default. 
+    This function is from ``kungpao`` https://github.com/dr-guangtou/kungpao.
 
     Parameters:
+        img (numpy 2-D array): The image array.
+        pixel_scale (float): The pixel size, in unit of "arcsec/pixel".
+        physical_scale (bool): Whether show the image in physical scale.
+        xsize (int): Width of the image, default = 8. 
+        ysize (int): Height of the image, default = 8. 
+        ax (``matplotlib.pyplot.axes`` object): The user could provide axes on which the figure will be drawn.
+        stretch (str): Stretching schemes. Options are "arcsinh", "log", "log10" and "linear".
+        scale (str): Scaling schemes. Options are "zscale" and "percentile".
+        contrast (float): Contrast of figure.
+        no_negative (bool): If true, all negative pixels will be set to zero.
+        lower_percentile (float): Lower percentile, if using ``scale="percentile"``.
+        upper_percentile (float): Upper percentile, if using ``scale="percentile"``.
+        cmap (str): Colormap.
+        scale_bar (bool): Whether show scale bar or not.
+        scale_bar_length (float): The length of scale bar.
+        scale_bar_y_offset (float): Offset of scale bar on y-axis.
+        scale_bar_fontsize (float): Fontsize of scale bar ticks.
+        scale_bar_color (str): Color of scale bar.
+        scale_bar_loc (str): Scale bar position, options are "left" and "right".
+        color_bar (bool): Whether show colorbar or not.
+        add_text (str): The text you want to add to the figure. Note that it is wrapped within ``$\mathrm{}$``.
+        text_fontsize (float): Fontsize of text.
+        text_y_offset (float): Offset of text on y-axis.
+        text_color (str): Color of text.
 
-        img: np 2-D array for image
-
-        xsize: int, default = 8
-            Width of the image.
-
-        ysize: int, default = 8
-            Height of the image.
+    Returns:
+        ax: If the input ``ax`` is not ``None``.
 
     """
+
     if ax is None:
         fig = plt.figure(figsize=(xsize, ysize))
         ax1 = fig.add_subplot(111)
@@ -278,19 +300,7 @@ def _display_single(img,
                    text_fontsize=30,
                    text_y_offset=0.80,
                    text_color='w'):
-    """Display single image. From `kungpao`.
 
-    Parameters
-    ----------
-        img: np 2-D array for image
-
-        xsize: int, default = 8
-            Width of the image.
-
-        ysize: int, default = 8
-            Height of the image.
-
-    """
     if ax is None:
         fig = plt.figure(figsize=(xsize, ysize))
         ax1 = fig.add_subplot(111)
@@ -421,6 +431,19 @@ def _display_single(img,
     return ax1, zmin, zmax
 
 def display_multiple(data_array, text=None, ax=None, **kwargs):
+    """
+    Display multiple images together using the same strecth and scale.
+
+    Parameters:
+        data_array (list): A list containing images which are numpy 2-D arrays.
+        text (str): A list containing strings which you want to add to each panel.
+        ax (list): The user could provide a list of axes on which the figure will be drawn.
+        **kwargs: other arguments in ``display_single``.
+
+    Returns:
+        axes: If the input ``ax`` is not ``None``.
+
+    """
     if ax is None:
         fig, axes = plt.subplots(1, len(data_array), figsize=(len(data_array) * 4, 8))
     else:
@@ -444,6 +467,25 @@ def display_multiple(data_array, text=None, ax=None, **kwargs):
 
 def draw_circles(img, catalog, colnames=['x', 'y'], header=None, ax=None, circle_size=30, 
                  pixel_scale=0.168, color='r', **kwargs):
+    """
+    Draw circles on an image according to a catalogue. 
+
+    Parameters:
+        img (numpy 2-D array): Image itself.
+        catalog (``astropy.table.Table`` object): A catalog which contains positions.
+        colnames (list): List of string, indicating which columns correspond to positions. 
+            It can also be "ra" and "dec", but then "header" is needed.
+        header: Header file of a FITS image containing WCS information, typically ``astropy.io.fits.header`` object.  
+        ax (``matplotlib.pyplot.axes`` object): The user could provide axes on which the figure will be drawn.
+        circle_size (float): Radius of circle, in pixel.
+        pixel_scale (float): Pixel size, in arcsec/pixel. Needed for correct scale bar.
+        color (str): Color of circles.
+        **kwargs: other arguments of ``display_single``. 
+
+    Returns:
+        ax: If the input ``ax`` is not ``None``.
+
+    """
     if ax is None:
         fig = plt.figure(figsize=(12, 12))
         fig.subplots_adjust(left=0.0, right=1.0, 
@@ -486,6 +528,25 @@ def draw_circles(img, catalog, colnames=['x', 'y'], header=None, ax=None, circle
 
 def draw_rectangles(img, catalog, colnames=['x', 'y'], header=None, ax=None, rectangle_size=[30, 30], 
                     pixel_scale=0.168, color='r', **kwargs):
+    """
+    Draw rectangles on an image according to a catalogue. 
+
+    Parameters:
+        img (numpy 2-D array): Image itself.
+        catalog (``astropy.table.Table`` object): A catalog which contains positions.
+        colnames (list): List of string, indicating which columns correspond to positions. 
+            It can also be "ra" and "dec", but then "header" is needed.
+        header: Header file of a FITS image containing WCS information, typically ``astropy.io.fits.header`` object.  
+        ax (``matplotlib.pyplot.axes`` object): The user could provide axes on which the figure will be drawn.
+        rectangle_size (list of floats): Size of rectangles, in pixel.
+        pixel_scale (float): Pixel size, in arcsec/pixel. Needed for correct scale bar.
+        color (str): Color of rectangles.
+        **kwargs: other arguments of ``display_single``. 
+
+    Returns:
+        ax: If the input ``ax`` is not ``None``.
+        
+    """
     if ax is None:
         fig = plt.figure(figsize=(12, 12))
         fig.subplots_adjust(left=0.0, right=1.0, 
@@ -534,20 +595,21 @@ def display_isophote(img, ell, pixel_scale, scale_bar=True, scale_bar_length=50,
     Visualize the isophotes.
     
     Parameters:
-        img: 2-D np.array, image.
+        img (numpy 2-D array): Image array.
         ell: astropy Table or numpy table, is the output of ELLIPSE.
-        pixel_scale: float, pixel scale in arcsec/pixel.
-        scale_bar: boolean, whether show scale bar.
-        scale_bar_length: float, length of scale bar.
-        physical_scale: float. If not None, the scale bar will be shown in physical scale.
-        text: string. If not None, the string will be shown in the upper left corner.
-        contrast: float. Default contrast is 0.15.
-        circle: **list** of floats. Maximun length is 3.
+        pixel_scale (float): Pixel scale in arcsec/pixel. 
+        scale_bar (boolean): Whether show scale bar.
+        scale_bar_length (float): Length of scale bar.
+        physical_scale (float): If not None, the scale bar will be shown in physical scale (kpc).
+        text (string): If not None, the text will be shown in the upper left corner.
+        ax (``matplotlib.pyplot.axes`` object): The user could provide axes on which the figure will be drawn.
+        contrast (float): Default contrast is 0.15.
+        circle (list of floats): This shows several circles with different radii. Maximun three circles.
 
     Returns:
-        ax: matplotlib axes class.
-
+        ax: If the input ``ax`` is not ``None``.
     """
+    
     if ax is None:
         fig = plt.figure(figsize=(12, 12))
         fig.subplots_adjust(left=0.0, right=1.0, 
@@ -622,27 +684,27 @@ def SBP_single(ell_fix, redshift, pixel_scale, zeropoint, ax=None, offset=0.0,
     """Display the 1-D profiles, without showing PA and ellipticity.
     
     Parameters:
-    -----------
-    ell_fix: astropy Table or numpy table, should be the output of ELLIPSE.
-    redshift: float, redshift of the object.
-    pixel_scale: float, pixel scale in arcsec/pixel.
-    zeropoint: float, zeropoint of the photometry system.
-    ax: matplotlib axes class.
-    offset: float.
-    x_min, x_max: float, in ^{1/4} scale.
-    alpha: float, transparency.
-    physical_unit: boolean. If true, the figure will be shown in physical scale.
-    show_dots: boolean. If true, it will show all the data points.
-    show_grid: boolean. If true, it will show a grid.
-    vertical_line: list of floats, positions of vertical lines. Maximum length is three.
-    linecolor, linestyle: string. Color and style of SBP.
-    label: string.
+        ell_fix: astropy Table or numpy table, should be the output of IRAF ELLIPSE.
+        redshift (float): redshift of the object.
+        pixel_scale (float): pixel scale in arcsec/pixel.
+        zeropoint (float): zeropoint of the photometry system.
+        ax (``matplotlib.pyplot.axes`` object): The user could provide axes on which the figure will be drawn.
+        offset (float): offset of single surface brightness profile, in the unit of ``count``. 
+        x_min (float): Minimum value of x-axis, in ``$x^{1/4}$`` scale.
+        x_max (float): Maximum value of x-axis, in ``$x^{1/4}$`` scale.
+        alpha (float): transparency.
+        physical_unit (bool): If true, the figure will be shown in physical scale.
+        show_dots (bool): If true, it will show all the data points.
+        show_grid (bool): If true, it will show a grid.
+        vertical_line (list of floats): positions of vertical lines. Maximum length is three.
+        linecolor (str): Color of surface brightness profile.
+        linestyle (str): Style of surface brightness profile. Could be "--", "-.", etc.
+        label (string): Label of surface brightness profile.
 
     Returns:
-    --------
-    ax: matplotlib axes class.
-
+        ax: If the input ``ax`` is not ``None``.
     """
+
     if ax is None:
         fig = plt.figure(figsize=(10, 10))
         fig.subplots_adjust(left=0.0, right=1.0, 

@@ -8,12 +8,15 @@ from astropy.table import Table, Column
 
 import mrf
 
+__all__ = ["imdelete", "imcopy", "imshift", "magnify", "blkavg"]
+
+
 def imdelete(image, iraf_path=None):
     """
-    Delete `fits` image.
+    Delete ``fits`` image.
 
     Parameters:
-        image: str, name of the image to be deleted. Can also use regex.
+        image: str, name of the image to be deleted. Can also use regex (REGular EXpression).
         iraf_path: directory of "iraf/macosx/".
 
     Returns:
@@ -34,7 +37,7 @@ def imdelete(image, iraf_path=None):
 
 def imcopy(image, output, iraf_path=None):
     """
-    Copy `fits` image.
+    Copy ``fits`` image.
 
     Parameters:
         image: str, name of the image to be deleted. Can also use regex.
@@ -63,12 +66,12 @@ def imcopy(image, output, iraf_path=None):
 
 def imshift(image, output, xshift, yshift, interp_type='poly3', boundary_type='constant', iraf_path=None):
     """
-    Shift `fits` image. https://iraf.net/irafhelp.php?val=imshift&help=Help+Page
+    Shift ``fits`` image, see https://iraf.net/irafhelp.php?val=imshift&help=Help+Page. 
 
     Parameters:
         image: str, name of the image to be deleted. Can also use regex.
         output: str, name of output image.
-        xshift, yshift: float, shift pixels in x and y.
+        xshift and yshift: float, shift pixels in x and y.
         interp_type: str, interpolant type. Available methods: 
             "nearest", "linear", "poly3", "poly5", "spline3", "sinc", "drizzle".
         boundary_type: str, available methods: "nearest", "constant", "reflect" and "wrap". 
@@ -104,12 +107,20 @@ def magnify(image, output, xmag, ymag, x1="INDEF", x2="INDEF", y1="INDEF", y2="I
             interpolant='poly3', boundary='constant', fluxconserve='yes',
             logfile="STDOUT", iraf_path=None):
     """
-    Magnify `fits` image. https://iraf.net/irafhelp.php?val=imgeom.magnify&help=Help+Page
+    Magnify ``fits`` image, see https://iraf.net/irafhelp.php?val=imgeom.magnify&help=Help+Page. 
 
     Parameters:
         image: str, name of the image to be deleted. Can also use regex.
         output: str, name of output image.
-        xshift, yshift: float, shift pixels in x and y.
+        xmag(ymag): float, shift pixels in x and y.
+        x1(x2): The starting and ending coordinates in x in the input image 
+            which become the first and last pixel in x in the magnified image. 
+            The values need not be integers. If indefinite the values default to 
+            the first and last pixel in x of the input image; i.e. a value of 1 and nx.
+        y1(y2): The starting and ending coordinates in y in the input image 
+            which become the first and last pixel in y in the magnified image. 
+            The values need not be integers. If indefinite the values default to 
+            the first and last pixel in y of the input image; i.e. a value of 1 and ny.
         interp_type: str, interpolant type. Available methods: 
             "nearest", "linear", "poly3", "poly5", "spline3", "sinc", "lsinc", "drizzle".
         boundary_type: str, available methods: "nearest", "constant", "reflect" and "wrap". 
@@ -150,12 +161,13 @@ def magnify(image, output, xmag, ymag, x1="INDEF", x2="INDEF", y1="INDEF", y2="I
 
 def blkavg(image, output, b1, b2, option="sum", iraf_path=None):
     """
-    Block average `fits` image. https://iraf.net/irafhelp.php?val=imgeom.magnify&help=Help+Page
+    Block average ``fits`` image, see https://iraf.net/irafhelp.php?val=imgeom.magnify&help=Help+Page.
 
     Parameters:
         image: str, name of the image to be deleted. Can also use regex.
         output: str, name of output image.
-        b1, b2: block size (column, row).
+        b1: block size (column).
+        b2: block size (row).
         option: str, choices are "sum" and "average".
     
     Returns:

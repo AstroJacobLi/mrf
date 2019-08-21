@@ -14,8 +14,6 @@ with open('requirements.txt') as infd:
     INSTALL_REQUIRES = [x.strip('\n') for x in infd.readlines()]
     print(INSTALL_REQUIRES)
 
-
-
 setup(name='mrf', 
 	version=__version__,
 	description='Subtracting compact objects from Dragonfly image',

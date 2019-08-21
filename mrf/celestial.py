@@ -16,10 +16,10 @@ from .imtools import imshift, imdelete, magnify, blkavg
 
 class Celestial(object):
     '''
-    Class for `Celestial` object.
+    Class for ``Celestial`` object. 
     '''
     def __init__(self, img, mask=None, header=None, dataset='Dragonfly'):
-        '''Initialize `Celestial` object'''
+        '''Initialize ``Celestial`` object'''
         try:
             self.pixel_scale = abs(header['CD1_1'] * 3600)
         except:
@@ -75,12 +75,12 @@ class Celestial(object):
     def variance(self, variance_array):
         self._variance = variance_array
 
-    # Save 2-D numpy array to `fits`
+    # Save 2-D numpy array to ``fits``
     def save_to_fits(self, fits_file_name, data='image', overwrite=True):
-        """Save numpy 2-D arrays to `fits` file. (from `kungpao`)
+        """Save numpy 2-D arrays to ``fits`` file. (from ``kungpao``)
         Parameters:
             data (str): can be 'image' or 'mask'
-            fits_file_name (str): File name of `fits` file
+            fits_file_name (str): File name of ``fits`` file
             overwrite (bool): Default is True
 
         Returns:
@@ -143,7 +143,7 @@ class Celestial(object):
                 from galsim import Image, InterpolatedImage
                 from galsim.fitswcs import AstropyWCS
             except:
-                raise ImportError('# Import `galsim` failed! Please check if `galsim` is installed!')
+                raise ImportError('# Import ``galsim`` failed! Please check if ``galsim`` is installed!')
             # Begin shift
             assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
             galimg = InterpolatedImage(Image(self.image, dtype=float), 
@@ -196,7 +196,7 @@ class Celestial(object):
                 from galsim import Image, InterpolatedImage
                 from galsim.fitswcs import AstropyWCS
             except:
-                raise ImportError('# Import `galsim` failed! Please check if `galsim` is installed!')
+                raise ImportError('# Import ``galsim`` failed! Please check if ``galsim`` is installed!')
             # Begin shift
             assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
             galimg = InterpolatedImage(Image(self.mask, dtype=float), 
@@ -262,7 +262,7 @@ class Celestial(object):
                 from galsim import Image, InterpolatedImage
                 from galsim.fitswcs import AstropyWCS
             except:
-                raise ImportError('# Import `galsim` failed! Please check if `galsim` is installed!')
+                raise ImportError('# Import ``galsim`` failed! Please check if ``galsim`` is installed!')
 
             assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
             galimg = InterpolatedImage(Image(self.image, dtype=float), 
@@ -313,7 +313,7 @@ class Celestial(object):
                 from galsim import Image, InterpolatedImage
                 from galsim.fitswcs import AstropyWCS
             except:
-                raise ImportError('# Import `galsim` failed! Please check if `galsim` is installed!')
+                raise ImportError('# Import ``galsim`` failed! Please check if ``galsim`` is installed!')
 
             assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
             galimg = InterpolatedImage(Image(self.mask, dtype=float), 
@@ -377,7 +377,8 @@ class Celestial(object):
 
 class Star(Celestial):
     def __init__(self, img, header, starobj, halosize=40, padsize=40, mask=None, hscmask=None):
-        """Halosize is the radius!!!
+        """
+        Halosize is the radius!!!
         RA, DEC are not supported yet!
         """
         Celestial.__init__(self, img, mask, header=header)
@@ -431,7 +432,7 @@ class Star(Celestial):
 
     def sub_bkg(self, verbose=True):
         # Here I subtract local sky background
-        # Evaluate local sky backgroud within `halo_i`
+        # Evaluate local sky backgroud within ``halo_i``
         # Actually this should be estimated in larger cutuouts.
         # So make another cutout (larger)!
         from astropy.convolution import convolve, Box2DKernel
@@ -450,7 +451,7 @@ class Star(Celestial):
 
     def get_masked_image(self, cval=np.nan):
         if not hasattr(self, 'mask'):
-            print("This `Star` object doesn't have a `mask`!")
+            print("This ``Star`` object doesn't have a ``mask``!")
             return self.image
         else:
             imgcp = copy.copy(self.image)
