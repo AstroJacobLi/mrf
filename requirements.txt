@@ -8,4 +8,4 @@ palettable
 shapely
 reproject
 tqdm
-yaml
+PyYAML
