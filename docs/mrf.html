@@ -1,0 +1,1272 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>mrf package &#8212; mrf 0.7.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="mrf-package">
+<h1>mrf package<a class="headerlink" href="#mrf-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-mrf.celestial">
+<span id="mrf-celestial-module"></span><h2>mrf.celestial module<a class="headerlink" href="#module-mrf.celestial" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mrf.celestial.Celestial">
+<em class="property">class </em><code class="sig-prename descclassname">mrf.celestial.</code><code class="sig-name descname">Celestial</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">mask=None</em>, <em class="sig-param">header=None</em>, <em class="sig-param">dataset='Dragonfly'</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Celestial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for <cite>Celestial</cite> object.</p>
+<dl class="method">
+<dt id="mrf.celestial.Celestial.display_Celestial">
+<code class="sig-name descname">display_Celestial</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Celestial.display_Celestial" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.display_image">
+<code class="sig-name descname">display_image</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Celestial.display_image" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.display_mask">
+<code class="sig-name descname">display_mask</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Celestial.display_mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.hscmask">
+<em class="property">property </em><code class="sig-name descname">hscmask</code><a class="headerlink" href="#mrf.celestial.Celestial.hscmask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.image">
+<em class="property">property </em><code class="sig-name descname">image</code><a class="headerlink" href="#mrf.celestial.Celestial.image" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.mask">
+<em class="property">property </em><code class="sig-name descname">mask</code><a class="headerlink" href="#mrf.celestial.Celestial.mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.resize_Celestial">
+<code class="sig-name descname">resize_Celestial</code><span class="sig-paren">(</span><em class="sig-param">f</em>, <em class="sig-param">method='iraf'</em>, <em class="sig-param">order=5</em>, <em class="sig-param">cval=0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Celestial.resize_Celestial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resize the Celestial object. f &gt; 1 means the image will be resampled! f &lt; 1 means the image will be degraded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>angle</strong> (<em>float</em>) – rotation angle in degress, counterclockwise.</p></li>
+<li><p><strong>order</strong> (<em>int</em>) – the order of spline interpolation, can be in the range 0-5.</p></li>
+<li><p><strong>reshape</strong> (<em>bool</em>) – if True, the output shape is adapted so that the rorated image
+is contained completely in the output array.</p></li>
+<li><p><strong>cval</strong> (<em>scalar</em>) – value to fill the edges. Default is NaN.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.resize_image">
+<code class="sig-name descname">resize_image</code><span class="sig-paren">(</span><em class="sig-param">f</em>, <em class="sig-param">method='iraf'</em>, <em class="sig-param">order=5</em>, <em class="sig-param">cval=0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Celestial.resize_image" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Zoom/Resize the image of Celestial object.</dt><dd><p>f &gt; 1 means the image will be resampled (finer)! f &lt; 1 means the image will be degraded.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f</strong> (<em>float</em>) – the positive factor of zoom. If 0 &lt; f &lt; 1, the image will be resized to smaller one.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – interpolation method. Use ‘lanczos’ or ‘spline’ or ‘iraf’.</p></li>
+<li><p><strong>order</strong> (<em>int</em>) – the order Lanczos interpolation (&gt;0).</p></li>
+<li><p><strong>cval</strong> (<em>scalar</em>) – value to fill the edges. Default is NaN.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ndarray.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>shift_image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.resize_mask">
+<code class="sig-name descname">resize_mask</code><span class="sig-paren">(</span><em class="sig-param">f</em>, <em class="sig-param">method='iraf'</em>, <em class="sig-param">order=5</em>, <em class="sig-param">cval=0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Celestial.resize_mask" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Zoom/Resize the mask of Celestial object.</dt><dd><p>f &gt; 1 means the mask will be resampled (finer)! f &lt; 1 means the mask will be degraded.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f</strong> (<em>float</em>) – the positive factor of zoom. If 0 &lt; f &lt; 1, the mask will be resized to smaller one.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – interpolation method. Use ‘lanczos’ or ‘spline’ or ‘iraf’.</p></li>
+<li><p><strong>order</strong> (<em>int</em>) – the order Lanczos interpolation (&gt;0).</p></li>
+<li><p><strong>cval</strong> (<em>scalar</em>) – value to fill the edges. Default is NaN.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ndarray.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>shift_image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.save_to_fits">
+<code class="sig-name descname">save_to_fits</code><span class="sig-paren">(</span><em class="sig-param">fits_file_name</em>, <em class="sig-param">data='image'</em>, <em class="sig-param">overwrite=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Celestial.save_to_fits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save numpy 2-D arrays to <cite>fits</cite> file. (from <cite>kungpao</cite>)
+:param data: can be ‘image’ or ‘mask’
+:type data: str
+:param fits_file_name: File name of <cite>fits</cite> file
+:type fits_file_name: str
+:param overwrite: Default is True
+:type overwrite: bool</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.shift_Celestial">
+<code class="sig-name descname">shift_Celestial</code><span class="sig-paren">(</span><em class="sig-param">dx</em>, <em class="sig-param">dy</em>, <em class="sig-param">method='iraf'</em>, <em class="sig-param">order=5</em>, <em class="sig-param">cval=0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Celestial.shift_Celestial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shift the Celestial object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dy</strong> (<em>dx</em><em>,</em>) – shift distance (in pixel) along x (horizontal) and y (vertical).
+Note that elements in one row has the same y but different x.
+Example: dx = 2 is to shift the image “RIGHT”, dy = 3 is to shift the image “UP”.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – interpolation method. Use ‘lanczos’ or ‘spline’.</p></li>
+<li><p><strong>order</strong> (<em>int</em>) – the order of spline interpolation (within 0-5) or Lanczos interpolation (&gt;0).</p></li>
+<li><p><strong>cval</strong> (<em>scalar</em>) – value to fill the edges. Default is NaN.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.shift_image">
+<code class="sig-name descname">shift_image</code><span class="sig-paren">(</span><em class="sig-param">dx</em>, <em class="sig-param">dy</em>, <em class="sig-param">method='iraf'</em>, <em class="sig-param">order=5</em>, <em class="sig-param">cval=0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Celestial.shift_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shift the image of Celestial object. The WCS of image will also be changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dy</strong> (<em>dx</em><em>,</em>) – shift distance (in pixel) along x (horizontal) and y (vertical).
+Note that elements in one row has the same y but different x.
+Example: dx = 2 is to shift the image “RIGHT”, dy = 3 is to shift the image “UP”.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – interpolation method. Use ‘lanczos’ or ‘iraf’.
+If using ‘iraf’, default interpolation is ‘poly3.</p></li>
+<li><p><strong>order</strong> (<em>int</em>) – the order of Lanczos interpolation (&gt;0).</p></li>
+<li><p><strong>cval</strong> (<em>scalar</em>) – value to fill the edges. Default is NaN.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ndarray.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>shift_image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.shift_mask">
+<code class="sig-name descname">shift_mask</code><span class="sig-paren">(</span><em class="sig-param">dx</em>, <em class="sig-param">dy</em>, <em class="sig-param">method='iraf'</em>, <em class="sig-param">order=5</em>, <em class="sig-param">cval=0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Celestial.shift_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shift the mask of Celestial object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dy</strong> (<em>dx</em><em>,</em>) – shift distance (in pixel) along x (horizontal) and y (vertical).
+Note that elements in one row has the same y but different x.
+Example: dx = 2 is to shift the image “RIGHT”, dy = 3 is to shift the image “UP”.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – interpolation method. Use ‘lanczos’ or ‘spline’ or ‘iraf’</p></li>
+<li><p><strong>order</strong> (<em>int</em>) – the order of spline interpolation (within 0-5) or Lanczos interpolation (&gt;0).</p></li>
+<li><p><strong>cval</strong> (<em>scalar</em>) – value to fill the edges. Default is NaN.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ndarray.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>shift_mask</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Celestial.variance">
+<em class="property">property </em><code class="sig-name descname">variance</code><a class="headerlink" href="#mrf.celestial.Celestial.variance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mrf.celestial.Star">
+<em class="property">class </em><code class="sig-prename descclassname">mrf.celestial.</code><code class="sig-name descname">Star</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">header</em>, <em class="sig-param">starobj</em>, <em class="sig-param">halosize=40</em>, <em class="sig-param">padsize=40</em>, <em class="sig-param">mask=None</em>, <em class="sig-param">hscmask=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Star" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mrf.celestial.Celestial" title="mrf.celestial.Celestial"><code class="xref py py-class docutils literal notranslate"><span class="pre">mrf.celestial.Celestial</span></code></a></p>
+<dl class="method">
+<dt id="mrf.celestial.Star.centralize">
+<code class="sig-name descname">centralize</code><span class="sig-paren">(</span><em class="sig-param">method='iraf'</em>, <em class="sig-param">order=5</em>, <em class="sig-param">cval=0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Star.centralize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Star.get_masked_image">
+<code class="sig-name descname">get_masked_image</code><span class="sig-paren">(</span><em class="sig-param">cval=nan</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Star.get_masked_image" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Star.mask_out_contam">
+<code class="sig-name descname">mask_out_contam</code><span class="sig-paren">(</span><em class="sig-param">blowup=True</em>, <em class="sig-param">show_fig=True</em>, <em class="sig-param">verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Star.mask_out_contam" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mrf.celestial.Star.sub_bkg">
+<code class="sig-name descname">sub_bkg</code><span class="sig-paren">(</span><em class="sig-param">verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.celestial.Star.sub_bkg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mrf.display">
+<span id="mrf-display-module"></span><h2>mrf.display module<a class="headerlink" href="#module-mrf.display" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mrf.display.SBP_single">
+<code class="sig-prename descclassname">mrf.display.</code><code class="sig-name descname">SBP_single</code><span class="sig-paren">(</span><em class="sig-param">ell_fix</em>, <em class="sig-param">redshift</em>, <em class="sig-param">pixel_scale</em>, <em class="sig-param">zeropoint</em>, <em class="sig-param">ax=None</em>, <em class="sig-param">offset=0.0</em>, <em class="sig-param">x_min=1.0</em>, <em class="sig-param">x_max=4.0</em>, <em class="sig-param">alpha=1</em>, <em class="sig-param">physical_unit=False</em>, <em class="sig-param">show_dots=False</em>, <em class="sig-param">show_grid=False</em>, <em class="sig-param">show_banner=True</em>, <em class="sig-param">vertical_line=None</em>, <em class="sig-param">linecolor='firebrick'</em>, <em class="sig-param">linestyle='-'</em>, <em class="sig-param">linewidth=3</em>, <em class="sig-param">labelsize=25</em>, <em class="sig-param">ticksize=30</em>, <em class="sig-param">label='SBP'</em>, <em class="sig-param">labelloc='lower left'</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.display.SBP_single" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the 1-D profiles, without showing PA and ellipticity.</p>
+<p>ell_fix: astropy Table or numpy table, should be the output of ELLIPSE.
+redshift: float, redshift of the object.
+pixel_scale: float, pixel scale in arcsec/pixel.
+zeropoint: float, zeropoint of the photometry system.
+ax: matplotlib axes class.
+offset: float.
+x_min, x_max: float, in ^{1/4} scale.
+alpha: float, transparency.
+physical_unit: boolean. If true, the figure will be shown in physical scale.
+show_dots: boolean. If true, it will show all the data points.
+show_grid: boolean. If true, it will show a grid.
+vertical_line: list of floats, positions of vertical lines. Maximum length is three.
+linecolor, linestyle: string. Color and style of SBP.
+label: string.</p>
+<p>ax: matplotlib axes class.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.display.display_isophote">
+<code class="sig-prename descclassname">mrf.display.</code><code class="sig-name descname">display_isophote</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">ell</em>, <em class="sig-param">pixel_scale</em>, <em class="sig-param">scale_bar=True</em>, <em class="sig-param">scale_bar_length=50</em>, <em class="sig-param">physical_scale=None</em>, <em class="sig-param">text=None</em>, <em class="sig-param">ax=None</em>, <em class="sig-param">contrast=None</em>, <em class="sig-param">circle=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.display.display_isophote" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize the isophotes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> – 2-D np.array, image.</p></li>
+<li><p><strong>ell</strong> – astropy Table or numpy table, is the output of ELLIPSE.</p></li>
+<li><p><strong>pixel_scale</strong> – float, pixel scale in arcsec/pixel.</p></li>
+<li><p><strong>scale_bar</strong> – boolean, whether show scale bar.</p></li>
+<li><p><strong>scale_bar_length</strong> – float, length of scale bar.</p></li>
+<li><p><strong>physical_scale</strong> – float. If not None, the scale bar will be shown in physical scale.</p></li>
+<li><p><strong>text</strong> – string. If not None, the string will be shown in the upper left corner.</p></li>
+<li><p><strong>contrast</strong> – float. Default contrast is 0.15.</p></li>
+<li><p><strong>circle</strong> – <strong>list</strong> of floats. Maximun length is 3.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>matplotlib axes class.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ax</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.display.display_multiple">
+<code class="sig-prename descclassname">mrf.display.</code><code class="sig-name descname">display_multiple</code><span class="sig-paren">(</span><em class="sig-param">data_array</em>, <em class="sig-param">text=None</em>, <em class="sig-param">ax=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.display.display_multiple" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="mrf.display.display_single">
+<code class="sig-prename descclassname">mrf.display.</code><code class="sig-name descname">display_single</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">pixel_scale=0.168</em>, <em class="sig-param">physical_scale=None</em>, <em class="sig-param">xsize=8</em>, <em class="sig-param">ysize=8</em>, <em class="sig-param">ax=None</em>, <em class="sig-param">stretch='arcsinh'</em>, <em class="sig-param">scale='zscale'</em>, <em class="sig-param">contrast=0.25</em>, <em class="sig-param">no_negative=False</em>, <em class="sig-param">lower_percentile=1.0</em>, <em class="sig-param">upper_percentile=99.0</em>, <em class="sig-param">cmap=&lt;matplotlib.colors.ListedColormap object&gt;</em>, <em class="sig-param">scale_bar=True</em>, <em class="sig-param">scale_bar_length=5.0</em>, <em class="sig-param">scale_bar_fontsize=20</em>, <em class="sig-param">scale_bar_y_offset=0.5</em>, <em class="sig-param">scale_bar_color='w'</em>, <em class="sig-param">scale_bar_loc='left'</em>, <em class="sig-param">color_bar=False</em>, <em class="sig-param">color_bar_loc=1</em>, <em class="sig-param">color_bar_width='75%'</em>, <em class="sig-param">color_bar_height='5%'</em>, <em class="sig-param">color_bar_fontsize=18</em>, <em class="sig-param">color_bar_color='w'</em>, <em class="sig-param">add_text=None</em>, <em class="sig-param">text_fontsize=30</em>, <em class="sig-param">text_y_offset=0.8</em>, <em class="sig-param">text_color='w'</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.display.display_single" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display single image. From <cite>kungpao</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> – np 2-D array for image</p></li>
+<li><p><strong>xsize</strong> – int, default = 8
+Width of the image.</p></li>
+<li><p><strong>ysize</strong> – int, default = 8
+Height of the image.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.display.draw_circles">
+<code class="sig-prename descclassname">mrf.display.</code><code class="sig-name descname">draw_circles</code><span class="sig-paren">(</span><em class="sig-param">img, catalog, colnames=['x', 'y'], header=None, ax=None, circle_size=30, pixel_scale=0.168, color='r', **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.display.draw_circles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="mrf.display.draw_rectangles">
+<code class="sig-prename descclassname">mrf.display.</code><code class="sig-name descname">draw_rectangles</code><span class="sig-paren">(</span><em class="sig-param">img, catalog, colnames=['x', 'y'], header=None, ax=None, rectangle_size=[30, 30], pixel_scale=0.168, color='r', **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.display.draw_rectangles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="mrf.display.random_cmap">
+<code class="sig-prename descclassname">mrf.display.</code><code class="sig-name descname">random_cmap</code><span class="sig-paren">(</span><em class="sig-param">ncolors=256</em>, <em class="sig-param">background_color='white'</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.display.random_cmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Random color maps.</p>
+<p>Generate a matplotlib colormap consisting of random (muted) colors.
+A random colormap is very useful for plotting segmentation images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ncolors</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of colors in the colormap.  The default is 256.</p></li>
+<li><p><strong>random_state</strong> (int or <cite>~numpy.random.RandomState</cite>, optional) – The pseudo-random number generator state used for random
+sampling.  Separate function calls with the same
+<code class="docutils literal notranslate"><span class="pre">random_state</span></code> will generate the same colormap.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>cmap</strong> – The matplotlib colormap with random colors.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><cite>matplotlib.colors.Colormap</cite></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Based on: colormaps.py in photutils</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-mrf.download">
+<span id="mrf-download-module"></span><h2>mrf.download module<a class="headerlink" href="#module-mrf.download" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mrf.download.TqdmUpTo">
+<em class="property">class </em><code class="sig-prename descclassname">mrf.download.</code><code class="sig-name descname">TqdmUpTo</code><span class="sig-paren">(</span><em class="sig-param">iterable=None</em>, <em class="sig-param">desc=None</em>, <em class="sig-param">total=None</em>, <em class="sig-param">leave=True</em>, <em class="sig-param">file=None</em>, <em class="sig-param">ncols=None</em>, <em class="sig-param">mininterval=0.1</em>, <em class="sig-param">maxinterval=10.0</em>, <em class="sig-param">miniters=None</em>, <em class="sig-param">ascii=None</em>, <em class="sig-param">disable=False</em>, <em class="sig-param">unit='it'</em>, <em class="sig-param">unit_scale=False</em>, <em class="sig-param">dynamic_ncols=False</em>, <em class="sig-param">smoothing=0.3</em>, <em class="sig-param">bar_format=None</em>, <em class="sig-param">initial=0</em>, <em class="sig-param">position=None</em>, <em class="sig-param">postfix=None</em>, <em class="sig-param">unit_divisor=1000</em>, <em class="sig-param">gui=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.download.TqdmUpTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tqdm._tqdm.tqdm</span></code></p>
+<p>Provides <cite>update_to(n)</cite> which uses <cite>tqdm.update(delta_n)</cite>.</p>
+<dl class="method">
+<dt id="mrf.download.TqdmUpTo.update_to">
+<code class="sig-name descname">update_to</code><span class="sig-paren">(</span><em class="sig-param">b=1</em>, <em class="sig-param">bsize=1</em>, <em class="sig-param">tsize=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.download.TqdmUpTo.update_to" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>b<span class="classifier">int, optional</span></dt><dd><p>Number of blocks transferred so far [default: 1].</p>
+</dd>
+<dt>bsize<span class="classifier">int, optional</span></dt><dd><p>Size of each block (in tqdm units) [default: 1].</p>
+</dd>
+<dt>tsize<span class="classifier">int, optional</span></dt><dd><p>Total size (in tqdm units). If [default: None] remains unchanged.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.download.download_cfht_megapipe">
+<code class="sig-prename descclassname">mrf.download.</code><code class="sig-name descname">download_cfht_megapipe</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">header</em>, <em class="sig-param">band='g'</em>, <em class="sig-param">mega_cat_dir='_megapipe_cat.csv'</em>, <em class="sig-param">output_dir='./'</em>, <em class="sig-param">output_name='CFHT_megapipe_img'</em>, <em class="sig-param">overwrite=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.download.download_cfht_megapipe" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Download CFHT MegaPipe frame catalog of given (ra, dec) and image size.</dt><dd><p>This could be really <strong>TIME CONSUMING</strong>!!!</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>numpy 2-D array</em>) – input image, usually low-resolution image (such as Dragonfly).</p></li>
+<li><p><strong>header</strong> (<em>astropy.io.fits.header object</em>) – header of the input image.</p></li>
+<li><p><strong>band</strong> (<em>string</em>) – such as ‘g’ (‘G’) and ‘r’ (‘R’).</p></li>
+<li><p><strong>mega_cat_dir</strong> (<em>string</em>) – the directory of MegaPipe catalog,
+which is downloaded by <cite>get_megapipe_catalog</cite>.</p></li>
+<li><p><strong>output_dir</strong> (<em>string</em>) – the CFHT images will be downloaded here.</p></li>
+<li><p><strong>output_name</strong> (<em>string</em>) – name of CFHT images, as you can change</p></li>
+<li><p><strong>overwrite</strong> – bool, it will overwrite the image if <cite>overwrite=True</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.download.download_highres">
+<code class="sig-prename descclassname">mrf.download.</code><code class="sig-name descname">download_highres</code><span class="sig-paren">(</span><em class="sig-param">lowres_dir</em>, <em class="sig-param">high_res='hsc'</em>, <em class="sig-param">band='g'</em>, <em class="sig-param">overwrite=False</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.download.download_highres" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Download high resolution image which overlaps with the given low resolution image.</dt><dd><p>This could be <strong>TIME CONSUMING</strong>!</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lowres_dir</strong> (<em>string</em>) – the directory of input low-resolution image.</p></li>
+<li><p><strong>high_res</strong> (<em>string</em>) – name of high-resolution survey, now support ‘HSC’ and ‘CFHT’.</p></li>
+<li><p><strong>band</strong> (<em>string</em>) – name of filter, typically ‘g’ or ‘r’.</p></li>
+<li><p><strong>overwrite</strong> – bool, it will overwrite the image if <cite>overwrite=True</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.download.get_megapipe_catalog">
+<code class="sig-prename descclassname">mrf.download.</code><code class="sig-name descname">get_megapipe_catalog</code><span class="sig-paren">(</span><em class="sig-param">ra</em>, <em class="sig-param">dec</em>, <em class="sig-param">size</em>, <em class="sig-param">output_filename='_megapipe_cat.csv'</em>, <em class="sig-param">overwrite=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.download.get_megapipe_catalog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download CFHT MegaPipe frame catalog of given (ra, dec) and image size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dec</strong> (<em>ra</em><em>,</em>) – float, in degree</p></li>
+<li><p><strong>size</strong> – use <cite>astropy.units</cite>. e.g. <cite>size = 300 * u.arcsec</cite>.
+If not in <cite>astropy.units</cite> form, then default units are
+‘arcsec’.</p></li>
+<li><p><strong>output_filename</strong> – string. The file will be saved here.</p></li>
+<li><p><strong>overwrite</strong> – bool, it will overwrite the catalog if <cite>overwrite=True</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.download.megapipe_query_sql">
+<code class="sig-prename descclassname">mrf.download.</code><code class="sig-name descname">megapipe_query_sql</code><span class="sig-paren">(</span><em class="sig-param">ra</em>, <em class="sig-param">dec</em>, <em class="sig-param">size</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.download.megapipe_query_sql" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return SQL query sentence of CFHT megapipe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dec</strong> (<em>ra</em><em>,</em>) – float, in degree</p></li>
+<li><p><strong>size</strong> – float, in degree.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>need to be opened by <cite>wget</cite> or <cite>curl</cite></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>url</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.download.overlap_fraction">
+<code class="sig-prename descclassname">mrf.download.</code><code class="sig-name descname">overlap_fraction</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">header</em>, <em class="sig-param">frame</em>, <em class="sig-param">is_print=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.download.overlap_fraction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="mrf.download.wget_cfht">
+<code class="sig-prename descclassname">mrf.download.</code><code class="sig-name descname">wget_cfht</code><span class="sig-paren">(</span><em class="sig-param">frame</em>, <em class="sig-param">band</em>, <em class="sig-param">output_dir</em>, <em class="sig-param">output_name</em>, <em class="sig-param">overwrite=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.download.wget_cfht" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-mrf.imtools">
+<span id="mrf-imtools-module"></span><h2>mrf.imtools module<a class="headerlink" href="#module-mrf.imtools" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mrf.imtools.blkavg">
+<code class="sig-prename descclassname">mrf.imtools.</code><code class="sig-name descname">blkavg</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">output</em>, <em class="sig-param">b1</em>, <em class="sig-param">b2</em>, <em class="sig-param">option='sum'</em>, <em class="sig-param">iraf_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.imtools.blkavg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Block average <cite>fits</cite> image. <a class="reference external" href="https://iraf.net/irafhelp.php?val=imgeom.magnify&amp;help=Help+Page">https://iraf.net/irafhelp.php?val=imgeom.magnify&amp;help=Help+Page</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – str, name of the image to be deleted. Can also use regex.</p></li>
+<li><p><strong>output</strong> – str, name of output image.</p></li>
+<li><p><strong>b2</strong> (<em>b1</em><em>,</em>) – block size (column, row).</p></li>
+<li><p><strong>option</strong> – str, choices are “sum” and “average”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.imtools.imcopy">
+<code class="sig-prename descclassname">mrf.imtools.</code><code class="sig-name descname">imcopy</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">output</em>, <em class="sig-param">iraf_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.imtools.imcopy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy <cite>fits</cite> image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – str, name of the image to be deleted. Can also use regex.</p></li>
+<li><p><strong>output</strong> – str, name of output image.</p></li>
+<li><p><strong>iraf_path</strong> – directory of “iraf/macosx/”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.imtools.imdelete">
+<code class="sig-prename descclassname">mrf.imtools.</code><code class="sig-name descname">imdelete</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">iraf_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.imtools.imdelete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete <cite>fits</cite> image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – str, name of the image to be deleted. Can also use regex.</p></li>
+<li><p><strong>iraf_path</strong> – directory of “iraf/macosx/”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.imtools.imshift">
+<code class="sig-prename descclassname">mrf.imtools.</code><code class="sig-name descname">imshift</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">output</em>, <em class="sig-param">xshift</em>, <em class="sig-param">yshift</em>, <em class="sig-param">interp_type='poly3'</em>, <em class="sig-param">boundary_type='constant'</em>, <em class="sig-param">iraf_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.imtools.imshift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shift <cite>fits</cite> image. <a class="reference external" href="https://iraf.net/irafhelp.php?val=imshift&amp;help=Help+Page">https://iraf.net/irafhelp.php?val=imshift&amp;help=Help+Page</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – str, name of the image to be deleted. Can also use regex.</p></li>
+<li><p><strong>output</strong> – str, name of output image.</p></li>
+<li><p><strong>yshift</strong> (<em>xshift</em><em>,</em>) – float, shift pixels in x and y.</p></li>
+<li><p><strong>interp_type</strong> – str, interpolant type. Available methods:
+“nearest”, “linear”, “poly3”, “poly5”, “spline3”, “sinc”, “drizzle”.</p></li>
+<li><p><strong>boundary_type</strong> – str, available methods: “nearest”, “constant”, “reflect” and “wrap”.
+If use constant, fill the value with zero.</p></li>
+<li><p><strong>iraf_path</strong> – directory of “iraf/macosx/”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.imtools.magnify">
+<code class="sig-prename descclassname">mrf.imtools.</code><code class="sig-name descname">magnify</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">output</em>, <em class="sig-param">xmag</em>, <em class="sig-param">ymag</em>, <em class="sig-param">x1='INDEF'</em>, <em class="sig-param">x2='INDEF'</em>, <em class="sig-param">y1='INDEF'</em>, <em class="sig-param">y2='INDEF'</em>, <em class="sig-param">interpolant='poly3'</em>, <em class="sig-param">boundary='constant'</em>, <em class="sig-param">fluxconserve='yes'</em>, <em class="sig-param">logfile='STDOUT'</em>, <em class="sig-param">iraf_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.imtools.magnify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Magnify <cite>fits</cite> image. <a class="reference external" href="https://iraf.net/irafhelp.php?val=imgeom.magnify&amp;help=Help+Page">https://iraf.net/irafhelp.php?val=imgeom.magnify&amp;help=Help+Page</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – str, name of the image to be deleted. Can also use regex.</p></li>
+<li><p><strong>output</strong> – str, name of output image.</p></li>
+<li><p><strong>yshift</strong> (<em>xshift</em><em>,</em>) – float, shift pixels in x and y.</p></li>
+<li><p><strong>interp_type</strong> – str, interpolant type. Available methods:
+“nearest”, “linear”, “poly3”, “poly5”, “spline3”, “sinc”, “lsinc”, “drizzle”.</p></li>
+<li><p><strong>boundary_type</strong> – str, available methods: “nearest”, “constant”, “reflect” and “wrap”.
+If use constant, fill the value with zero.</p></li>
+<li><p><strong>fluxconserve</strong> – str, whether conserve flux.</p></li>
+<li><p><strong>iraf_path</strong> – directory of “iraf/macosx/”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-mrf.task">
+<span id="mrf-task-module"></span><h2>mrf.task module<a class="headerlink" href="#module-mrf.task" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mrf.task.Config">
+<em class="property">class </em><code class="sig-prename descclassname">mrf.task.</code><code class="sig-name descname">Config</code><span class="sig-paren">(</span><em class="sig-param">d</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.task.Config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration class.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrf.task.MrfTask">
+<em class="property">class </em><code class="sig-prename descclassname">mrf.task.</code><code class="sig-name descname">MrfTask</code><span class="sig-paren">(</span><em class="sig-param">config_file</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.task.MrfTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>MRF task class. This class implements <cite>mrf</cite>.</p>
+<dl class="method">
+<dt id="mrf.task.MrfTask.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">dir_lowres</em>, <em class="sig-param">dir_hires_b</em>, <em class="sig-param">dir_hires_r</em>, <em class="sig-param">certain_gal_cat</em>, <em class="sig-param">output_name='mrf'</em>, <em class="sig-param">verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.task.MrfTask.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run MRF task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dir_lowres</strong> – string, directory of input low-resolution image.</p></li>
+<li><p><strong>dir_hires_b</strong> – string, directory of input high-resolution blue-band image (typically g-band).</p></li>
+<li><p><strong>dir_hires_r</strong> – string, directory of input high-resolution red-band image (typically r-band).</p></li>
+<li><p><strong>certain_gal_cat</strong> – string, directory of a catalog (in ascii format) which contains
+RA and DEC of galaxies which you want to retain during MRF.</p></li>
+<li><p><strong>output_name</strong> – string, which will be the prefix of output files.</p></li>
+<li><p><strong>verbose</strong> – bool. If True, it will make a log file recording the process.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>Results</cite> class, containing key results of this task.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>results</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mrf.task.MrfTask.set_logger">
+<code class="sig-name descname">set_logger</code><span class="sig-paren">(</span><em class="sig-param">verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.task.MrfTask.set_logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mrf.task.Results">
+<em class="property">class </em><code class="sig-prename descclassname">mrf.task.</code><code class="sig-name descname">Results</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.task.Results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Results class.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-mrf.utils">
+<span id="mrf-utils-module"></span><h2>mrf.utils module<a class="headerlink" href="#module-mrf.utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mrf.utils.Autokernel">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">Autokernel</code><span class="sig-paren">(</span><em class="sig-param">img_hires</em>, <em class="sig-param">img_lowres</em>, <em class="sig-param">s</em>, <em class="sig-param">d</em>, <em class="sig-param">object_cat_dir=None</em>, <em class="sig-param">frac_maxflux=0.1</em>, <em class="sig-param">fwhm_upper=14</em>, <em class="sig-param">nkernels=20</em>, <em class="sig-param">border=50</em>, <em class="sig-param">cval=nan</em>, <em class="sig-param">show_figure=True</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.Autokernel" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Automatically generate kernel from an image,</dt><dd><p>by detecting star position and make kernel from them.
+Here all images are subsampled, and all coordinates are in
+subsampled image’s coordinate.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img_hires</strong> (<em>Celestial class</em>) – high resolution image</p></li>
+<li><p><strong>img_lowres</strong> (<em>Celestial class</em>) – low resolution image</p></li>
+<li><p><strong>object_cat_dir</strong> (<em>str</em>) – the directory of object catalog in <cite>fits</cite>.
+This catalog contains all stars that can be used to construct PSF of high-res image.</p></li>
+<li><p><strong>s</strong> (<em>float</em>) – kernel half-size, in pixel</p></li>
+<li><p><strong>d</strong> (<em>float</em>) – PSF half-size, in pixel</p></li>
+<li><p><strong>frac_maxflux</strong> (<em>float</em>) – only account for stars whose flux is
+less than <cite>frac_maxflux * maxflux</cite></p></li>
+<li><p><strong>nkernels</strong> (<em>int</em>) – number of stars, from which the kernel is generated</p></li>
+<li><p><strong>border</strong> (<em>int</em>) – don’t select stars with in the border/edge of image</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the median kernel generated from given image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>kernel_median</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrf.utils.Config">
+<em class="property">class </em><code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">Config</code><span class="sig-paren">(</span><em class="sig-param">d</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.Config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.Flux_Model">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">Flux_Model</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">header</em>, <em class="sig-param">b=64</em>, <em class="sig-param">f=3</em>, <em class="sig-param">sigma=2.5</em>, <em class="sig-param">minarea=3</em>, <em class="sig-param">deblend_cont=0.005</em>, <em class="sig-param">deblend_nthresh=32</em>, <em class="sig-param">save=False</em>, <em class="sig-param">output_suffix='flux_model'</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.Flux_Model" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Extract sources from given image and return a flux map (not segmentation map).</dt><dd><p>The flux map will be saved as ‘_flux_’ + output_suffix + ‘.fits’, along with segmentation map.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>numpy 2-D array</em>) – Image itself</p></li>
+<li><p><strong>header</strong> – the header of the image</p></li>
+<li><p><strong>sigma</strong> (<em>float</em>) – We detect objects above this sigma</p></li>
+<li><p><strong>minarea</strong> (<em>float</em>) – minimum area of the object, in pixels</p></li>
+<li><p><strong>deblend_cont</strong> (<em>float</em>) – Minimum contrast ratio used for object deblending. Default is 0.005.
+To entirely disable deblending, set to 1.0.</p></li>
+<li><p><strong>deblend_nthresh</strong> (<em>float</em>) – Number of thresholds used for object deblending. Default is 32.</p></li>
+<li><p><strong>output_suffix</strong> (<em>str</em>) – Suffix of output image and segmentation map.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Table of detected objects.
+segmap (numpy 2-D array): Segmentation map.
+im_fluxes (numpy 2-D array): Flux map.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>objects (astropy.table.Table class)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.Makekernel">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">Makekernel</code><span class="sig-paren">(</span><em class="sig-param">img_hires</em>, <em class="sig-param">img_lowres</em>, <em class="sig-param">obj</em>, <em class="sig-param">s</em>, <em class="sig-param">d</em>, <em class="sig-param">cval=nan</em>, <em class="sig-param">window=&lt;photutils.psf.matching.windows.CosineBellWindow object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.Makekernel" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Given position, make kernel based on this position image.</dt><dd><p>To make ‘makekernel’ more general, all coordinates are local.
+Here we don’t normalize PSF! Don’t use <cite>photutils.psf.creat_matching_kernel</cite>.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img_hires</strong> (<em>2-D numpy array</em>) – high resolution image</p></li>
+<li><p><strong>img_lowres</strong> (<em>2-D numpy array</em>) – low resolution image</p></li>
+<li><p><strong>y</strong> (<em>x</em><em>,</em>) – position of star, where kernel is made</p></li>
+<li><p><strong>s</strong> – kernel half-size, in pixel</p></li>
+<li><p><strong>d</strong> – PSF half-size, in pixel</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>kernel generated by given position
+hires_cut: the local cutout from high resolution image
+lowres_cut: the local cutout from low resolution image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>kernel</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.add_tractor_sources">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">add_tractor_sources</code><span class="sig-paren">(</span><em class="sig-param">obj_cat</em>, <em class="sig-param">sources</em>, <em class="sig-param">w</em>, <em class="sig-param">shape_method='manual'</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.add_tractor_sources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add tractor sources to the sources list.</p>
+<p>obj_cat: astropy Table, objects catalogue.
+sources: list, to which we will add objects.
+w: wcs object.
+shape_method: string, ‘manual’ or ‘decals’. If ‘manual’, it will adopt the</p>
+<blockquote>
+<div><p>manually measured shapes. If ‘decals’, it will adopt ‘DECaLS’
+tractor shapes.</p>
+</div></blockquote>
+<p>sources: list of sources.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.azimuthal_average">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">azimuthal_average</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">center=None</em>, <em class="sig-param">stddev=True</em>, <em class="sig-param">binsize=0.5</em>, <em class="sig-param">interpnan=False</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.azimuthal_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modified based on <a class="reference external" href="https://github.com/keflavich/image_tools/blob/master/image_tools/radialprofile.py">https://github.com/keflavich/image_tools/blob/master/image_tools/radialprofile.py</a>
+Calculate the azimuthally averaged radial profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imgae</strong> (<em>numpy ndarray</em>) – 2-D image</p></li>
+<li><p><strong>center</strong> (<em>list</em>) – [x, y] pixel coordinates. If None, use image center.
+Note that x is horizontal and y is vertical, y, x = image.shape.</p></li>
+<li><p><strong>stdev</strong> (<em>bool</em>) – if True, the stdev of profile will also be returned.</p></li>
+<li><p><strong>binsize</strong> (<em>float</em>) – size of the averaging bin. Can lead to strange results if
+non-binsize factors are used to specify the center and the binsize is
+too large.</p></li>
+<li><p><strong>interpnan</strong> (<em>bool</em>) – Interpolate over NAN values, i.e. bins where there is no data?</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If <cite>stdev == True</cite>, it will return [radius, profile, stdev];
+else, it will return [radius, profile].</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.bright_star_mask">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">bright_star_mask</code><span class="sig-paren">(</span><em class="sig-param">mask</em>, <em class="sig-param">catalog</em>, <em class="sig-param">bright_lim=17.5</em>, <em class="sig-param">r=2.0</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.bright_star_mask" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Mask out bright stars on the segmentation map of high resolution image,</dt><dd><p>before degrading to low resolution.</p>
+</dd>
+</dl>
+<p>Parameters:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>segmentation map after removing bright stars.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>segmap_cp</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.circularize">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">circularize</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">n=14</em>, <em class="sig-param">print_g=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.circularize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Circularize an image. Inspired by <a class="reference external" href="http://adsabs.harvard.edu/abs/2011PASP..123.1218A">http://adsabs.harvard.edu/abs/2011PASP..123.1218A</a>.
+:param img: image
+:type img: numpy 2-D array
+:param n: times of circularization. For example, the output image</p>
+<blockquote>
+<div><p>will be invariant under rotation <cite>theta = 360 / 2^14</cite> if <cite>n=14</cite>.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>print_g</strong> (<em>bool</em>) – if true, a parameter describing the asymmetricness of input image.
+<cite>g=0</cite> means perfectly symmetric.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>circularized image.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>img_cir (numpy 2-D array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.create_matching_kernel_custom">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">create_matching_kernel_custom</code><span class="sig-paren">(</span><em class="sig-param">source_psf</em>, <em class="sig-param">target_psf</em>, <em class="sig-param">window=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.create_matching_kernel_custom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a kernel to match 2D point spread functions (PSF) using the
+ratio of Fourier transforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_psf</strong> (2D <cite>~numpy.ndarray</cite>) – The source PSF.  The source PSF should have higher resolution
+(i.e. narrower) than the target PSF.  <code class="docutils literal notranslate"><span class="pre">source_psf</span></code> and
+<code class="docutils literal notranslate"><span class="pre">target_psf</span></code> must have the same shape and pixel scale.</p></li>
+<li><p><strong>target_psf</strong> (2D <cite>~numpy.ndarray</cite>) – The target PSF.  The target PSF should have lower resolution
+(i.e. broader) than the source PSF.  <code class="docutils literal notranslate"><span class="pre">source_psf</span></code> and
+<code class="docutils literal notranslate"><span class="pre">target_psf</span></code> must have the same shape and pixel scale.</p></li>
+<li><p><strong>window</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>The window (or taper) function or callable class instance used
+to remove high frequency noise from the PSF matching kernel.
+Some examples include:</p>
+<ul>
+<li><p><cite>~photutils.psf.matching.HanningWindow</cite></p></li>
+<li><p><cite>~photutils.psf.matching.TukeyWindow</cite></p></li>
+<li><p><cite>~photutils.psf.matching.CosineBellWindow</cite></p></li>
+<li><p><cite>~photutils.psf.matching.SplitCosineBellWindow</cite></p></li>
+<li><p><cite>~photutils.psf.matching.TopHatWindow</cite></p></li>
+</ul>
+<p>For more information on window functions and example usage, see
+<span class="xref std std-ref">psf_matching</span>.</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>kernel</strong> – The matching kernel to go from <code class="docutils literal notranslate"><span class="pre">source_psf</span></code> to <code class="docutils literal notranslate"><span class="pre">target_psf</span></code>.
+The output matching kernel is normalized such that it sums to 1.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>2D <cite>~numpy.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.extract_obj">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">extract_obj</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">b=64</em>, <em class="sig-param">f=3</em>, <em class="sig-param">sigma=5</em>, <em class="sig-param">pixel_scale=0.168</em>, <em class="sig-param">minarea=5</em>, <em class="sig-param">deblend_nthresh=32</em>, <em class="sig-param">deblend_cont=0.005</em>, <em class="sig-param">clean_param=1.0</em>, <em class="sig-param">sky_subtract=False</em>, <em class="sig-param">flux_auto=True</em>, <em class="sig-param">flux_aper=None</em>, <em class="sig-param">show_fig=True</em>, <em class="sig-param">verbose=True</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.extract_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract objects for a given image, using <cite>sep</cite>. This is from <cite>slug</cite>.</p>
+<p>img: 2-D numpy array
+b: float, size of box
+f: float, size of convolving kernel
+sigma: float, detection threshold
+pixel_scale: float, default is 0.168 (HSC pixel size)
+minarea: float, minimum number of connected pixels
+deblend_nthresh: float, Number of thresholds used for object deblending
+deblend_cont: float, Minimum contrast ratio used for object deblending. Set to 1.0 to disable deblending.
+clean_param: float, Cleaning parameter (see SExtractor manual)
+sky_subtract: bool, whether subtract sky before extract objects (this will affect the measured flux).
+flux_auto: bool, whether return AUTO photometry (see SExtractor manual)
+flux_aper: list, such as [3, 6], which gives flux within [3 pix, 6 pix] annulus.</p>
+<dl class="simple">
+<dt>objects: <cite>astropy</cite> Table, containing the positions,</dt><dd><p>shapes and other properties of extracted objects.</p>
+</dd>
+</dl>
+<p>segmap: 2-D numpy array, segmentation map</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.img_cutout">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">img_cutout</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">wcs</em>, <em class="sig-param">coord_1</em>, <em class="sig-param">coord_2</em>, <em class="sig-param">size=60.0</em>, <em class="sig-param">pix=2.5</em>, <em class="sig-param">prefix='img_cutout'</em>, <em class="sig-param">pixel_unit=False</em>, <em class="sig-param">img_header=None</em>, <em class="sig-param">out_dir=None</em>, <em class="sig-param">save=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.img_cutout" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> – 2d array.</p></li>
+<li><p><strong>pixel_unit</strong> – boolen, optional
+When True, coord_1, cooord_2 becomes X, Y pixel coordinates.
+Size will also be treated as in pixels.</p></li>
+<li><p><strong>wcs</strong> – astropy wcs object of the input image.</p></li>
+<li><p><strong>coord_1</strong> – ra or x of the center.</p></li>
+<li><p><strong>coord_2</strong> – dec or y of the center.</p></li>
+<li><p><strong>size</strong> – image size, default in arcsec unit.</p></li>
+<li><p><strong>pix</strong> – pixel size.</p></li>
+<li><p><strong>img_header</strong> – the astropy header object of the input image.
+In case you can save the infomation in this header to the new header.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.img_replace_with_noise">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">img_replace_with_noise</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">mask</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.img_replace_with_noise" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>This function add Gaussian noise to the masked region.</dt><dd><p>The characteristics of Gaussian is decided by <cite>sep</cite> locally measured sky value and stderr.
+(stole from <cite>kungpao</cite>)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>numpy 2-D array</em>) – image.</p></li>
+<li><p><strong>mask</strong> (<em>numpy 2-D array</em>) – pixels that you want to mask out should have value of ONE.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>image with mask replaced by noise</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>img_noise_replace (numpy 2-D array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.mask_out_certain_galaxy">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">mask_out_certain_galaxy</code><span class="sig-paren">(</span><em class="sig-param">segmap</em>, <em class="sig-param">header</em>, <em class="sig-param">gal_cat=None</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.mask_out_certain_galaxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mask out certain galaxy on segmentation map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>segmap</strong> (<em>2-D numpy array</em>) – segmentation map, on which bright stars will be masked.</p></li>
+<li><p><strong>img</strong> (<em>2-D numpy array</em>) – image itselt.</p></li>
+<li><p><strong>header</strong> – the header of this image.</p></li>
+<li><p><strong>gal_cat</strong> (<em>astropy.table.Table object</em>) – catalog of galaxies you want to mask out.
+Must have columns called ‘ra’ and ‘dec’ (or ‘x’ and ‘y’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>segmentation map after removing bright stars.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>segmap_cp</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.mask_out_stars">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">mask_out_stars</code><span class="sig-paren">(</span><em class="sig-param">segmap</em>, <em class="sig-param">img</em>, <em class="sig-param">header</em>, <em class="sig-param">method='gaia'</em>, <em class="sig-param">bright_lim=15.5</em>, <em class="sig-param">catalog_dir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.mask_out_stars" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Mask out bright stars on the segmentation map of high resolution image,</dt><dd><p>before degrading to low resolution.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>segmap</strong> (<em>2-D numpy array</em>) – segmentation map, on which bright stars will be masked.</p></li>
+<li><p><strong>img</strong> (<em>2-D numpy array</em>) – image itselt.</p></li>
+<li><p><strong>header</strong> – the header of this image.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – here three methods are provided: ‘gaia’, ‘apass’ or ‘usno’.</p></li>
+<li><p><strong>bright_lim</strong> (<em>float</em>) – the magnitude limit of stars to be masked out.</p></li>
+<li><p><strong>catalog_dir</strong> (<em>str</em>) – optional, you can provide local catalog here.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>segmentation map after removing bright stars.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>segmap_cp</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.mask_out_stars_hsc">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">mask_out_stars_hsc</code><span class="sig-paren">(</span><em class="sig-param">segmap</em>, <em class="sig-param">img</em>, <em class="sig-param">header</em>, <em class="sig-param">method='gaia'</em>, <em class="sig-param">bright_lim=15.5</em>, <em class="sig-param">catalog_dir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.mask_out_stars_hsc" title="Permalink to this definition">¶</a></dt>
+<dd><p>For HSC, the bleeding tails are annoying. So this function is for them.
+Mask out bright stars on the segmentation map of high resolution image,</p>
+<blockquote>
+<div><p>before degrading to low resolution.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>segmap</strong> (<em>2-D numpy array</em>) – segmentation map, on which bright stars will be masked.</p></li>
+<li><p><strong>img</strong> (<em>2-D numpy array</em>) – image itselt.</p></li>
+<li><p><strong>header</strong> – the header of this image.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – here three methods are provided: ‘gaia’, ‘apass’ or ‘usno’.</p></li>
+<li><p><strong>bright_lim</strong> (<em>float</em>) – the magnitude limit of stars to be masked out.</p></li>
+<li><p><strong>catalog_dir</strong> (<em>str</em>) – optional, you can provide local catalog here.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>segmentation map after removing bright stars.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>segmap_cp</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.mask_remove_cen_obj">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">mask_remove_cen_obj</code><span class="sig-paren">(</span><em class="sig-param">mask</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.mask_remove_cen_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the central object from the binary 0-1 mask.
+:param mask: binary mask
+:type mask: numpy 2-D array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a mask with central object removed</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>mask_copy (numpy 2-D array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.mask_remove_obj">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">mask_remove_obj</code><span class="sig-paren">(</span><em class="sig-param">mask</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.mask_remove_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove an object from the mask given its coordinate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask</strong> (<em>numpy 2-D array</em>) – binary mask</p></li>
+<li><p><strong>y</strong> (<em>x</em><em>,</em>) – coordinates.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the mask with certain object removed</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mask_copy (numpy 2-D array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.phys_size">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">phys_size</code><span class="sig-paren">(</span><em class="sig-param">redshift</em>, <em class="sig-param">is_print=True</em>, <em class="sig-param">H0=70</em>, <em class="sig-param">Omegam=0.3</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.phys_size" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Calculate the corresponding physical size per arcsec of a given redshift</dt><dd><p>in the Lambda-CDM cosmology.</p>
+</dd>
+</dl>
+<p>astropy</p>
+<p>redshift: float
+is_print: boolean. If true, it will print out the physical scale at the given redshift.
+Omegam: float, density parameter of matter. It should be within [0, 1].</p>
+<p>physical_size: float, in ‘kpc/arcsec’</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.psf_bkgsub">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">psf_bkgsub</code><span class="sig-paren">(</span><em class="sig-param">psf</em>, <em class="sig-param">edge</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.psf_bkgsub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtract a background of PSF, estimated by the pixel value around the edges of PSF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>psf</strong> (<em>numpy 2-D array</em>) – PSF itself</p></li>
+<li><p><strong>edge</strong> (<em>int</em>) – size of edge, within which we measure the local background</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.query_star">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">query_star</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">header</em>, <em class="sig-param">method='gaia'</em>, <em class="sig-param">bright_lim=15.5</em>, <em class="sig-param">catalog_dir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.query_star" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>2-D numpy array</em>) – image itselt.</p></li>
+<li><p><strong>header</strong> – the header of this image.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – here three methods are provided: ‘gaia’, ‘apass’ or ‘usno’.</p></li>
+<li><p><strong>bright_lim</strong> (<em>float</em>) – the magnitude limit of stars to be masked out.</p></li>
+<li><p><strong>catalog_dir</strong> (<em>str</em>) – optional, you can provide local catalog here.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>star_cat</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.readStarCatalog">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">readStarCatalog</code><span class="sig-paren">(</span><em class="sig-param">catalog</em>, <em class="sig-param">img</em>, <em class="sig-param">img_header</em>, <em class="sig-param">ra_dec_name=None</em>, <em class="sig-param">mag_name=None</em>, <em class="sig-param">bright_lim=15.5</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.readStarCatalog" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Read a given catalog (astropy Table objects). Note that the column names of RA and DEC</dt><dd><p>must be ‘ra’ and ‘dec’ or ‘RA’ and ‘DEC’. One magnitude column shuold be included
+and named ‘mag’ or ‘MAG’.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>catalog</strong> – given catalog, must contain ra, dec and some magnitude (such as r-mag).</p></li>
+<li><p><strong>ra_dec_name</strong> – [‘ra’, ‘dec’]</p></li>
+<li><p><strong>img</strong> (<em>2-D numpy array</em>) – image itselt.</p></li>
+<li><p><strong>img_header</strong> – the header of this image.</p></li>
+<li><p><strong>bright_lim</strong> – the magnitude limit of stars to be masked out.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>2-D numpy table, contains ‘x’ and ‘y’ coordinate of bright stars.
+nx, ny: dimension of image.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>xys</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.remove_lowsb">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">remove_lowsb</code><span class="sig-paren">(</span><em class="sig-param">flux_model</em>, <em class="sig-param">conv_model</em>, <em class="sig-param">kernel</em>, <em class="sig-param">segmap</em>, <em class="sig-param">objcat_dir</em>, <em class="sig-param">SB_lim=24.0</em>, <em class="sig-param">zeropoint=30.0</em>, <em class="sig-param">pixel_size=0.83</em>, <em class="sig-param">unmask_ratio=6</em>, <em class="sig-param">gaussian_radius=1.5</em>, <em class="sig-param">gaussian_threshold=0.01</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.remove_lowsb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.save_to_fits">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">save_to_fits</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">fits_file</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">header=None</em>, <em class="sig-param">overwrite=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.save_to_fits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save numpy 2-D arrays to <cite>fits</cite> file. (from <cite>kungpao</cite>)
+:param img: The 2-D array to be saved
+:type img: np.array, 2d
+:param fits_file: File name of <cite>fits</cite> file
+:type fits_file: str
+:param wcs: World coordinate system of this image
+:type wcs: astropy.wcs.WCS class
+:param header: header of this image
+:type header: astropy.io.fits.header or str
+:param overwrite: Default is True
+:type overwrite: bool</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.seg_remove_cen_obj">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">seg_remove_cen_obj</code><span class="sig-paren">(</span><em class="sig-param">seg</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.seg_remove_cen_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the central object from the segmentation.
+:param seg: segmentation map
+:type seg: numpy 2-D array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the segmentation map with central object removed</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>seg_copy (numpy 2-D array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.seg_remove_obj">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">seg_remove_obj</code><span class="sig-paren">(</span><em class="sig-param">seg</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.seg_remove_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove an object from the segmentation given its coordinate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seg</strong> (<em>numpy 2-D array</em>) – segmentation mask</p></li>
+<li><p><strong>y</strong> (<em>x</em><em>,</em>) – coordinates.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the segmentation map with certain object removed</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>seg_copy (numpy 2-D array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrf.utils.tractor_iteration">
+<code class="sig-prename descclassname">mrf.utils.</code><code class="sig-name descname">tractor_iteration</code><span class="sig-paren">(</span><em class="sig-param">obj_cat</em>, <em class="sig-param">w</em>, <em class="sig-param">img_data</em>, <em class="sig-param">invvar</em>, <em class="sig-param">psf_obj</em>, <em class="sig-param">pixel_scale</em>, <em class="sig-param">shape_method='manual'</em>, <em class="sig-param">kfold=4</em>, <em class="sig-param">first_num=50</em>, <em class="sig-param">fig_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mrf.utils.tractor_iteration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run tractor iteratively.</p>
+<p>obj_cat: objects catalogue.
+w: wcs object.
+img_data: 2-D np.array, image.
+invvar: 2-D np.array, inverse variance matrix of the image.
+psf_obj: PSF object, defined by tractor.psf.PixelizedPSF() class.
+pixel_scale: float, pixel scale in unit arcsec/pixel.
+shape_method: if ‘manual’, then adopt manually measured shape. If ‘decals’, then adopt DECaLS shape from tractor files.
+kfold: int, iteration time.
+first_num: how many objects will be fit in the first run.
+fig_name: string, if not None, it will save the tractor subtracted image to the given path.</p>
+<p>sources: list, containing tractor model sources.
+trac_obj: optimized tractor object after many iterations.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-mrf">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-mrf" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">mrf</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Pieter van Dokkum, Jiaxuan Li.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/mrf.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
