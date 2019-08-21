@@ -17,9 +17,22 @@ from .imtools import imshift, imdelete, magnify, blkavg
 class Celestial(object):
     '''
     Class for ``Celestial`` object. 
+    This class is basically a celestial body from observational perspective. 
+    It has its image, header, WCS. The mask which masks out contaminations can also be stored as an attribute. 
+    Then this ``Celestial`` object can be saved to FITS file, can be shifted, resized, rotated, etc. 
+    What's more, the user could check the image/mask/masked image simply by invoke ``Celestial.display_image()``.
+    
+    This class can also be inherited to form other classes.
     '''
+
     def __init__(self, img, mask=None, header=None, dataset='Dragonfly'):
-        '''Initialize ``Celestial`` object'''
+        '''
+        Initialize ``Celestial`` object.
+
+        Parameters:
+            img (numpy 2-D array): 
+        
+        '''
         try:
             self.pixel_scale = abs(header['CD1_1'] * 3600)
         except:
