@@ -112,8 +112,8 @@ def display_single(img,
                    text_color='w'):
     """Display single image. From `kungpao`.
 
-    Parameters
-    ----------
+    Parameters:
+
         img: np 2-D array for image
 
         xsize: int, default = 8
@@ -534,20 +534,18 @@ def display_isophote(img, ell, pixel_scale, scale_bar=True, scale_bar_length=50,
     Visualize the isophotes.
     
     Parameters:
-    ----------
-    img: 2-D np.array, image.
-    ell: astropy Table or numpy table, is the output of ELLIPSE.
-    pixel_scale: float, pixel scale in arcsec/pixel.
-    scale_bar: boolean, whether show scale bar.
-    scale_bar_length: float, length of scale bar.
-    physical_scale: float. If not None, the scale bar will be shown in physical scale.
-    text: string. If not None, the string will be shown in the upper left corner.
-    contrast: float. Default contrast is 0.15.
-    circle: **list** of floats. Maximun length is 3.
+        img: 2-D np.array, image.
+        ell: astropy Table or numpy table, is the output of ELLIPSE.
+        pixel_scale: float, pixel scale in arcsec/pixel.
+        scale_bar: boolean, whether show scale bar.
+        scale_bar_length: float, length of scale bar.
+        physical_scale: float. If not None, the scale bar will be shown in physical scale.
+        text: string. If not None, the string will be shown in the upper left corner.
+        contrast: float. Default contrast is 0.15.
+        circle: **list** of floats. Maximun length is 3.
 
     Returns:
-    --------
-    ax: matplotlib axes class.
+        ax: matplotlib axes class.
 
     """
     if ax is None:
