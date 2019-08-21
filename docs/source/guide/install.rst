@@ -49,5 +49,5 @@ Then import ``mrf`` package in Python. The following snippet check the availabil
     # otherwise the environmental variable is not set correctly.
 
 Requirements
--------------------
+-------------
 ``Python>=3`` is needed, but you can try whether ``mrf`` still works under ``python2``. Check out the dependence of ``mrf`` depends from `requirements.txt <https://github.com/AstroJacobLi/mrf/blob/master/requirements.txt>`_.
