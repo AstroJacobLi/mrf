@@ -33,7 +33,6 @@ version = __version__
 extensions = [
     'sphinx.ext.napoleon', 
     'recommonmark',
-    'sphinx.ext.autodoc',
     'sphinx.ext.mathjax'
     ] #'sphinx.ext.autodoc', 
  
