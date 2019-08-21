@@ -2,8 +2,10 @@ numpy
 scipy
 astropy>=3.0
 matplotlib>=2.0
-pyraf
+sep
 photutils
 palettable
 shapely
 reproject
+tqdm
+yaml

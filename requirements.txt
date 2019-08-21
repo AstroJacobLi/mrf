@@ -7,3 +7,5 @@ photutils
 palettable
 shapely
 reproject
+tqdm
+yaml
