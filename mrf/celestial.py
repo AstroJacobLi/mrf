@@ -30,8 +30,13 @@ class Celestial(object):
         Initialize ``Celestial`` object.
 
         Parameters:
-            img (numpy 2-D array): 
-        
+            img (numpy 2-D array): image array.
+            mask (numpy 2-D array, optional): mask array. 1 means the pixel will be masked.
+            header: header of image, containing WCS information. Typically it is ``astropy.io.fits.header`` object.
+            dataset (str): The description of the input data.
+
+        Returns:
+            None
         '''
         try:
             self.pixel_scale = abs(header['CD1_1'] * 3600)
@@ -71,10 +76,10 @@ class Celestial(object):
     @mask.setter
     def mask(self, mask_array):
         self._mask = mask_array
-    
+
     @property
     def hscmask(self):
-        return self._hscmask
+        return self._mask
     
     @hscmask.setter
     def hscmask(self, mask_array):
@@ -90,10 +95,12 @@ class Celestial(object):
 
     # Save 2-D numpy array to ``fits``
     def save_to_fits(self, fits_file_name, data='image', overwrite=True):
-        """Save numpy 2-D arrays to ``fits`` file. (from ``kungpao``)
+        """
+        Save image or mask of this ``Celestial`` object to ``fits`` file.
+
         Parameters:
-            data (str): can be 'image' or 'mask'
             fits_file_name (str): File name of ``fits`` file
+            data (str): can be 'image' or 'mask'
             overwrite (bool): Default is True
 
         Returns:
@@ -135,17 +142,21 @@ class Celestial(object):
         '''Shift the image of Celestial object. The WCS of image will also be changed.
 
         Parameters:
-            dx, dy (float): shift distance (in pixel) along x (horizontal) and y (vertical). 
+            dx (float): shift distance (in pixel) along x (horizontal). 
                 Note that elements in one row has the same y but different x. 
-                Example: dx = 2 is to shift the image "RIGHT", dy = 3 is to shift the image "UP".
+                Example: dx = 2 is to shift the image "RIGHT" (as seen in DS9), dy = 3 is to shift the image "UP".
+            dy (float): shift distance (in pixel) along y (vertical). 
+                Note that elements in one row has the same y but different x. 
+                Example: dx = 2 is to shift the image "RIGHT" (as seen in DS9), dy = 3 is to shift the image "UP".
             method (str): interpolation method. Use 'lanczos' or 'iraf'. 
-                If using 'iraf', default interpolation is 'poly3.
+                If using 'iraf', default interpolation is 'poly3. 'Lanczos' requires ``GalSim`` installed.
             order (int): the order of Lanczos interpolation (>0).
-            cval (scalar): value to fill the edges. Default is NaN.
+            cval (float): value to fill the edges. Default is 0.
 
         Returns:
-            shift_image: ndarray.
+            shift_image (ndarray): shifted image, the "image" attribute of ``Celestial`` class will also be changed accordingly.
         '''
+
         ny, nx = self.image.shape
         if abs(dx) > nx or abs(ny) > ny:
             raise ValueError('# Shift distance is beyond the image size.')
@@ -189,16 +200,21 @@ class Celestial(object):
         '''Shift the mask of Celestial object.
 
         Parameters:
-            dx, dy (float): shift distance (in pixel) along x (horizontal) and y (vertical). 
+            dx (float): shift distance (in pixel) along x (horizontal). 
                 Note that elements in one row has the same y but different x. 
-                Example: dx = 2 is to shift the image "RIGHT", dy = 3 is to shift the image "UP".
-            method (str): interpolation method. Use 'lanczos' or 'spline' or 'iraf'
-            order (int): the order of spline interpolation (within 0-5) or Lanczos interpolation (>0).
-            cval (scalar): value to fill the edges. Default is NaN.
+                Example: dx = 2 is to shift the mask "RIGHT" (as seen in DS9), dy = 3 is to shift the image "UP".
+            dy (float): shift distance (in pixel) along y (vertical). 
+                Note that elements in one row has the same y but different x. 
+                Example: dx = 2 is to shift the mask "RIGHT" (as seen in DS9), dy = 3 is to shift the image "UP".
+            method (str): interpolation method. Use 'lanczos' or 'iraf'. 
+                If using 'iraf', default interpolation is 'poly3. 'Lanczos' requires ``GalSim`` installed.
+            order (int): the order of Lanczos interpolation (>0).
+            cval (float): value to fill the edges. Default is 0.
 
         Returns:
-            shift_mask: ndarray.
+            shift_mask (ndarray): shifted mask. The "mask" attribute of ``Celestial`` class will also be changed accordingly.
         '''
+
         ny, nx = self.mask.shape
         if abs(dx) > nx or abs(ny) > ny:
             raise ValueError('# Shift distance is beyond the image size.')
@@ -239,35 +255,42 @@ class Celestial(object):
             raise ValueError("# Not supported interpolation method. Use 'lanczos' or 'iraf'.")
 
     def shift_Celestial(self, dx, dy, method='iraf', order=5, cval=0.0):
-        '''Shift the Celestial object.
+        '''Shift the Celestial object, including image and mask.
 
         Parameters:
-            dx, dy (float): shift distance (in pixel) along x (horizontal) and y (vertical). 
+            dx (float): shift distance (in pixel) along x (horizontal). 
                 Note that elements in one row has the same y but different x. 
-                Example: dx = 2 is to shift the image "RIGHT", dy = 3 is to shift the image "UP".
-            method (str): interpolation method. Use 'lanczos' or 'spline'.
-            order (int): the order of spline interpolation (within 0-5) or Lanczos interpolation (>0).
-            cval (scalar): value to fill the edges. Default is NaN.
+                Example: dx = 2 is to shift the image "RIGHT" (as seen in DS9), dy = 3 is to shift the image "UP".
+            dy (float): shift distance (in pixel) along y (vertical). 
+                Note that elements in one row has the same y but different x. 
+                Example: dx = 2 is to shift the image "RIGHT" (as seen in DS9), dy = 3 is to shift the image "UP".
+            method (str): interpolation method. Use 'lanczos' or 'iraf'. 
+                If using 'iraf', default interpolation is 'poly3. 'Lanczos' requires ``GalSim`` installed.
+            order (int): the order of Lanczos interpolation (>0).
+            cval (float): value to fill the edges. Default is 0.
         
         Returns:
+            None
         '''
         self.shift_image(dx, dy, method=method, order=order, cval=cval)
         if hasattr(self, 'mask'):
             self.shift_mask(dx, dy, method=method, order=order, cval=cval)
     
     def resize_image(self, f, method='iraf', order=5, cval=0.0):
-        '''Zoom/Resize the image of Celestial object. 
-            f > 1 means the image will be resampled (finer)! f < 1 means the image will be degraded.
+        '''
+        Zoom/Resize the image of Celestial object. 
+        f > 1 means the image will be resampled (finer)! f < 1 means the image will be degraded.
 
         Parameters:
             f (float): the positive factor of zoom. If 0 < f < 1, the image will be resized to smaller one.
-            method (str): interpolation method. Use 'lanczos' or 'spline' or 'iraf'.
+            method (str): interpolation method. Use 'lanczos' or 'iraf'. 'Lanczos' requires ``GalSim`` installed.
             order (int): the order Lanczos interpolation (>0).
-            cval (scalar): value to fill the edges. Default is NaN.
+            cval (float): value to fill the edges. Default is 0.
 
         Returns:
-            shift_image: ndarray.
+            resize_image (ndarray): resized image. The "image" attribute of ``Celestial`` class will also be changed accordingly.
         '''
+
         if method == 'lanczos':
             try: # try to import galsim
                 from galsim import degrees, Angle
@@ -307,18 +330,20 @@ class Celestial(object):
             raise ValueError("# Not supported interpolation method. Use 'lanczos' or 'iraf'.")
         
     def resize_mask(self, f, method='iraf', order=5, cval=0.0):
-        '''Zoom/Resize the mask of Celestial object. 
-            f > 1 means the mask will be resampled (finer)! f < 1 means the mask will be degraded.
+        '''
+        Zoom/Resize the mask of Celestial object. 
+        f > 1 means the mask will be resampled (finer)! f < 1 means the mask will be degraded.
 
         Parameters:
             f (float): the positive factor of zoom. If 0 < f < 1, the mask will be resized to smaller one.
-            method (str): interpolation method. Use 'lanczos' or 'spline' or 'iraf'.
+            method (str): interpolation method. Use 'lanczos' or 'spline' or 'iraf'. 'Lanczos' requires ``GalSim`` installed.
             order (int): the order Lanczos interpolation (>0).
-            cval (scalar): value to fill the edges. Default is NaN.
+            cval (float): value to fill the edges. Default is 0.
 
         Returns:
-            shift_image: ndarray.
+            resize_mask (ndarray): resized mask. The "mask" attribute of ``Celestial`` class will also be changed accordingly.
         '''
+
         if method == 'lanczos':
             try: # try to import galsim
                 from galsim import degrees, Angle
@@ -357,31 +382,59 @@ class Celestial(object):
             raise ValueError("# Not supported interpolation method. Use 'lanczos' or 'iraf'.")
 
     def resize_Celestial(self, f, method='iraf', order=5, cval=0.0):
-        '''Resize the Celestial object. f > 1 means the image will be resampled! f < 1 means the image will be degraded.
+        '''
+        Resize the Celestial object, including both image and mask.
+        f > 1 means the image/mask will be resampled! f < 1 means the image/mask will be degraded.
 
         Parameters:
-            angle (float): rotation angle in degress, counterclockwise.
-            order (int): the order of spline interpolation, can be in the range 0-5.
-            reshape (bool): if True, the output shape is adapted so that the rorated image 
-                is contained completely in the output array.
-            cval (scalar): value to fill the edges. Default is NaN.
+            f (float): the positive factor of zoom. If 0 < f < 1, the mask will be resized to smaller one.
+            method (str): interpolation method. Use 'lanczos' or 'spline' or 'iraf'. 'Lanczos' requires ``GalSim`` installed.
+            order (int): the order Lanczos interpolation (>0).
+            cval (float): value to fill the edges. Default is 0.
         
         Returns:
+            None
         '''
         self.resize_image(f, method=method, order=order, cval=cval)
         if hasattr(self, 'mask'):
             self.resize_mask(f, method=method, order=order, cval=cval)
 
-    
     # Display image/mask
     def display_image(self, **kwargs):
+        """
+        Take a peek at the image, using "zscale", "arcsinh" streching and "viridis" colormap. You can change them by adding **kwargs.
+
+        Parameters:
+            **kwargs: arguments in ``mrf.display.display_single``.
+
+        Returns:
+            None
+        """
         display_single(self.image, scale_bar_length=self.scale_bar_length, **kwargs)
 
     def display_mask(self, **kwargs):
+        """
+        Take a peek at the mask.
+
+        Parameters:
+            **kwargs: arguments in ``mrf.display.display_single``.
+            
+        Returns:
+            None
+        """
         display_single(self.mask, scale='linear', 
                         cmap=SEG_CMAP, scale_bar_length=self.scale_bar_length, **kwargs)
 
     def display_Celestial(self, **kwargs):
+        """
+        Take a peek at the masked image, using "zscale", "arcsinh" streching and "viridis" colormap. You can change them by adding **kwargs.
+
+        Parameters:
+            **kwargs: arguments in ``mrf.display.display_single``.
+            
+        Returns:
+            None
+        """
         if hasattr(self, 'mask'):
             display_single(self.image * (~self.mask.astype(bool)), 
                             scale_bar_length=self.scale_bar_length, **kwargs)
@@ -389,23 +442,51 @@ class Celestial(object):
             self.display_image()
 
 class Star(Celestial):
-    def __init__(self, img, header, starobj, halosize=40, padsize=40, mask=None, hscmask=None):
+    """
+    This ``Star`` class is the inheritance of ``Celestial`` class. 
+    It represents a small cutout, which is typically a star. 
+    Other than the functions inherited from ``Celestial``, ``Star`` object has extra functions such as ``centralize``, ``mask_out_contam``.
+    """
+    def __init__(self, img, header, starobj, colnames=['x', 'y'], halosize=40, padsize=40, mask=None, hscmask=None):
         """
-        Halosize is the radius!!!
-        RA, DEC are not supported yet!
+        Initialize ``Star`` object. 
+        
+        Parameters:
+            img (numpy 2-D array): the image from which the cutout of star is made.
+            header: header of image, containing WCS information. Typically it is ``astropy.io.fits.header`` object.
+            starobj: A row of ``astropy.table.Table``, containing basic information of the star, such as ``ra``, `dec`` and magnitudes.
+            colnames (list of str): indicating the columns which contains position of the star. It could be ['x', 'y'] or ['ra', 'dec'].
+            halosize (float): the radial size of cutout. If ``halosize=40``, the square cutout will be 80 * 80 pix.
+            padsize (float): The image will be padded in order to make cutout of stars near the edge of input image. 
+                ``padsize`` should be equal to or larger than ``halosize``.
+            mask (numpy 2-D array): the mask of input big image.
+            hscmask (numpy 2-D array): the hscmask of input image.
+        
+        Returns:
+            None
         """
         Celestial.__init__(self, img, mask, header=header)
         if hscmask is not None:
             self.hscmask = hscmask
         self.name = 'star'
         self.scale_bar_length = 3
-        # Trim the image to star size
-        # starobj should at least contain x, y, (or ra, dec) and 
-        # Position of a star, in numpy convention
-        x_int = int(starobj['x'])
-        y_int = int(starobj['y'])
-        dx = -1.0 * (starobj['x'] - x_int)
-        dy = -1.0 * (starobj['y'] - y_int)
+
+        # Trim the image to star size   
+        # starobj should at least contain x, y, (or ra, dec)
+        if 'x' in colnames or 'y' in colnames:
+            # Position of a star, in numpy convention
+            x_int = int(starobj['x'])
+            y_int = int(starobj['y'])
+            dx = -1.0 * (starobj['x'] - x_int)
+            dy = -1.0 * (starobj['y'] - y_int)
+        elif 'ra' in colnames or 'dec' in colnames:
+            w = self.wcs
+            x, y = w.wcs_world2pix(starobj['ra'], starobj['dec'], 0)
+            x_int = int(x)
+            y_int = int(y)
+            dx = -1.0 * (x - x_int)
+            dy = -1.0 * (y - y_int)
+
         halosize = int(halosize)
         # Make padded image to deal with stars near the edges
         padsize = int(padsize)
@@ -423,6 +504,7 @@ class Star(Celestial):
         # FLux
         self.flux = starobj['flux']
         self.fluxann = starobj['flux_ann']
+        self.fluxauto = starobj['flux_auto']
 
         if hasattr(self, 'mask'):
             im_padded = np.zeros((ny + 2 * padsize, nx + 2 * padsize))
@@ -441,19 +523,40 @@ class Star(Celestial):
             self.hscmask = halo
 
     def centralize(self, method='iraf', order=5, cval=0.0):
+        """
+        Shift the cutout to the true position of the star using interpolation. 
+
+        Parameters:
+            method (str): interpolation method. Options are "iraf" and "lanczos". "Lanczos" requires ``GalSim`` installed.
+            order (int): the order of Lanczos interpolation (>0).
+            cval (float): value to fill the edges. Default is 0.
+        Returns:
+            None
+        """
+
         self.shift_Celestial(self.dx, self.dy, method=method, order=order, cval=cval)
 
-    def sub_bkg(self, verbose=True):
-        # Here I subtract local sky background
-        # Evaluate local sky backgroud within ``halo_i``
+    def sub_bkg(self, sigma=4.5, deblend_cont=0.0001, verbose=True):
+        """
+        Subtract the locally-measured background of ``Star`` object. The sky is measured by masking out objects using ``sep``.
+        Be cautious and be aware what you do when using this function.
+
+        Parameters:
+            sigma (float): The sigma in ``SExtractor``.
+            deblend_cont (float): Deblending parameter.
+            verbose (bool): Whether print out background value.
+        
+        Returns:
+            None
+        """
         # Actually this should be estimated in larger cutuouts.
         # So make another cutout (larger)!
         from astropy.convolution import convolve, Box2DKernel
         from .image import extract_obj, seg_remove_cen_obj
         from sep import Background
         img_blur = convolve(abs(self.image), Box2DKernel(2))
-        img_objects, img_segmap = extract_obj(abs(img_blur), b=5, f=4, sigma=4.5, minarea=2, pixel_scale=self.pixel_scale,
-                                                deblend_nthresh=32, deblend_cont=0.0001, 
+        img_objects, img_segmap = extract_obj(abs(img_blur), b=10, f=4, sigma=sigma, minarea=2, pixel_scale=self.pixel_scale,
+                                                deblend_nthresh=32, deblend_cont=deblend_cont, 
                                                 sky_subtract=False, show_fig=False, verbose=False)
         bk = Background(self.image, img_segmap != 0)
         glbbck = bk.globalback
@@ -463,6 +566,16 @@ class Star(Celestial):
         self.image -= glbbck
 
     def get_masked_image(self, cval=np.nan):
+        """
+        Mask image according to the mask.
+
+        Parameter:
+            cval: value to fill the void. Default is NaN, but sometimes NaN is problematic. 
+        
+        Return:
+            imgcp (numpy 2-D array): masked image.
+        """
+
         if not hasattr(self, 'mask'):
             print("This ``Star`` object doesn't have a ``mask``!")
             return self.image
@@ -471,12 +584,27 @@ class Star(Celestial):
             imgcp[self.mask.astype(bool)] = cval
             return imgcp
 
-    def mask_out_contam(self, blowup=True, show_fig=True, verbose=True):
+    def mask_out_contam(self, sigma=4.5, deblend_cont=0.0005, blowup=True, show_fig=True, verbose=True):
+        """
+        Mask out contamination in the cutout of star. Contamination may be stars, galaxies or artifacts. 
+        This function uses ``sep`` to identify and mask contamination。
+
+        Parameters:
+            sigma (float): The sigma in ``SExtractor``. Default is 4.5.
+            deblend_cont (float): Deblending parameter. Default is 0.0005.
+            blowup (bool): Whether blow up the segmentation mask by convolving a 1.5 pixel Gaussian kernel.
+            show_fig (bool): Whether show the figure.
+            verbose (bool): Whether print out results.
+
+        Returns:
+            None
+        """
+        
         from astropy.convolution import convolve, Box2DKernel
         from .utils import extract_obj, seg_remove_cen_obj
         img_blur = convolve(abs(self.image), Box2DKernel(2))
-        img_objects, img_segmap = extract_obj(abs(img_blur), b=5, f=4, sigma=4.5, minarea=2, pixel_scale=self.pixel_scale,
-                                                deblend_nthresh=32, deblend_cont=0.0005, 
+        img_objects, img_segmap = extract_obj(abs(img_blur), b=5, f=4, sigma=sigma, minarea=2, pixel_scale=self.pixel_scale,
+                                                deblend_nthresh=32, deblend_cont=deblend_cont, 
                                                 sky_subtract=False, show_fig=show_fig, verbose=verbose)
         # remove central object from segmap
         img_segmap = seg_remove_cen_obj(img_segmap) 
