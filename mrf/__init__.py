@@ -5,7 +5,7 @@ warnings.simplefilter('ignore')
 __all__ = ["utils", "display", "celestial", "imtools", "task", "download"]
 
 # Version
-__version__ = "0.7.0"
+__version__ = "1.0.1"
 __name__ = 'mrf'
 
 # Define pixel scale of different surveys, unit = arcsec / pixel

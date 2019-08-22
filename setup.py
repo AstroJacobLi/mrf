@@ -1,6 +1,6 @@
 '''This sets up the package.
 '''
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 from setuptools import setup, find_packages
 
@@ -16,7 +16,7 @@ with open('requirements.txt') as infd:
 
 setup(name='mrf', 
 	version=__version__,
-	description='Subtracting compact objects from Dragonfly image',
+	description='Multi-Resolution Filtering (MRF) is a method for isolating faint, extended emission in low-resolution images.',
 	long_description=readme(),
 	long_description_content_type="text/markdown",
 	classifiers=[
