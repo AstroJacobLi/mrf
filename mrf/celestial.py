@@ -410,7 +410,8 @@ class Celestial(object):
         Returns:
             None
         """
-        display_single(self.image, scale_bar_length=self.scale_bar_length, **kwargs)
+        display_single(self.image, pixel_scale=self.pixel_scale, 
+                        scale_bar_length=self.scale_bar_length, **kwargs)
 
     def display_mask(self, **kwargs):
         """
@@ -422,7 +423,7 @@ class Celestial(object):
         Returns:
             None
         """
-        display_single(self.mask, scale='linear', 
+        display_single(self.mask, scale='linear', pixel_scale=self.pixel_scale, 
                         cmap=SEG_CMAP, scale_bar_length=self.scale_bar_length, **kwargs)
 
     def display_Celestial(self, **kwargs):
@@ -436,7 +437,7 @@ class Celestial(object):
             None
         """
         if hasattr(self, 'mask'):
-            display_single(self.image * (~self.mask.astype(bool)), 
+            display_single(self.image * (~self.mask.astype(bool)), pixel_scale=self.pixel_scale, 
                             scale_bar_length=self.scale_bar_length, **kwargs)
         else:
             self.display_image()

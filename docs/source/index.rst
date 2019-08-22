@@ -16,6 +16,13 @@ Basic Usage
     results = task.run(img_lowres, img_hires_b, img_hires_r, certain_gal_cat, 
                     output_name='m101_df3', verbose=True)
 
+    results.lowres_final.display_image()
+
+.. figure:: https://github.com/AstroJacobLi/mrf/raw/master/examples/m101-df3-final.png
+    :width: 700px
+    :align: center
+    :alt: alternate text
+    :figclass: align-center
 
 Guide
 -----
@@ -24,7 +31,7 @@ Guide
    :maxdepth: 2
 
    guide/install
-   tutorial/mrf
+   tutorial/mrf-tutorial
 
    license
 

@@ -1,6 +1,6 @@
 Tutorials
 ---------
-This page shows the applications of MRF on various objects. You can download the data and implement MRF by yourself. 
+This page shows the applications of MRF on various objects. You can download the data and implement MRF by yourself. All files and notebooks can be find `here <https://github.com/AstroJacobLi/mrf/tree/master/examples>`_.  
 
 NGC 5907
 ^^^^^^^^^
@@ -123,8 +123,14 @@ After having ``results``, you can show the flux model, kernels and PSF as follow
     :figclass: align-center
 
 
-You can also use `this script <https://github.com/AstroJacobLi/mrf/blob/master/examples/mrf-task.py>`_ to run the MRF task. Take NGC 5907 as an example:
 
-.. code-block:: python
+Run with script
+^^^^^^^^^^^^^^^
 
-    python mrf-task.py n5907_df_g.fits ngc5907_cfht_g.fits ngc5907_cfht_r.fits ngc5907-task.yaml --galcat='gal_cat_n5907.txt' --output='n5907_g'
+You can also use `this script <https://github.com/AstroJacobLi/mrf/blob/master/examples/mrf-task.py>`_ to run the MRF task. Take NGC 5907 as an example: (notice that you should copy the following command as one line)
+
+.. code-block:: bash
+
+    python mrf-task.py n5907_df_g.fits ngc5907_cfht_g.fits  
+    ngc5907_cfht_r.fits ngc5907-task.yaml --galcat='gal_cat_n5907.txt'
+    --output='n5907_g'
