@@ -90,20 +90,31 @@ In this example, the dwarf galaxy M101-DF3 is revealed clearly by MRF after subt
 After having ``results``, you can show the flux model, kernels and PSF as follows. 
 
 .. code-block:: python
+
     fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(15, 8))
     ax1 = display_single(results.lowres_input.image, ax=ax1, 
                          scale_bar=False, add_text='Kernel')
     ax2 = display_single(results.hires_fluxmod, ax=ax2, 
                          scale='percentile', lower_percentile=0.5,
                          scale_bar=False, add_text='FLux\,Model')
+    plt.savefig('m101-df3-fluxmodel.png', bbox_inches='tight')
     plt.show()
-
-
+    
 .. figure:: https://github.com/AstroJacobLi/mrf/raw/master/examples/m101-df3-fluxmodel.png
     :width: 1000px
     :align: center
     :alt: alternate text
     :figclass: align-center
+
+.. code-block:: python
+
+    fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(15, 8))
+    ax1 = display_single(results.kernel_med, ax=ax1, 
+                        scale_bar=False, add_text='Kernel')
+    ax2 = display_single(results.PSF, ax=ax2, 
+                        scale_bar=False, add_text='PSF')
+    plt.savefig('m101-df3-kernel-psf.png', bbox_inches='tight')
+    plt.show()
 
 .. figure:: https://github.com/AstroJacobLi/mrf/raw/master/examples/m101-df3-kernel-psf.png
     :width: 1000px
@@ -111,7 +122,7 @@ After having ``results``, you can show the flux model, kernels and PSF as follow
     :alt: alternate text
     :figclass: align-center
 
-    
+
 You can also use `this script <https://github.com/AstroJacobLi/mrf/blob/master/examples/mrf-task.py>`_ to run the MRF task. Take NGC 5907 as an example:
 
 .. code-block:: python
