@@ -587,7 +587,7 @@ class Star(Celestial):
     def mask_out_contam(self, sigma=4.5, deblend_cont=0.0005, blowup=True, show_fig=True, verbose=True):
         """
         Mask out contamination in the cutout of star. Contamination may be stars, galaxies or artifacts. 
-        This function uses ``sep`` to identify and mask contamination。
+        This function uses ``sep`` to identify and mask contamination.
 
         Parameters:
             sigma (float): The sigma in ``SExtractor``. Default is 4.5.
@@ -599,7 +599,7 @@ class Star(Celestial):
         Returns:
             None
         """
-        
+
         from astropy.convolution import convolve, Box2DKernel
         from .utils import extract_obj, seg_remove_cen_obj
         img_blur = convolve(abs(self.image), Box2DKernel(2))
@@ -614,4 +614,5 @@ class Star(Celestial):
             cv = convolve(detect_mask, Gaussian2DKernel(1.5))
             detect_mask = (cv > 0.1).astype(float)
         self.mask = detect_mask
+
         return 
