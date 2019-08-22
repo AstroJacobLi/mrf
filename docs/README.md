@@ -5,16 +5,18 @@ Multi-Resolution Filtering: a method for isolating faint, extended emission in [
   <img src="df-logo.png" width="40%">
 </p>
 
+Documentation
+-------------
+Please read the documentation and tutorial at https://mrfiltering.readthedocs.io/en/latest/.
+
 Applications
 ------------
+- Subtract compact objects from low-resolution images (such as Dragonfly) to reveal low surface brightness features.
 - Download corresponding high resolution image (HSC, CFHT) of given Dragonfly image.
-- Generate kernels to match high resolution image with low resolution one.
 - Characterize and subtract stellar halos in Dragonfly image.
-- Documentation is on its way :car: :airplane:
 
 Examples
 ------------
-
 This example shows the tidal feature of NGC 5907, described in [van Dokkum et al. (2019)](https://ui.adsabs.harvard.edu/abs/2019arXiv190611260V/abstract). The images presented there just used this algorithm. Full resolution Dragonfly images and MRF results can be found [here](https://www.pietervandokkum.com/ngc5907). Check [this notebook](https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-n5907.ipynb) for more details in how to do MRF using this Python package! :rocket: 
 
 ![MRF on NGC 5907](https://github.com/AstroJacobLi/mrf/raw/master/examples/n5907-demo.png)
@@ -33,6 +35,7 @@ Installation
 ------------
 
 ```bash
+mkdir <install dir>
 cd <install dir>
 git clone git@github.com:AstroJacobLi/mrf.git
 cd mrf
@@ -61,7 +64,6 @@ TODO
 Acknowledgement
 ---------------
 Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io)and [Jiaxuan Li](http://astrojacobli.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. Here we acknowledge them for their help!
-
 
 Citation
 -------

@@ -4,7 +4,7 @@ Installation
 
 Install from source code
 ------------------------
-If you have configured ``git`` in your computer, you can make a new directory for this package and then clone the GitHub repository locally.
+The source code of ``mrf`` is stored in GitHub repo https://github.com/AstroJacobLi/mrf. If you have configured ``git`` in your computer, you can make a new directory for this package and then clone the GitHub repository locally.
 
 .. code-block:: bash
 

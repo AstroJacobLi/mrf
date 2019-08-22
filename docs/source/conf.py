@@ -63,7 +63,7 @@ html_static_path = ['_static']
 html_logo = "_static/df-logo.png"
 
 html_sidebars = {
-    'index':    ['sidebarintro.html', 'searchbox.html'],
+#'index':    ['sidebarintro.html', 'searchbox.html'],
     '**':       ['sidebarintro.html', 'localtoc.html', 'relations.html',
                  'searchbox.html']
 }
