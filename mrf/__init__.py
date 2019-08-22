@@ -2,7 +2,7 @@
 import warnings
 warnings.simplefilter('ignore')
 
-__all__ = ["utils", "profile", "display", "celestial", "imtools"]
+__all__ = ["utils", "display", "celestial", "imtools", "task", "download"]
 
 # Version
 __version__ = "0.7.0"

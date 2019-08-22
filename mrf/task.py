@@ -26,7 +26,7 @@ class Config(object):
 
 class Results():
     """
-    Results class.
+    Results class. Other attributes will be added by ``setattr()``.
     """
     def __init__(self, config):
         self.config = config
@@ -36,6 +36,14 @@ class MrfTask():
     MRF task class. This class implements `mrf`.
     '''
     def __init__(self, config_file):
+        """
+        Initialize ``MrfTask`` class. 
+
+        Parameters:
+            config_file (str): the directory of configuration YAML file.
+        Returns:
+            None
+        """
         # Open configuration file
         with open(config_file, 'r') as ymlfile:
             cfg = yaml.safe_load(ymlfile)
@@ -44,7 +52,15 @@ class MrfTask():
         self.config = config
 
     def set_logger(self, verbose=True):
-        
+        """
+        Set logger for ``MrfTask``. The logger will record the time and each output. The log file will be saved locally.
+
+        Parameters:
+            verbose (bool): If False, the logger will be silent. 
+
+        Returns:
+            logger (``logging.logger`` object)
+        """
         if verbose:
             log_filename = self.config_file.rstrip('yaml') + 'log'
             logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO, 
@@ -63,16 +79,18 @@ class MrfTask():
         Run MRF task.
 
         Parameters:
-            dir_lowres: string, directory of input low-resolution image.
-            dir_hires_b: string, directory of input high-resolution blue-band image (typically g-band).
-            dir_hires_r: string, directory of input high-resolution red-band image (typically r-band).
-            certain_gal_cat: string, directory of a catalog (in ascii format) which contains 
+            dir_lowres (string): directory of input low-resolution image.
+            dir_hires_b (string): directory of input high-resolution 
+                blue-band image (typically g-band).
+            dir_hires_r (string): directory of input high-resolution 
+                red-band image (typically r-band).
+            certain_gal_cat (string): directory of a catalog (in ascii format) which contains 
                 RA and DEC of galaxies which you want to retain during MRF.
-            output_name: string, which will be the prefix of output files.
-            verbose: bool. If True, it will make a log file recording the process. 
+            output_name (string): which will be the prefix of output files.
+            verbose (bool): If True, it will make a log file recording the process. 
 
         Returns:
-            results: `Results` class, containing key results of this task.
+            results (`Results` class): containing key results of this task.
         
         """
         from astropy.coordinates import SkyCoord, match_coordinates_sky
@@ -466,6 +484,6 @@ class MrfTask():
         plt.subplots_adjust(wspace=0.02)
         plt.savefig(output_name + '_result.png', bbox_inches='tight', facecolor='silver')
         plt.close()
-        logger.info('Mission finished! (⁎⁍̴̛ᴗ⁍̴̛⁎)')
+        logger.info('Task finished! (⁎⁍̴̛ᴗ⁍̴̛⁎)')
 
         return results
