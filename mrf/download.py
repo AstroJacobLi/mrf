@@ -174,7 +174,7 @@ def download_cfht_megapipe(img, header, band='g', mega_cat_dir='_megapipe_cat.cs
                                             [0, 0, img.shape[0], img.shape[0]], 0)
         
     # Calculate the overlap between the given image and each CFHT frame
-    overlap = [overlap_fraction(img, header, frame, is_print=False) for frame in mega_cat]
+    overlap = [overlap_fraction(img, header, frame, verbose=False) for frame in mega_cat]
     mega_cat.add_column(Column(data = np.array(overlap), name='overlap'))
     mega_cat.sort('overlap')
     mega_cat.reverse()

@@ -22,53 +22,60 @@ APASS_vizier = 'II/336'
 #########################################################################
 
 # Calculate physical size of a given redshift
-def phys_size(redshift, is_print=True, H0=70, Omegam=0.3):
+def phys_size(redshift, H0=70, Omegam=0.3, verbose=True):
     ''' Calculate the corresponding physical size per arcsec of a given redshift
-        in the Lambda-CDM cosmology.
+        in the Flat Lambda-CDM cosmology.
 
-    Requirement:
-    -----------
-    astropy
-    
     Parameters:
-    -----------
-    redshift: float
-    is_print: boolean. If true, it will print out the physical scale at the given redshift.
-    Omegam: float, density parameter of matter. It should be within [0, 1]. 
+        redshift (float): redshift at which you want to calculate.
+        H0 (float): Hubble constant, in the unit of ``km/s/Mpc``.
+        Omegam (float): density parameter of matter ``$\Omega_m$``. It should be within [0, 1]. 
+        verbose (bool): If true, it will print out the physical scale at the given redshift.
 
     Returns:
-    -----------
-    physical_size: float, in 'kpc/arcsec'
+        physical_size (float): The corresponding physical size (not comoving) per arcsec of a given redshift.
     '''
     from astropy.cosmology import FlatLambdaCDM
     cosmos = FlatLambdaCDM(H0=H0, Om0=Omegam) 
     physical_size = 1 / cosmos.arcsec_per_kpc_comoving(redshift).value # kpc/arcsec
-    if is_print:
+    if verbose:
         print ('At redshift', redshift, ', 1 arcsec =', physical_size, 'kpc')
     return physical_size
 
 # Cutout image
-def img_cutout(img, wcs, coord_1, coord_2, size=60.0, pix=2.5,
-               prefix='img_cutout', pixel_unit=False, img_header=None, 
+def img_cutout(img, wcs, coord_1, coord_2, size=60.0, pixel_scale=2.5,
+               pixel_unit=False, img_header=None, prefix='img_cutout', 
                out_dir=None, save=True):
-    """(From kungpao) Generate image cutout with updated WCS information.
-    ----------
-    Parameters:
-        img: 2d array.
-        pixel_unit: boolen, optional
-                    When True, coord_1, cooord_2 becomes X, Y pixel coordinates.
-                    Size will also be treated as in pixels.
-        wcs: astropy wcs object of the input image.
-        coord_1: ra or x of the center.
-        coord_2: dec or y of the center.
-        size: image size, default in arcsec unit.
-        pix: pixel size.
-        img_header: the astropy header object of the input image. 
-                    In case you can save the infomation in this header to the new header.
     """
+    Generate image cutout with updated WCS information. (From ``kungpao`` https://github.com/dr-guangtou/kungpao) 
+    
+    Parameters:
+        img (numpy 2-D array): image array.
+        wcs (``astropy.wcs.WCS`` object): WCS of input image array.
+        coord_1 (float): ``ra`` or ``x`` of the cutout center.
+        coord_2 (float): ``dec`` or ``y`` of the cutout center.
+        size (float): image size, in arcsec unit by default.
+        pixel_scale (float): pixel size, in the unit of "arcsec/pixel".
+        pixel_unit (bool):  When True, ``coord_1``, ``cooord_2`` becomes ``X``, ``Y`` pixel coordinates. 
+            ``size`` will also be treated as in pixels.
+        img_header: The header of input image, typically ``astropy.io.fits.header`` object.
+            Provide the haeder in case you can save the infomation in this header to the new header.
+        prefix (str): Prefix of output files.
+        out_dir (str): Directory of output files. Default is the current folder.
+        save (bool): Whether save the cutout image.
+    
+    Returns: 
+        :
+            cutout (numpy 2-D array): the cutout image.
+
+            [cen_pos, dx, dy]: a list contains center position and ``dx``, ``dy``.
+
+            cutout_header: Header of cutout image.
+    """
+
     from astropy.nddata import Cutout2D
     if not pixel_unit:
-        # imgsize in unit of arcsec
+        # img_size in unit of arcsec
         cutout_size = np.asarray(size) / pix
         cen_x, cen_y = wcs.wcs_world2pix(coord_1, coord_2, 0)
     else:
@@ -119,16 +126,18 @@ def img_cutout(img, wcs, coord_1, coord_2, size=60.0, pix=2.5,
 
 # Save 2-D numpy array to `fits`
 def save_to_fits(img, fits_file, wcs=None, header=None, overwrite=True):
-    """Save numpy 2-D arrays to `fits` file. (from `kungpao`)
+    """
+    Save numpy 2-D arrays to `fits` file. (from `kungpao` https://github.com/dr-guangtou/kungpao)
+
     Parameters:
-        img (np.array, 2d): The 2-D array to be saved
-        fits_file (str): File name of `fits` file
-        wcs (astropy.wcs.WCS class): World coordinate system of this image
-        header (astropy.io.fits.header or str): header of this image
-        overwrite (bool): Default is True
+        img (numpy 2-D array): The 2-D array to be saved.
+        fits_file (str): File name of `fits` file.
+        wcs (``astropy.wcs.WCS`` object): World coordinate system (WCS) of this image.
+        header (``astropy.io.fits.header`` or str): header of this image.
+        overwrite (bool): Whether overwrite the file. Default is True.
 
     Returns:
-        None
+        img_hdu (``astropy.fits.PrimaryHDU`` object)
     """
     img_hdu = fits.PrimaryHDU(img)
 
@@ -158,7 +167,9 @@ def save_to_fits(img, fits_file, wcs=None, header=None, overwrite=True):
     return img_hdu
 
 def seg_remove_cen_obj(seg):
-    """Remove the central object from the segmentation.
+    """
+    Remove the central object from the segmentation map yielded by ``sep`` or ``SExtractor``.
+
     Parameters:
         seg (numpy 2-D array): segmentation map
 
@@ -171,12 +182,14 @@ def seg_remove_cen_obj(seg):
     return seg_copy
 
 def mask_remove_cen_obj(mask):
-    """Remove the central object from the binary 0-1 mask.
+    """
+    Remove the central object from the binary 0-1 mask.
+
     Parameters:
-        mask (numpy 2-D array): binary mask
+        mask (numpy 2-D array): binary mask, in which 1 means the pixel will be masked from image.
 
     Returns:
-        mask_copy (numpy 2-D array): a mask with central object removed
+        mask_copy (numpy 2-D array): a mask with central object removed (1 -> 0).
     """
     from scipy.ndimage import label
     mask_copy = copy.deepcopy(mask)
@@ -186,11 +199,14 @@ def mask_remove_cen_obj(mask):
     return mask_copy
 
 def seg_remove_obj(seg, x, y):
-    """Remove an object from the segmentation given its coordinate.
+    """
+    Remove an object from the segmentation given its coordinate.
         
     Parameters:
         seg (numpy 2-D array): segmentation mask
-        x, y (int): coordinates.
+        x (int): x-coordinate. (Remember here x is columns, and y is rows, follows the ``sep`` convention, not ``numpy`` one.)
+        y (int): y-coordinate. 
+
     Returns:
         seg_copy (numpy 2-D array): the segmentation map with certain object removed
     """
@@ -200,11 +216,14 @@ def seg_remove_obj(seg, x, y):
     return seg_copy
 
 def mask_remove_obj(mask, x, y):
-    """Remove an object from the mask given its coordinate.
+    """
+    Remove an object from the mask given its coordinate.
         
     Parameters:
         mask (numpy 2-D array): binary mask
-        x, y (int): coordinates.
+        x (int): x-coordinate. (Remember here x is columns, and y is rows, follows the ``sep`` convention, not ``numpy`` one.)
+        y (int): y-coordinate. 
+
     Returns:
         mask_copy (numpy 2-D array): the mask with certain object removed
     """
@@ -216,9 +235,10 @@ def mask_remove_obj(mask, x, y):
     return mask_copy
 
 def img_replace_with_noise(img, mask):
-    """ This function add Gaussian noise to the masked region. 
-        The characteristics of Gaussian is decided by `sep` locally measured sky value and stderr.
-        (stole from `kungpao`)
+    """ 
+    This function add Gaussian noise to the masked region. 
+    The characteristics of Gaussian is decided by `sep` locally measured sky value and stderr.
+    (from `kungpao` https://github.com/dr-guangtou/kungpao)
 
     Parameters:
         img (numpy 2-D array): image.
@@ -230,7 +250,7 @@ def img_replace_with_noise(img, mask):
     import sep
     import copy
     if sep.__version__ < '0.8.0':
-        raise ImportError('Please update `sep` to most recent version! Current version is ' + sep.__version__)
+        raise ImportError('Please update ``sep`` to most recent version! Current version is ' + sep.__version__)
     else:
         bkg = sep.Background(img, mask=(mask.astype(bool)))
         sky_noise_add = np.random.normal(loc=bkg.back(), 
@@ -241,16 +261,19 @@ def img_replace_with_noise(img, mask):
         return img_noise_replace
 
 def circularize(img, n=14, print_g=True):
-    """ Circularize an image. Inspired by http://adsabs.harvard.edu/abs/2011PASP..123.1218A.
+    """ 
+    Circularize an image/kernel. Inspired by http://adsabs.harvard.edu/abs/2011PASP..123.1218A.
+
     Parameters:
         img (numpy 2-D array): image
-        n (int): times of circularization. For example, the output image 
-            will be invariant under rotation `theta = 360 / 2^14` if `n=14`.
-        print_g (bool): if true, a parameter describing the asymmetricness of input image. 
-            `g=0` means perfectly symmetric.
+        n (int): times of circularization. For example, the output image will be 
+            invariant under rotation ``theta = 360 / 2^14`` if ``n=14``.
+        print_g (bool): if true, a parameter describing the asymmetricness of input image. ``g=0`` means perfectly symmetric.
+
     Returns:
         img_cir (numpy 2-D array): circularized image.
     """
+
     from scipy.ndimage.interpolation import rotate
     a = img
     for i in range(n):
@@ -272,11 +295,11 @@ def circularize(img, n=14, print_g=True):
 
 def azimuthal_average(image, center=None, stddev=True, binsize=0.5, interpnan=False):
     """
-    Modified based on https://github.com/keflavich/image_tools/blob/master/image_tools/radialprofile.py
     Calculate the azimuthally averaged radial profile.
+    Modified based on https://github.com/keflavich/image_tools/blob/master/image_tools/radialprofile.py
     
     Parameters:
-        imgae (numpy ndarray): 2-D image
+        imgae (numpy 2-D array): image array.
         center (list): [x, y] pixel coordinates. If None, use image center.
             Note that x is horizontal and y is vertical, y, x = image.shape.
         stdev (bool): if True, the stdev of profile will also be returned.
@@ -286,8 +309,9 @@ def azimuthal_average(image, center=None, stddev=True, binsize=0.5, interpnan=Fa
         interpnan (bool): Interpolate over NAN values, i.e. bins where there is no data?
     
     Returns:
-        If `stdev == True`, it will return [radius, profile, stdev]; 
-        else, it will return [radius, profile].
+        :
+            If `stdev == True`, it will return [radius, profile, stdev]; 
+            else, it will return [radius, profile].
     """
     # Calculate the indices from the image
     y, x = np.indices(image.shape)
@@ -321,48 +345,10 @@ def azimuthal_average(image, center=None, stddev=True, binsize=0.5, interpnan=Fa
         # recall that bins are from 1 to nbins
         whichbin = np.digitize(r.ravel(), bins)
         profile_std = np.array([np.nanstd(image.ravel()[whichbin == b]) for b in range(1, nbins + 1)])
-        profile_std /= np.sqrt(nr) # 均值的偏差
+        profile_std /= np.sqrt(nr) # Deviation of the mean!
         return [bin_centers, profile, profile_std]
     else:
         return [bin_centers, profile]
-
-    """
-    Calculate the azimuthally averaged radial profile.
-
-    image - The 2D image
-    center - The [x,y] pixel coordinates used as the center. The default is 
-             None, which then uses the center of the image (including 
-             fracitonal pixels).
-    
-    """
-    # Calculate the indices from the image
-    y, x = np.indices(image.shape)
-
-    if not center:
-        center = np.array([(x.max()-x.min())/2.0, (x.max()-x.min())/2.0])
-
-    r = np.hypot(x - center[0], y - center[1])
-
-    # Get sorted radii
-    ind = np.argsort(r.flat)
-    r_sorted = r.flat[ind]
-    i_sorted = image.flat[ind]
-
-    # Get the integer part of the radii (bin size = 1)
-    r_int = r_sorted.astype(int)
-
-    # Find all pixels that fall within each radial bin.
-    deltar = r_int[1:] - r_int[:-1]  # Assumes all radii represented
-    rind = np.where(deltar)[0]       # location of changed radius
-    nr = rind[1:] - rind[:-1]        # number of radius bin
-    
-    # Cumulative sum to figure out sums for each radius bin
-    csim = np.cumsum(i_sorted, dtype=float)
-    tbin = csim[rind[1:]] - csim[rind[:-1]]
-
-    radial_prof = tbin / nr
-
-    return radial_prof
 
 
 #########################################################################
@@ -374,33 +360,35 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
     deblend_nthresh=32, deblend_cont=0.005, clean_param=1.0, 
     sky_subtract=False, flux_auto=True, flux_aper=None, show_fig=True, 
     verbose=True, logger=None):
-    '''Extract objects for a given image, using `sep`. This is from `slug`.
+    '''
+    Extract objects for a given image using ``sep`` (a Python-wrapped ``SExtractor``). 
+    For more details, please check http://sep.readthedocs.io and documentation of SExtractor.
 
     Parameters:
-    ----------
-    img: 2-D numpy array
-    b: float, size of box
-    f: float, size of convolving kernel
-    sigma: float, detection threshold
-    pixel_scale: float, default is 0.168 (HSC pixel size)
-    minarea: float, minimum number of connected pixels
-    deblend_nthresh: float, Number of thresholds used for object deblending
-    deblend_cont: float, Minimum contrast ratio used for object deblending. Set to 1.0 to disable deblending. 
-    clean_param: float, Cleaning parameter (see SExtractor manual)
-    sky_subtract: bool, whether subtract sky before extract objects (this will affect the measured flux).
-    flux_auto: bool, whether return AUTO photometry (see SExtractor manual)
-    flux_aper: list, such as [3, 6], which gives flux within [3 pix, 6 pix] annulus.
+        img (numpy 2-D array): input image
+        b (float): size of box
+        f (float): size of convolving kernel
+        sigma (float): detection threshold
+        pixel_scale (float): default is 0.168 (HSC pixel size). This only affect the figure scale bar.
+        minarea (float): minimum number of connected pixels
+        deblend_nthresh (float): Number of thresholds used for object deblending
+        deblend_cont (float): Minimum contrast ratio used for object deblending. Set to 1.0 to disable deblending. 
+        clean_param (float): Cleaning parameter (see SExtractor manual)
+        sky_subtract (bool): whether subtract sky before extract objects (this will affect the measured flux).
+        flux_auto (bool): whether return AUTO photometry (see SExtractor manual)
+        flux_aper (list): such as [3, 6], which gives flux within [3 pix, 6 pix] annulus.
 
     Returns:
-    -------
-    objects: `astropy` Table, containing the positions,
-        shapes and other properties of extracted objects.
-    segmap: 2-D numpy array, segmentation map
+        :
+            objects: `astropy` Table, containing the positions,
+                shapes and other properties of extracted objects.
+
+            segmap: 2-D numpy array, segmentation map
     '''
 
     # Subtract a mean sky value to achieve better object detection
-    b = 30  # Box size
-    f = 5   # Filter width
+    b = b  # Box size
+    f = f  # Filter width
     bkg = sep.Background(img, bw=b, bh=b, fw=f, fh=f)
     data_sub = img - bkg.back()
     
@@ -487,8 +475,9 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
 def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3, 
                 deblend_cont=0.005, deblend_nthresh=32, save=False, 
                 output_suffix='flux_model', logger=None):
-    """ Extract sources from given image and return a flux map (not segmentation map).
-        The flux map will be saved as '_flux_' + output_suffix + '.fits', along with segmentation map.
+    """ 
+    Extract sources from given image and return a flux map (not segmentation map).
+    The flux map will be saved as '_flux_' + output_suffix + '.fits', along with segmentation map.
 
     Parameters:
         img (numpy 2-D array): Image itself
@@ -501,9 +490,10 @@ def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3,
         output_suffix (str): Suffix of output image and segmentation map.
 
     Returns:
-        objects (astropy.table.Table class): Table of detected objects.
-        segmap (numpy 2-D array): Segmentation map.
-        im_fluxes (numpy 2-D array): Flux map.
+        :
+            objects (``astropy.table.Table`` class): Table of detected objects.
+            segmap (numpy 2-D array): Segmentation map.
+            im_fluxes (numpy 2-D array): Flux map.
     """
 
     objects, segmap = extract_obj(img, b=b, f=f, sigma=sigma, minarea=minarea, show_fig=False,
@@ -514,7 +504,7 @@ def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3,
     flux = objects['flux_auto'].data.astype(np.float)
     im_fluxes = im_seg.astype(float)
     im_seg_slice_ind = np.where(im_seg > 0) # The (x,y) index of non-zero pixels in segmap
-    im_seg_slice = im_seg[im_seg > 0] # The index of non-zero pixels in segmap
+    im_seg_slice = im_seg[im_seg > 0]       # The index of non-zero pixels in segmap
     im_fluxes_slice = im_fluxes[im_seg > 0] # The fluxes of non-zero pixels in segmap
 
     for i in range(len(objects)):
@@ -530,15 +520,18 @@ def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3,
 # Simply remove stars by masking them out
 def query_star(img, header, method='gaia', bright_lim=15.5, catalog_dir=None):
     """ 
+    Query stars within a given field, return a catalog.
+
     Parameters:
-        img (2-D numpy array): image itselt.
-        header: the header of this image.
+        img (numpy 2-D array): image array.
+        header (``astropy.io.fits.header`` object): the header of this image.
         method (str): here three methods are provided: 'gaia', 'apass' or 'usno'.
+            "gaia" will be slower than the other two methods.
         bright_lim (float): the magnitude limit of stars to be masked out. 
         catalog_dir (str): optional, you can provide local catalog here.
 
     Returns:
-        star_cat
+        star_cat (``astropy.table.Table`` object)
     """
     if method.lower() == 'gaia':
         from kungpao import imtools, query
@@ -689,9 +682,9 @@ def readStarCatalog(catalog, img, img_header, ra_dec_name=None, mag_name=None, b
 
 # Simply remove stars by masking them out
 def mask_out_stars_hsc(segmap, img, header, method='gaia', bright_lim=15.5, catalog_dir=None):
-    """ For HSC, the bleeding tails are annoying. So this function is for them.
-    Mask out bright stars on the segmentation map of high resolution image, 
-        before degrading to low resolution.
+    """ 
+    For HSC, the bleeding tails are annoying. So this function is for them.
+    Mask out bright stars on the segmentation map of high resolution image, before degrading to low resolution.
 
     Parameters:
         segmap (2-D numpy array): segmentation map, on which bright stars will be masked.
@@ -725,8 +718,9 @@ def mask_out_stars_hsc(segmap, img, header, method='gaia', bright_lim=15.5, cata
     return segmap_cp
 
 def mask_out_stars(segmap, img, header, method='gaia', bright_lim=15.5, catalog_dir=None):
-    """ Mask out bright stars on the segmentation map of high resolution image, 
-        before degrading to low resolution.
+    """ 
+    Mask out bright stars on the segmentation map of high resolution image, 
+    before degrading to low resolution.
 
     Parameters:
         segmap (2-D numpy array): segmentation map, on which bright stars will be masked.
@@ -756,18 +750,20 @@ def mask_out_stars(segmap, img, header, method='gaia', bright_lim=15.5, catalog_
 
 # Mask certain galaxy
 def mask_out_certain_galaxy(segmap, header, gal_cat=None, logger=None):
-    """ Mask out certain galaxy on segmentation map.
+    """ 
+    Mask out certain galaxy on segmentation map.
 
     Parameters:
         segmap (2-D numpy array): segmentation map, on which bright stars will be masked.
         img (2-D numpy array): image itselt.
-        header: the header of this image.
-        gal_cat (astropy.table.Table object): catalog of galaxies you want to mask out. 
-            Must have columns called 'ra' and 'dec' (or 'x' and 'y').
+        header (``astropy.io.fits.header`` object): the header of this image.
+        gal_cat (``astropy.table.Table`` object): catalog of galaxies you want to mask out. 
+            Must have columns called ``ra`` and ``dec`` (or ``x`` and ``y``).
 
     Returns:
-        segmap_cp: segmentation map after removing bright stars.
+        segmap_cp (numpy 2-D array): segmentation map after removing bright stars.
     """
+
     from astropy import wcs
     if gal_cat is not None:
         w = wcs.WCS(header) # this header should be of the subsampled image
@@ -803,42 +799,34 @@ def mask_out_certain_galaxy(segmap, header, gal_cat=None, logger=None):
     else:
         return segmap
 
+# Create convolution kernels
 def create_matching_kernel_custom(source_psf, target_psf, window=None):
     """
-    Create a kernel to match 2D point spread functions (PSF) using the
-    ratio of Fourier transforms.
+    Create a kernel to match 2D point spread functions (PSF) using the ratio of Fourier transforms. 
+    Reference: https://photutils.readthedocs.io/en/stable/api/photutils.create_matching_kernel.html?highlight=create_kernel.
 
-    Parameters
-    ----------
-    source_psf : 2D `~numpy.ndarray`
-        The source PSF.  The source PSF should have higher resolution
-        (i.e. narrower) than the target PSF.  ``source_psf`` and
-        ``target_psf`` must have the same shape and pixel scale.
+    Parameters:
+        source_psf (numpy 2-D array): The source PSF.  The source PSF should have higher resolution
+            (i.e. narrower) than the target PSF.  ``source_psf`` and ``target_psf`` must have the same shape and pixel scale.
 
-    target_psf : 2D `~numpy.ndarray`
-        The target PSF.  The target PSF should have lower resolution
-        (i.e. broader) than the source PSF.  ``source_psf`` and
-        ``target_psf`` must have the same shape and pixel scale.
+        target_psf (numpy 2-D array): The target PSF.  The target PSF should have lower resolution 
+            (i.e. broader) than the source PSF.  ``source_psf`` and ``target_psf`` must have the same shape and pixel scale.
 
-    window : callable, optional
-        The window (or taper) function or callable class instance used
-        to remove high frequency noise from the PSF matching kernel.
-        Some examples include:
+        window: The window (or taper) function or callable class instance used
+            to remove high frequency noise from the PSF matching kernel.
+            Some examples include:
+            * ``photutils.psf.matching.HanningWindow``
+            * ``photutils.psf.matching.TukeyWindow``
+            * ``photutils.psf.matching.CosineBellWindow``
+            * ``photutils.psf.matching.SplitCosineBellWindow``
+            * ``photutils.psf.matching.TopHatWindow``
 
-        * `~photutils.psf.matching.HanningWindow`
-        * `~photutils.psf.matching.TukeyWindow`
-        * `~photutils.psf.matching.CosineBellWindow`
-        * `~photutils.psf.matching.SplitCosineBellWindow`
-        * `~photutils.psf.matching.TopHatWindow`
+            For more information on window functions and example usage, see
+            https://photutils.readthedocs.io/en/stable/psf_matching.html#psf-matching.
 
-        For more information on window functions and example usage, see
-        :ref:`psf_matching`.
-
-    Returns
-    -------
-    kernel : 2D `~numpy.ndarray`
-        The matching kernel to go from ``source_psf`` to ``target_psf``.
-        The output matching kernel is normalized such that it sums to 1.
+    Returns:
+        kernel (numpy 2-D array): The matching kernel to go from ``source_psf`` to ``target_psf``. 
+            The output matching kernel is normalized such that it sums to 1.
     """
 
     # inputs are copied so that they are not changed when normalizing
@@ -849,7 +837,7 @@ def create_matching_kernel_custom(source_psf, target_psf, window=None):
         raise ValueError('source_psf and target_psf must have the same shape '
                          '(i.e. registered with the same pixel scale).')
 
-    # ensure input PSFs are normalized
+    # We don't normalize our PSFs here.
     #source_psf /= source_psf.sum()
     #target_psf /= target_psf.sum()
 
@@ -864,24 +852,27 @@ def create_matching_kernel_custom(source_psf, target_psf, window=None):
     kernel = np.real(np.fft.fftshift((np.fft.ifft2(np.fft.ifftshift(ratio)))))
     return kernel
 
-# new version of makekernel using `Celestial` object
-def Makekernel(img_hires, img_lowres, obj, s, d, cval=np.nan, window=CosineBellWindow(alpha=1)):
-    """ Given position, make kernel based on this position image. 
-        To make 'makekernel' more general, all coordinates are local. 
-        Here we don't normalize PSF! Don't use `photutils.psf.creat_matching_kernel`.
+# Make convolution kernels for MRF based on one object
+def Makekernel(img_hires, img_lowres, obj, s, d, window=CosineBellWindow(alpha=1)):
+    """ 
+    Given position, make kernel based on this position image. 
+    Here we don't normalize PSF! Don't use ``photutils.psf.creat_matching_kernel``.
 
     Parameters:
         img_hires (2-D numpy array): high resolution image
         img_lowres (2-D numpy array): low resolution image
-        x, y (float): position of star, where kernel is made
-        s: kernel half-size, in pixel
-        d: PSF half-size, in pixel
+        x (float): x-position of star, where kernel is made
+        y (float): y-position of star, where kernel is made
+        s (float): kernel half-size, in pixel
+        d (float): PSF half-size, in pixel
 
     Returns:
-        kernel: kernel generated by given position
-        hires_cut: the local cutout from high resolution image
-        lowres_cut: the local cutout from low resolution image
+        : 
+            kernel (numpy 2-D array): kernel generated by given position
+            hires_cut (numpy 2-D array): the local cutout from high resolution image
+            lowres_cut (numpy 2-D array): the local cutout from low resolution image
     """
+
     from .celestial import Star
     # Don't use mask
     star_lowres = Star(img_lowres.image, img_lowres.header, obj, halosize=s)
@@ -907,29 +898,32 @@ def Makekernel(img_hires, img_lowres, obj, s, d, cval=np.nan, window=CosineBellW
     
     return kernel, hires_cut, lowres_cut
 
-# new version of autokernel using `Celestial` object
+# Automatically make convolution kernels for MRF
 def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None, 
               frac_maxflux=0.1, fwhm_upper=14, nkernels=20, 
-              border=50, cval=np.nan, show_figure=True, logger=None):
-    """ Automatically generate kernel from an image, 
-        by detecting star position and make kernel from them.
-        Here all images are subsampled, and all coordinates are in 
-        subsampled image's coordinate.
+              border=50, show_figure=True, logger=None):
+    """ 
+    Automatically generate kernel from an image, by detecting star position and make kernel from them.
+    Here all images are subsampled, and all coordinates are in subsampled image's coordinate.
+    Notice that ``s`` and ``d`` are half-size of kernel. Typically ``s > d``.
 
     Parameters:
         img_hires (Celestial class): high resolution image
         img_lowres (Celestial class): low resolution image
-        object_cat_dir (str): the directory of object catalog in `fits`.
-            This catalog contains all stars that can be used to construct PSF of high-res image.
         s (float): kernel half-size, in pixel
         d (float): PSF half-size, in pixel
+        object_cat_dir (str): the directory of object catalog in `fits`.
+            This catalog contains all stars that can be used to construct PSF of high-res image.
         frac_maxflux (float): only account for stars whose flux is 
             less than `frac_maxflux * maxflux`
+        fwhm_upper (float): we only select objects whose FWHMs are less than this value.
         nkernels (int): number of stars, from which the kernel is generated
         border (int): don't select stars with in the border/edge of image
-        
+        show_figure (bool): Whether show the kernels and save the figure
+        logger (``logging.logger`` object): logger for this task.
+
     Returns:
-        kernel_median: the median kernel generated from given image
+        kernel_median (numpy 2-D array): the median kernel generated from given image
     """
     # Attempt to generate kernel automatically
 
@@ -972,7 +966,7 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
     # take brightest `n` objects
     bad_indices = []
     for i, obj in enumerate(good_cat[:nkernels]):
-        kernel, hires_cut, lowres_cut = Makekernel(img_hires, img_lowres, obj, s, d, cval=cval)
+        kernel, hires_cut, lowres_cut = Makekernel(img_hires, img_lowres, obj, s, d)
         cuts_low[i, :, :] = lowres_cut
         cuts_high[i, :, :] = hires_cut
         # discard this one if flux deviates too much.
@@ -1024,15 +1018,20 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
 
 # Generate a star mask, different from `mask_out_star` function
 def bright_star_mask(mask, catalog, bright_lim=17.5, r=2.0):
-    """ Mask out bright stars on the segmentation map of high resolution image, 
-        before degrading to low resolution.
+    """ 
+    Mask out bright stars on the segmentation map of high resolution image, 
+    before degrading to low resolution.
 
     Parameters:
-        
+        mask (numpy 2-D array): the mask.
+        catalog (``astropy.table.Table`` object): a catalog containing all objects detected using ``sep``.
+        bright_lim (float): Stars brighter than this value will be masked out.
+        r (float): Blow-up factor of mask.
 
     Returns:
-        segmap_cp: segmentation map after removing bright stars.
+        segmap_cp (numpy 2-D array): segmentation map after removing bright stars (1 -> 0).
     """
+
     import sep
     # Make stars to be zero on segmap
     for obj in catalog:
@@ -1043,7 +1042,8 @@ def bright_star_mask(mask, catalog, bright_lim=17.5, r=2.0):
 # Subtract background of PSF
 def psf_bkgsub(psf, edge):
     """
-    Subtract a background of PSF, estimated by the pixel value around the edges of PSF.
+    Subtract the background of PSF, estimated by the pixel value around the edges of PSF.
+    This is different from ``Star.sub_bkg``, in which we estimate background using ``sep``.
 
     Parameters:
         psf (numpy 2-D array): PSF itself
@@ -1062,9 +1062,32 @@ def psf_bkgsub(psf, edge):
     psf_sub = psf - d
     return psf_sub
 
+# Remove low surface brightness features from Flux Model
 def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir, 
                  SB_lim=24.0, zeropoint=30.0, pixel_size=0.83, unmask_ratio=6, 
                  gaussian_radius=1.5, gaussian_threshold=0.01, logger=None):
+    """
+    Remove low surface brightness features from Flux Model. 
+    For more details please read the corresponding sections in van Dokkum et al. 2019 PASP.
+
+    Parameters:
+        flux_model (numpy 2-D array): Flux model, generated by ``FluxModel`` function.
+        conv_model (numpy 2-D array): The flux model after convolved with MRF kernel.
+        kernel (numpy 2-D array): MRF kernel.
+        segmap (numpy 2-D array): Segmentation map yielded by ``extract_obj`` function.
+        objcat_dir (str): The directory of object catalog, which is also yielded by ``extract_obj`` function.
+        SB_lim (float): Surface brightness limit. Objects fainter than this will be masked.
+        zeropoint (float): The photometric zeropoint of high-resolution image.
+        pixel_size (float): Pixel size of ``flux_model``, after rebinning high-resolution image.
+        unmask_ratio (float): We mask out faint objects with ``$E<unmask_ratio$``.
+        gaussian_radius (float): A 2-D Gaussian is called to smooth the mask a little bit.
+        gaussian_threshold (float): A 2-D Gaussian is called to smooth the mask a little bit.
+        logger (``logging.logger`` object): logger for this task.
+
+    Returns:
+        im_highres (numpy 2-D array): Flux model after removing low-SB features.
+    """
+
     from astropy.convolution import convolve, Gaussian2DKernel
 
     E = flux_model / conv_model
@@ -1126,7 +1149,6 @@ def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir,
     return im_highres
 
     
-
 #########################################################################
 ########################## The Tractor related ##########################
 #########################################################################
@@ -1137,17 +1159,15 @@ def add_tractor_sources(obj_cat, sources, w, shape_method='manual'):
     Add tractor sources to the sources list.
 
     Parameters:
-    ----------
-    obj_cat: astropy Table, objects catalogue.
-    sources: list, to which we will add objects.
-    w: wcs object.
-    shape_method: string, 'manual' or 'decals'. If 'manual', it will adopt the 
-                manually measured shapes. If 'decals', it will adopt 'DECaLS' 
-                tractor shapes.
+        obj_cat: astropy Table, objects catalogue.
+        sources: list, to which we will add objects.
+        w: wcs object.
+        shape_method: string, 'manual' or 'decals'. If 'manual', it will adopt the 
+                    manually measured shapes. If 'decals', it will adopt 'DECaLS' 
+                    tractor shapes.
 
     Returns:
-    --------
-    sources: list of sources.
+        sources: list of sources.
     '''
     from tractor import NullWCS, NullPhotoCal, ConstantSky
     from tractor.galaxy import GalaxyShape, DevGalaxy, ExpGalaxy, CompositeGalaxy
@@ -1255,22 +1275,20 @@ def tractor_iteration(obj_cat, w, img_data, invvar, psf_obj, pixel_scale, shape_
     Run tractor iteratively.
 
     Parameters:
-    -----------
-    obj_cat: objects catalogue.
-    w: wcs object.
-    img_data: 2-D np.array, image.
-    invvar: 2-D np.array, inverse variance matrix of the image.
-    psf_obj: PSF object, defined by tractor.psf.PixelizedPSF() class.
-    pixel_scale: float, pixel scale in unit arcsec/pixel.
-    shape_method: if 'manual', then adopt manually measured shape. If 'decals', then adopt DECaLS shape from tractor files.
-    kfold: int, iteration time.
-    first_num: how many objects will be fit in the first run.
-    fig_name: string, if not None, it will save the tractor subtracted image to the given path.
+        obj_cat: objects catalogue.
+        w: wcs object.
+        img_data: 2-D np.array, image.
+        invvar: 2-D np.array, inverse variance matrix of the image.
+        psf_obj: PSF object, defined by tractor.psf.PixelizedPSF() class.
+        pixel_scale: float, pixel scale in unit arcsec/pixel.
+        shape_method: if 'manual', then adopt manually measured shape. If 'decals', then adopt DECaLS shape from tractor files.
+        kfold: int, iteration time.
+        first_num: how many objects will be fit in the first run.
+        fig_name: string, if not None, it will save the tractor subtracted image to the given path.
 
     Returns:
-    -----------
-    sources: list, containing tractor model sources.
-    trac_obj: optimized tractor object after many iterations.
+        sources: list, containing tractor model sources.
+        trac_obj: optimized tractor object after many iterations.
     '''
     from tractor import NullWCS, NullPhotoCal, ConstantSky
     from tractor.galaxy import GalaxyShape, DevGalaxy, ExpGalaxy, CompositeGalaxy
@@ -1335,9 +1353,13 @@ def tractor_iteration(obj_cat, w, img_data, invvar, psf_obj, pixel_scale, shape_
 #########################################################################
 
 class Config(object):
+    """
+    Configuration class.
+    """
     def __init__(self, d):
         for a, b in d.items():
             if isinstance(b, (list, tuple)):
                 setattr(self, a, [Config(x) if isinstance(x, dict) else x for x in b])
             else:
                 setattr(self, a, Config(b) if isinstance(b, dict) else b)
+        Config.config = d

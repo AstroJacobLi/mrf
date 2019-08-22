@@ -719,7 +719,7 @@ def SBP_single(ell_fix, redshift, pixel_scale, zeropoint, ax=None, offset=0.0,
 
     # Calculate physical size at this redshift
     from .utils import phys_size
-    phys_sclae = phys_size(redshift, is_print=False)
+    phys_sclae = phys_size(redshift, verbose=False)
 
     # 1-D profile
     if physical_unit is True:

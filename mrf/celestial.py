@@ -402,10 +402,10 @@ class Celestial(object):
     # Display image/mask
     def display_image(self, **kwargs):
         """
-        Take a peek at the image, using "zscale", "arcsinh" streching and "viridis" colormap. You can change them by adding **kwargs.
+        Take a peek at the image, using "zscale", "arcsinh" streching and "viridis" colormap. You can change them by adding ``**kwargs``.
 
         Parameters:
-            **kwargs: arguments in ``mrf.display.display_single``.
+            ``**kwargs``: arguments in ``mrf.display.display_single``.
 
         Returns:
             None
@@ -417,7 +417,7 @@ class Celestial(object):
         Take a peek at the mask.
 
         Parameters:
-            **kwargs: arguments in ``mrf.display.display_single``.
+            ``**kwargs``: arguments in ``mrf.display.display_single``.
             
         Returns:
             None
@@ -427,10 +427,10 @@ class Celestial(object):
 
     def display_Celestial(self, **kwargs):
         """
-        Take a peek at the masked image, using "zscale", "arcsinh" streching and "viridis" colormap. You can change them by adding **kwargs.
+        Take a peek at the masked image, using "zscale", "arcsinh" streching and "viridis" colormap. You can change them by adding ``**kwargs``.
 
         Parameters:
-            **kwargs: arguments in ``mrf.display.display_single``.
+            ``**kwargs``: arguments in ``mrf.display.display_single``.
             
         Returns:
             None
