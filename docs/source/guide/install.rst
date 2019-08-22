@@ -2,14 +2,6 @@ Installation
 ============
 ``mrf`` is a Python package which also incorperates some ``iraf`` functions. You can download and install the package as follows.
 
-Install from ``pip``
-----------------------
-Probably the easiest way is to install with ``pip`:
-
-.. code-block:: bash
-
-  $ pip install --user mrf
-
 Install from source code
 --------------------------
 The source code of ``mrf`` is stored in GitHub repo https://github.com/AstroJacobLi/mrf. If you have configured ``git`` in your computer, you can make a new directory for this package and then clone the GitHub repository locally.
@@ -24,7 +16,15 @@ The source code of ``mrf`` is stored in GitHub repo https://github.com/AstroJaco
 
 If you don't have ``git`` configured, you can also download the ``zip`` file directly from https://github.com/AstroJacobLi/mrf/archive/master.zip, then unzip it and install it in the same way using ``$ python setup.py install``. 
 
+Install from ``pip``
+----------------------
+Probably the easiest way is to install with ``pip``. However, we recommend our use install most up-to-date version using ``git``. 
 
+.. code-block:: bash
+
+  $ pip install --user mrf
+
+  
 Test the Installation
 -----------------------
 **You need to export the path of** ``mrf`` **as an environment variable**. 
