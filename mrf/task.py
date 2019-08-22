@@ -260,7 +260,7 @@ class MrfTask():
                                         int(f_magnify * config.kernel.kernel_size), 
                                         int(f_magnify * (config.kernel.kernel_size - config.kernel.kernel_edge)), 
                                         frac_maxflux=config.kernel.frac_maxflux, 
-                                        show_figure=config.kernel.show_fig, cval=0.0,
+                                        show_figure=config.kernel.show_fig,
                                         nkernels=config.kernel.nkernel, logger=logger)
         # You can also circularize the kernel
         if config.kernel.circularize:
