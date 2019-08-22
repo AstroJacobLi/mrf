@@ -197,6 +197,8 @@ class MrfTask():
         
         _ = hires_3.save_to_fits('_hires_{}.fits'.format(int(f_magnify)))
         
+        setattr(results, 'hires_img', copy.deepcopy(hires_3))
+
         # Clear memory
         del r_imflux, b_imflux, hires_b, hires_r
         gc.collect()
