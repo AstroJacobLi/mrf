@@ -14,7 +14,7 @@ Multi-Resolution Filtering is a method for isolating faint, extended emission in
     :target: https://mrfiltering.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://img.shields.io/badge/version-1.0.0-green
+.. image:: https://img.shields.io/badge/version-1.0.1-green
     :alt: Version
 
 .. image:: https://img.shields.io/badge/GitHub-astrojacobli%2Fmrf-blue
@@ -47,7 +47,7 @@ Basic Usage
     :figclass: align-center
 
 User Guide
------
+-----------
 
 .. toctree::
    :maxdepth: 2
@@ -55,6 +55,10 @@ User Guide
    guide/install
    tutorial/mrf-tutorial
 
+.. toctree::
+   :maxdepth: 1
+
+   tutorial/misc
    license
    guide/changelog
 
@@ -69,7 +73,7 @@ Index
 Citation
 --------
 
-``mrf`` is free software made available under MIT License. For details see the LICENSE file. If you use this package in your work, please cite van Dokkum et al. (in prep). 
+``mrf`` is a free software made available under MIT License. For details see the LICENSE file. If you use this package in your work, please cite van Dokkum et al. (in prep). 
 
 You are welcome to report bugs in ``mrf`` via creating issues at https://github.com/AstroJacobLi/mrf/issues.
 

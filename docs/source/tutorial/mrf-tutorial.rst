@@ -50,6 +50,9 @@ The main part of MRF can be simply done by the following code. A configuration Y
 
 ``results`` has many attributes including the MRF results ``results.lowres_final``, the models ``results.lowres_model``, the convolution kernel ``results.kernel_med``, the stacked PSF ``results.PSF``, etc.
 
+.. warning::
+   Incorrect pixel scale could yield completely wrong results. Be aware of the pixel scale of the image you are processing, and pass the pixel scale to the functions in time.
+
 .. code-block:: python
 
     import matplotlib.pyplot as plt
