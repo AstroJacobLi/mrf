@@ -69,13 +69,13 @@ Index
 Citation
 --------
 
-``mrf`` is a free software made available under MIT License. For details see the LICENSE file. If you use this package in your work, please cite van Dokkum et al. (in prep). 
+``mrf`` is free software made available under MIT License. For details see the LICENSE file. If you use this package in your work, please cite van Dokkum et al. (in prep). 
 
 You are welcome to report bugs in ``mrf`` via creating issues at https://github.com/AstroJacobLi/mrf/issues.
 
 Need more help? Feel free to contact via pieter.vandokkum@yale.edu and jiaxuan_li@pku.edu.cn.
 
-Acknowledgement
+Acknowledgment
 ---------------
 Many scripts and snippets are from `kungpao <https://github.com/dr-guangtou/kungpao>`_ (written by `Song Huang <http://dr-guangtou.github.io>`_). `Johnny Greco <http://johnnygreco.github.io>`_ kindly shared his idea of the code structure. Here we acknowledge them for their help!
 

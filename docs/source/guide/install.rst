@@ -18,18 +18,18 @@ If you don't have ``git`` configured, you can also download the ``zip`` file dir
 
 Install from ``pip``
 ----------------------
-Probably the easiest way is to install with ``pip``. However, we recommend our use install most up-to-date version using ``git``. 
+Probably the easiest way is to install with ``pip``. However, we recommend our users install most up-to-date version using ``git``. 
 
 .. code-block:: bash
 
   $ pip install --user mrf
 
-  
+
 Test the Installation
 -----------------------
 **You need to export the path of** ``mrf`` **as an environment variable**. 
 
-So please open ``~/.bash_profile`` (or ``~/.bashrc``) with your favourite editor, and write 
+So please open ``~/.bash_profile`` (or ``~/.bashrc``) with your favorite editor, and write 
 
 .. code-block:: bash
 
@@ -42,7 +42,7 @@ to it (replace ``<install dir>`` with your certain directory). Don't forget to v
   $ source ~/.bash_profile
 
 
-Then import ``mrf`` package in Python. The following snippet check the availability of some ``iraf`` files. The output should be ``"<install dir>/mrf/mrf/iraf/macosx/"``.
+Then import ``mrf`` package in Python. The following snippet checks the availability of some ``iraf`` files. The output should be ``"<install dir>/mrf/mrf/iraf/macosx/"``.
 
 .. code-block:: python
 
