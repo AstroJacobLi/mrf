@@ -18,8 +18,8 @@
 from mrf import __version__
 
 project = 'mrf'
-copyright = '2019, Pieter van Dokkum, Jiaxuan Li'
-author = 'Pieter van Dokkum, Jiaxuan Li'
+copyright = '2019, Jiaxuan Li, Pieter van Dokkum'
+author = 'Jiaxuan Li, Pieter van Dokkum'
 
 # The full version, including alpha/beta/rc tags
 release = __version__
@@ -33,7 +33,8 @@ version = __version__
 extensions = [
     'sphinx.ext.napoleon',
     'recommonmark',
-    'sphinx.ext.mathjax'
+    'sphinx.ext.mathjax',
+    'sphinx.ext.autosectionlabel'
     ] #'sphinx.ext.autodoc', 
  
 # Add any paths that contain templates here, relative to this directory.
