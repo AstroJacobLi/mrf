@@ -6,7 +6,7 @@ NGC 5907
 ^^^^^^^^^
 NGC 5907 is an edge-on spiral galaxy, which is famous for its prominent tidal streams. Recently the images taken by Dragonfly Telephoto Array reveal more details about the low surface brightness features around this galaxy (`van Dokkum et al. 2019 <https://ui.adsabs.harvard.edu/abs/2019arXiv190611260V/abstract>`_). In this paper, we isolate diffuse low surface brightness streams using "Multi-Resolution Filtering" (MRF). Now we show how to do it using Python package ``mrf``. Check `this notebook <https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-n5907.ipynb>`_ for the whole process of MRF using this Python package. Below I briefly show the key steps.
 
-Full resolution Dragonfly images and MRF results can be found `here <https://www.pietervandokkum.com/ngc5907>`_. The corresponding CFHT images can be found on `Canadian Astronomy Data Center <http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/?collection=CFHTMEGAPIPE&noexec=true#queryFormTab>`_. Besides, ``mrf`` provides functions to download high-resolution images (including `CFHT <https://www.cfht.hawaii.edu>`_ and `HSC <https://hsc.mtk.nao.ac.jp>`_), shown as follows:
+Dragonfly images in ``g`` and ``r`` band can be found `here <https://www.pietervandokkum.com/ngc5907>`_ along with MRF results. The corresponding CFHT images can be found on `Canadian Astronomy Data Center <http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/?collection=CFHTMEGAPIPE&noexec=true#queryFormTab>`_. Besides, ``mrf`` provides functions to download high-resolution images (including `CFHT <https://www.cfht.hawaii.edu>`_ and `HSC <https://hsc.mtk.nao.ac.jp>`_), shown as follows:
 
 .. code-block:: python
 
@@ -82,7 +82,7 @@ M101-DF3
 ^^^^^^^^^
 M101-DF3 is a satellite galaxy of the famous spiral galaxy M101, presented in `Merritt, van Dokkum, & Abraham 2014 <https://iopscience.iop.org/article/10.1088/2041-8205/787/2/L37/meta>`_. It has an effective surface brightness :math:`\mu_g=27.4\pm0.2` and effective radius :math:`r_e=30\pm 3` arcsec. 
 
-In this example, the dwarf galaxy M101-DF3 is revealed clearly by MRF after subtracting compact objects and bright star halos according to `van Dokkum et al. (in prep) <https://www.pietervandokkum.com>`_ . The basic procedures are the same as NGC 5907 example. Check `this notebook <https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-m101df3.ipynb>`_ for more details. 
+The Dragonfly ``r`` band image of M101-DF3 and CFHT counterpart can be found `here (google drive link) <https://drive.google.com/open?id=1XKRY6-WAftOnfIIuAVWbiGVcbWCNfi6j>`_. In this example, the dwarf galaxy M101-DF3 is revealed clearly by MRF after subtracting compact objects and bright star halos according to `van Dokkum et al. (in prep) <https://www.pietervandokkum.com>`_ . The basic procedures are the same as NGC 5907 example. Check `this notebook <https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-m101df3.ipynb>`_ for more details. 
 
 .. figure:: https://github.com/AstroJacobLi/mrf/raw/master/examples/m101-df3-demo.png
     :width: 1000px
