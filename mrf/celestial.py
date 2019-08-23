@@ -276,6 +276,36 @@ class Celestial(object):
         if hasattr(self, 'mask'):
             self.shift_mask(dx, dy, method=method, order=order, cval=cval)
     
+    # Resize image/mask
+    def _resize_wcs(self, img, w, f):
+        w_temp = copy.deepcopy(w)
+        ra_cen, dec_cen = w_temp.wcs_pix2world(img.shape[1]/2, img.shape[0]/2, 1)
+        w_temp.wcs.crval = [ra_cen, dec_cen]
+        w_temp.wcs.crpix = [img.shape[1]/2 * f, img.shape[0]/2 * f]
+        #ra_cen, dec_cen = w_temp.wcs_pix2world(0, 0, 1)
+        #w_temp.wcs.crval = [ra_cen, dec_cen]
+        #w_temp.wcs.crpix = [0, 0]
+        # move the reference pixel to (0, 0)
+        w_temp.wcs.cd /= f
+        w_temp.wcs.cdelt /= f
+        return w_temp
+
+    def _wcs_header_merge(self):
+        """
+        Look! this function must be used just before `return`! If you use it earlier, you'll make big trouble!
+        """
+        self.header['NAXIS1'] = self.image.shape[1]
+        self.header['NAXIS2'] = self.image.shape[0]
+        if self.wcs is not None:
+            wcs_header = self.wcs.to_header()
+            import fnmatch
+            for i in self.header:
+                if i in wcs_header:
+                    self.header[i] = wcs_header[i]
+                if fnmatch.fnmatch(i, 'CD?_?'):
+                    self.header[i] = wcs_header['PC' + i.lstrip('CD')]
+        self.wcs = wcs.WCS(self.header)
+
     def resize_image(self, f, method='iraf', order=5, cval=0.0):
         '''
         Zoom/Resize the image of Celestial object. 
@@ -304,20 +334,32 @@ class Celestial(object):
             galimg = InterpolatedImage(Image(self.image, dtype=float), 
                                     scale=self.pixel_scale, x_interpolant=Lanczos(order))
             #galimg = galimg.magnify(f)
-            ny, nx = self.image.shape
-            result = galimg.drawImage(scale=self.pixel_scale / f, nx=round(nx * f), ny=round(ny * f))#, wcs=AstropyWCS(self.wcs))
-            self.wcs = self._resize_wcs(self.image, self.wcs, f)
-            self._image = result.array
-            self.shape = self.image.shape
-            self._wcs_header_merge()
-            self.pixel_scale /= f
+            if f > 1:
+                ny, nx = self.image.shape
+                result = galimg.drawImage(scale=self.pixel_scale / f, nx=round(nx * f), ny=round(ny * f))#, wcs=AstropyWCS(self.wcs))
+                self.wcs = self._resize_wcs(self.image, self.wcs, f)
+                self._image = result.array
+                self.shape = self.image.shape
+                self._wcs_header_merge()
+                self.pixel_scale /= f
+            else:
+                k = 1 / f
+                ny, nx = self.image.shape
+                result = galimg.drawImage(scale=self.pixel_scale / f, nx=round(nx * f), ny=round(ny * f))#, wcs=AstropyWCS(self.wcs))
+                self.wcs = self._resize_wcs(self.image, self.wcs, 1/round(k))
+                self._image = result.array
+                self.shape = self.image.shape
+                self._wcs_header_merge()
+                self.pixel_scale /= f
+
             return result.array
         elif method == 'iraf':
             self.save_to_fits('./_temp.fits', 'image')
             if f > 1:
                 magnify('./_temp.fits', './_resize_temp.fits', f, f)
             else:
-                blkavg('./_temp.fits', './_resize_temp.fits', 1/f, 1/f, option='sum')
+                blkavg('./_temp.fits', './_resize_temp.fits', 
+                        round(1/f), round(1/f), option='sum')
             hdu = fits.open('./_resize_temp.fits')
             self.image = hdu[0].data
             self.shape = hdu[0].data.shape

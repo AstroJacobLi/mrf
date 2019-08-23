@@ -16,13 +16,17 @@ The source code of ``mrf`` is stored in GitHub repo https://github.com/AstroJaco
 
 If you don't have ``git`` configured, you can also download the ``zip`` file directly from https://github.com/AstroJacobLi/mrf/archive/master.zip, then unzip it and install it in the same way using ``$ python setup.py install``. 
 
-Install from ``pip``
-----------------------
-Probably the easiest way is to install with ``pip``. However, we recommend our users install most up-to-date version using ``git``. 
+.. warning::
+   ``mrf`` has not been fully compatible with Windows. Use Linux or MacOS!
 
-.. code-block:: bash
+..
+  Install from ``pip``
+  ----------------------
+  Probably the easiest way is to install with ``pip``. However, we recommend our users install most up-to-date version using ``git``. 
 
-  $ pip install --user mrf
+  .. code-block:: bash
+
+    $ pip install --user mrf
 
 
 Test the Installation
