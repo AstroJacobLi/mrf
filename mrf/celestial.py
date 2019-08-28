@@ -218,10 +218,10 @@ class Celestial(object):
         Parameters:
             dx (float): shift distance (in pixel) along x (horizontal). 
                 Note that elements in one row has the same y but different x. 
-                Example: dx = 2 is to shift the image "RIGHT" (as seen in DS9), dy = 3 is to shift the image "UP".
+                Example: dx = 2 is to shift the mask "RIGHT" (as seen in DS9), dy = 3 is to shift the image "UP".
             dy (float): shift distance (in pixel) along y (vertical). 
                 Note that elements in one row has the same y but different x. 
-                Example: dx = 2 is to shift the image "RIGHT" (as seen in DS9), dy = 3 is to shift the image "UP".
+                Example: dx = 2 is to shift the mask "RIGHT" (as seen in DS9), dy = 3 is to shift the image "UP".
             method (str): interpolation method. Use 'spline', lanczos' or 'iraf'. 
                 If using 'iraf', default interpolation is 'poly3. 'Lanczos' requires ``GalSim`` installed.
             order (int): the order of Spline or Lanczos interpolation (>0).
@@ -447,7 +447,7 @@ class Celestial(object):
             hdu.close()
             imdelete('./*temp.fits')
             return self.image
-            
+
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos', 'spline' or 'iraf'.")
     

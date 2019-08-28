@@ -397,16 +397,29 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
         input_data = data_sub
     else:
         input_data = img
-    objects, segmap = sep.extract(input_data,
-                                  sigma,
-                                  err=bkg.globalrms,
-                                  segmentation_map=True,
-                                  filter_type='matched',
-                                  deblend_nthresh=deblend_nthresh,
-                                  deblend_cont=deblend_cont,
-                                  clean=True,
-                                  clean_param=clean_param,
-                                  minarea=minarea)
+    try:
+        objects, segmap = sep.extract(input_data,
+                                    sigma,
+                                    err=bkg.globalrms,
+                                    segmentation_map=True,
+                                    filter_type='matched',
+                                    deblend_nthresh=deblend_nthresh,
+                                    deblend_cont=deblend_cont,
+                                    clean=True,
+                                    clean_param=clean_param,
+                                    minarea=minarea)
+    except ValueError as e:
+        objects, segmap = sep.extract(input_data.byteswap().newbyteorder(),
+                                    sigma,
+                                    err=bkg.globalrms,
+                                    segmentation_map=True,
+                                    filter_type='matched',
+                                    deblend_nthresh=deblend_nthresh,
+                                    deblend_cont=deblend_cont,
+                                    clean=True,
+                                    clean_param=clean_param,
+                                    minarea=minarea)
+
     if verbose:
         if logger is not None:
             logger.info("    - Detect %d objects" % len(objects))
