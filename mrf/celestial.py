@@ -139,7 +139,7 @@ class Celestial(object):
         return img_hdu
     
     # Shift image/mask
-    def shift_image(self, dx, dy, method='iraf', order=5, cval=0.0):
+    def shift_image(self, dx, dy, method='spline', order=5, cval=0.0):
         '''Shift the image of Celestial object. The WCS of image will also be changed.
 
         Parameters:
@@ -212,7 +212,7 @@ class Celestial(object):
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos' or 'iraf'.")
 
-    def shift_mask(self, dx, dy, method='iraf', order=5, cval=0.0):
+    def shift_mask(self, dx, dy, method='spline', order=5, cval=0.0):
         '''Shift the mask of Celestial object.
 
         Parameters:
@@ -284,7 +284,7 @@ class Celestial(object):
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos' or 'iraf'.")
 
-    def shift_Celestial(self, dx, dy, method='iraf', order=5, cval=0.0):
+    def shift_Celestial(self, dx, dy, method='spline', order=5, cval=0.0):
         '''Shift the Celestial object, including image and mask.
 
         Parameters:
@@ -304,7 +304,8 @@ class Celestial(object):
         '''
         self.shift_image(dx, dy, method=method, order=order, cval=cval)
         if hasattr(self, 'mask'):
-            self.shift_mask(dx, dy, method=method, order=order, cval=cval)
+            if abs(np.sum(self.mask)) > 1e-5:
+                self.shift_mask(dx, dy, method=method, order=order, cval=cval)
 
     def _resize_header_wcs(self, img, f):
         hdr = copy.deepcopy(self.header)
@@ -558,8 +559,8 @@ class Celestial(object):
             self.wcs = wcs.WCS(self.header)
             self._image = result
             self.shape = self.image.shape
-            self.header['NAXIS1'] = result.array.shape[1]
-            self.header['NAXIS2'] = result.array.shape[0]
+            self.header['NAXIS1'] = result.shape[1]
+            self.header['NAXIS2'] = result.shape[0]
             self.pixel_scale /= f
             return result
 
@@ -633,8 +634,8 @@ class Celestial(object):
             self.wcs = wcs.WCS(self.header)
             self._mask = result
             self.shape = self.mask.shape
-            self.header['NAXIS1'] = result.array.shape[1]
-            self.header['NAXIS2'] = result.array.shape[0]
+            self.header['NAXIS1'] = result.shape[1]
+            self.header['NAXIS2'] = result.shape[0]
             self.pixel_scale /= f
             return result
 
@@ -783,7 +784,7 @@ class Star(Celestial):
                                 x_int + padsize - halosize: x_int + padsize + halosize + 1])
             self.hscmask = halo
 
-    def centralize(self, method='iraf', order=5, cval=0.0):
+    def centralize(self, method='spline', order=5, cval=0.0):
         """
         Shift the cutout to the true position of the star using interpolation. 
 
@@ -845,7 +846,7 @@ class Star(Celestial):
             imgcp[self.mask.astype(bool)] = cval
             return imgcp
 
-    def mask_out_contam(self, sigma=4.5, deblend_cont=0.0005, blowup=True, show_fig=True, verbose=True):
+    def mask_out_contam(self, sigma=4.5, deblend_cont=0.0005, blowup=True, cval=np.nan, show_fig=True, verbose=True):
         """
         Mask out contamination in the cutout of star. Contamination may be stars, galaxies or artifacts. 
         This function uses ``sep`` to identify and mask contamination.
@@ -874,6 +875,11 @@ class Star(Celestial):
             from astropy.convolution import convolve, Gaussian2DKernel
             cv = convolve(detect_mask, Gaussian2DKernel(1.5))
             detect_mask = (cv > 0.1).astype(float)
-        self.mask = detect_mask
+        
+        imgcp = copy.copy(self.image)
+        imgcp[detect_mask.astype(bool)] = cval
+        self.image = imgcp
+        # Shift mask will be very horrible!!! Hence we still don't use self.mask. 
+        # Instead we directly mask out on the image.
 
         return 

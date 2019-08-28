@@ -63,7 +63,7 @@ TODO
 
 Acknowledgement
 ---------------
-Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io)and [Jiaxuan Li](http://astrojacobli.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. Here we acknowledge them for their help!
+Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io) and [Jiaxuan Li](http://astrojacobli.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. Here we acknowledge them for their help!
 
 Citation
 -------
