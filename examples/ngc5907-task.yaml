@@ -29,6 +29,7 @@ fluxmodel:
   unmask_lowsb: True
   sb_lim: 24.0
   unmask_ratio: 6
+  interp: 'lanczos'
 
 kernel:
   kernel_size: 8 # In original coordinate, before magnification
@@ -52,6 +53,7 @@ starhalo:
   deblend_nthresh: 32
   sky_subtract: False
   flux_aper: [3, 6]
+  interp: 'lanczos'
   cval: 0.0
   mask_contam: True
 
