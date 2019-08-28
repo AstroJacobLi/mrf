@@ -311,25 +311,44 @@ class Celestial(object):
     def _resize_header_wcs(self, img, f):
         hdr = copy.deepcopy(self.header)
         w = wcs.WCS(hdr)
-        hdr['CRPIX1'] = hdr['CRPIX1'] * f #+ (1 - f * 1)
-        # (1 - f * x1), where x1=1 is the starting index
-        hdr['CRPIX2'] = hdr['CRPIX2'] * f #+ (1 - f * 1)
-        
-        # Delete "CDELT"
-        if "CDELT1" in hdr or "CDELT2" in hdr:
-            for i in hdr['CDELT*'].keys():
-                del hdr[i]
-        if "LTV1" in hdr:
-            for i in hdr['LTV*'].keys():
-                del hdr[i]
-            for i in hdr['LTM*'].keys():
-                del hdr[i]
-        hdr['CD1_1'] /= f
-        hdr['CD2_2'] /= f
-        if "CD1_2" in hdr:
-            hdr['CD1_2'] /= f
-        if "CD2_1" in hdr:
-            hdr['CD2_1'] /= f
+        if f > 1:
+            hdr['CRPIX1'] = hdr['CRPIX1'] * f #+ (1 - f * 1)
+            # (1 - f * x1), where x1=1 is the starting index
+            hdr['CRPIX2'] = hdr['CRPIX2'] * f #+ (1 - f * 1)
+            # Delete "CDELT"
+            if "CDELT1" in hdr or "CDELT2" in hdr:
+                for i in hdr['CDELT*'].keys():
+                    del hdr[i]
+            if "LTV1" in hdr:
+                for i in hdr['LTV*'].keys():
+                    del hdr[i]
+                for i in hdr['LTM*'].keys():
+                    del hdr[i]
+            hdr['CD1_1'] /= f
+            hdr['CD2_2'] /= f
+            if "CD1_2" in hdr:
+                hdr['CD1_2'] /= f
+            if "CD2_1" in hdr:
+                hdr['CD2_1'] /= f
+        else:
+            b = round(1 / f)
+            hdr['CRPIX1'] = hdr['CRPIX1'] / b
+            hdr['CRPIX2'] = hdr['CRPIX2'] / b
+            # Delete "CDELT"
+            if "CDELT1" in hdr or "CDELT2" in hdr:
+                for i in hdr['CDELT*'].keys():
+                    del hdr[i]
+            if "LTV1" in hdr:
+                for i in hdr['LTV*'].keys():
+                    del hdr[i]
+                for i in hdr['LTM*'].keys():
+                    del hdr[i]
+            hdr['CD1_1'] *= b
+            hdr['CD2_2'] *= b
+            if "CD1_2" in hdr:
+                hdr['CD1_2'] *= b
+            if "CD2_1" in hdr:
+                hdr['CD2_1'] *= b
 
         return hdr
 
@@ -363,18 +382,54 @@ class Celestial(object):
             galimg = InterpolatedImage(Image(self.image, dtype=float), 
                                        scale=self.pixel_scale, x_interpolant=Lanczos(order))
             ny, nx = self.image.shape
-            result = galimg.drawImage(scale=self.pixel_scale / f, nx=int((nx -1) * f + 1), ny=int((ny - 1)* f + 1))
-            self.header = self._resize_header_wcs(self.image, f)
-            self.header['CRPIX1'] += (1 - f * 1)
-            self.header['CRPIX2'] += (1 - f * 1)
-            self._image = result.array
-            self.shape = self.image.shape
-            self.header['NAXIS1'] = result.array.shape[1]
-            self.header['NAXIS2'] = result.array.shape[0]
-            self.pixel_scale /= f
-            self.wcs = wcs.WCS(self.header)
+            if f > 1:
+                result = galimg.drawImage(scale=self.pixel_scale / f, 
+                                nx=int((nx -1) * f + 1), ny=int((ny - 1)* f + 1))
+                self.header = self._resize_header_wcs(self.image, f)
+                self.header['CRPIX1'] += (1 - f * 1)
+                self.header['CRPIX2'] += (1 - f * 1)
+                self._image = result.array
+                self.shape = self.image.shape
+                self.header['NAXIS1'] = result.array.shape[1]
+                self.header['NAXIS2'] = result.array.shape[0]
+                self.pixel_scale /= f
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The following block could be wrong! ####
+                ## Probably you'll need extra shift of image
+                dshift = 2 * (1 - f * 1) % 0.5
+                self.shift_image(dshift, dshift, method='spline')
+                # We don't want to shift wcs.
+                self.header['CRPIX1'] -= dshift
+                self.header['CRPIX2'] -= dshift 
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The above block could be wrong! ####
 
-            return result.array
+            else:
+                from math import ceil
+                b = round(1 / f)
+                nxout = ceil(nx / b)
+                nyout = ceil(ny / b)
+                result = galimg.drawImage(scale=self.pixel_scale * b, 
+                                          nx=nxout, ny=nyout)
+                self.header = self._resize_header_wcs(self.image, f)
+                self.header['CRPIX1'] += 0.5 - 1 / b / 2
+                self.header['CRPIX2'] += 0.5 - 1 / b / 2
+                self._image = result.array
+                self.shape = self.image.shape
+                self.header['NAXIS1'] = result.array.shape[1]
+                self.header['NAXIS2'] = result.array.shape[0]
+                self.pixel_scale *= b
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The following block could be wrong! ####
+                ## Probably you'll need extra shift of image
+                dshift = 0.5 - 1 / b / 2
+                self.shift_image(-dshift, -dshift, method='spline')
+                # We don't want to shift wcs.
+                self.header['CRPIX1'] -= dshift
+                self.header['CRPIX2'] -= dshift 
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The above block could be wrong! ####
+            return self.image
 
         elif method == 'iraf':
             self.save_to_fits('./_temp.fits', 'image')
@@ -392,49 +447,7 @@ class Celestial(object):
             hdu.close()
             imdelete('./*temp.fits')
             return self.image
-
-        elif method == 'spline':
-            ## This only works for ZOOM! NEED BKGAVG!
-            from scipy.ndimage import zoom
-            assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
-            ny, nx = self.image.shape
-            print(ny, nx, f)
-            result = zoom(self.image, float(f), order=order, mode='constant', cval=cval)
-            result /= f**2 # preserve total flux
-            self.header = self._resize_header_wcs(self.image, f)
-            self._image = result
-
-            extra_shift = 1 - (f * 1)
-            self.shift_image(extra_shift, extra_shift, method=method)
-            self.header['CRPIX1'] += 1 * extra_shift # Empirically correct
-            self.header['CRPIX2'] += 1 * extra_shift
-
-            self.shape = self.image.shape
-            self.header['NAXIS1'] = result.shape[1]
-            self.header['NAXIS2'] = result.shape[0]
-            self.pixel_scale /= f
-            self.wcs = wcs.WCS(self.header)
-
-            """
-            print(result.shape[1], result.shape[0])
-            dx = int((nx - 1) * f + 1) - result.shape[1]
-            dy = int((ny - 1) * f + 1) - result.shape[0]
-            print(dx, dy)
-            result = self.image
-            # Pad the image to fit the shape of `iraf` results
-            if dy != 0:
-                if dy < 0:
-                    result = result[:dy, :]
-            if dx != 0:
-                if dx < 0:
-                    result = result[:, :dx]
-                    #result = np.append(result, np.zeros(result.shape[0], dx), axis=1)
-            self._image = result
-
             
-            #return result
-            """
-
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos', 'spline' or 'iraf'.")
     
@@ -471,15 +484,54 @@ class Celestial(object):
                                        scale=self.pixel_scale, x_interpolant=Lanczos(order))
             #galimg = galimg.magnify(f)
             ny, nx = self.mask.shape
-            result = galimg.drawImage(scale=self.pixel_scale / f, nx=round((nx -1) * f + 1), ny=round((ny - 1)* f + 1))#, wcs=AstropyWCS(self.wcs))
-            self.header = self._resize_header_wcs(self.mask, f)
-            self.wcs = wcs.WCS(self.header)
-            self._mask = result.array
-            self.shape = self.mask.shape
-            self.header['NAXIS1'] = result.array.shape[1]
-            self.header['NAXIS2'] = result.array.shape[0]
-            self.pixel_scale /= f
-            return result.array
+            if f > 1:
+                result = galimg.drawImage(scale=self.pixel_scale / f, 
+                                nx=int((nx -1) * f + 1), ny=int((ny - 1)* f + 1))
+                self.header = self._resize_header_wcs(self.mask, f)
+                self.header['CRPIX1'] += (1 - f * 1)
+                self.header['CRPIX2'] += (1 - f * 1)
+                self._mask = result.array
+                self.shape = self.mask.shape
+                self.header['NAXIS1'] = result.array.shape[1]
+                self.header['NAXIS2'] = result.array.shape[0]
+                self.pixel_scale /= f
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The following block could be wrong! ####
+                ## Probably you'll need extra shift of image
+                dshift = 2 * (1 - f * 1) % 0.5
+                self.shift_mask(dshift, dshift, method='spline')
+                # We don't want to shift wcs.
+                self.header['CRPIX1'] -= dshift
+                self.header['CRPIX2'] -= dshift 
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The above block could be wrong! ####
+            else:
+                from math import ceil
+                b = round(1 / f)
+                nxout = ceil(nx / b)
+                nyout = ceil(ny / b)
+                result = galimg.drawImage(scale=self.pixel_scale * b, 
+                                          nx=nxout, ny=nyout)
+                self.header = self._resize_header_wcs(self.mask, f)
+                self.header['CRPIX1'] += 0.5 - 1 / b / 2
+                self.header['CRPIX2'] += 0.5 - 1 / b / 2
+                self._mask = result.array
+                self.shape = self.image.shape
+                self.header['NAXIS1'] = result.array.shape[1]
+                self.header['NAXIS2'] = result.array.shape[0]
+                self.pixel_scale *= b
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The following block could be wrong! ####
+                ## Probably you'll need extra shift of image
+                dshift = 0.5 - 1 / b / 2
+                self.shift_image(-dshift, -dshift, method='spline')
+                # We don't want to shift wcs.
+                self.header['CRPIX1'] -= dshift
+                self.header['CRPIX2'] -= dshift 
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The above block could be wrong! ####
+
+            return self.mask
 
         elif method == 'iraf':
             self.save_to_fits('./_temp.fits', 'mask')
@@ -497,19 +549,6 @@ class Celestial(object):
             hdu.close()
             imdelete('./*temp.fits')
             return self.mask
-
-        elif method == 'spline':
-            from scipy.ndimage import zoom
-            assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
-            result = zoom(self.image, float(f), order=order, mode='constant', cval=cval)
-            self.header = self._resize_header_wcs(self.mask, f)
-            self.wcs = wcs.WCS(self.header)
-            self._mask = result
-            self.shape = self.mask.shape
-            self.header['NAXIS1'] = result.shape[1]
-            self.header['NAXIS2'] = result.shape[0]
-            self.pixel_scale /= f
-            return result
 
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos', 'spline' or 'iraf'.")

@@ -76,7 +76,7 @@ def img_cutout(img, wcs, coord_1, coord_2, size=60.0, pixel_scale=2.5,
     from astropy.nddata import Cutout2D
     if not pixel_unit:
         # img_size in unit of arcsec
-        cutout_size = np.asarray(size) / pix
+        cutout_size = np.asarray(size) / pixel_scale
         cen_x, cen_y = wcs.wcs_world2pix(coord_1, coord_2, 0)
     else:
         cutout_size = np.asarray(size)
