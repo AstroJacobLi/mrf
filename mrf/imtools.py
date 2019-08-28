@@ -153,7 +153,7 @@ def magnify(image, output, xmag, ymag, x1="INDEF", x2="INDEF", y1="INDEF", y2="I
     Command += 'interpolation={} '.format(interpolant)
     Command += 'boundary={} '.format(boundary)
     if boundary == 'constant':
-        Command += 'constant={} '.format(0.0)
+        Command += 'constant={} '.format(0)
     Command += 'fluxconserve={} '.format(fluxconserve)
     Command += 'logfile={} '.format(logfile)
     os.system(Command)

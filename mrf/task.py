@@ -126,7 +126,7 @@ class MrfTask():
         # 2. Create magnified low-res image, and register high-res images with subsampled low-res ones
         f_magnify = config.lowres.magnify_factor
         logger.info('Magnify Dragonfly image with a factor of %.1f:', f_magnify)
-        lowres.resize_image(f_magnify)
+        lowres.resize_image(f_magnify, method=config.fluxmodel.interp)
         lowres.save_to_fits('_lowres_{}.fits'.format(int(f_magnify)))
         logger.info('Register high resolution image "{0}" with "{1}"'.format(dir_hires_b, dir_lowres))
         hdu = fits.open(dir_hires_b)
@@ -303,11 +303,11 @@ class MrfTask():
         res = Celestial(lowres.image - lowres_model.image, header=lowres.header)
         res.save_to_fits('_res_{}.fits'.format(f_magnify))
 
-        lowres_model.resize_image(1 / f_magnify)
+        lowres_model.resize_image(1 / f_magnify, method=config.fluxmodel.interp)
         lowres_model.save_to_fits('_lowres_model.fits')
         setattr(results, 'lowres_model_compact', copy.deepcopy(lowres_model))
 
-        res.resize_image(1 / f_magnify)
+        res.resize_image(1 / f_magnify, method=config.fluxmodel.interp)
         res.save_to_fits(output_name + '_res.fits')
         setattr(results, 'res', res)
 
@@ -331,7 +331,7 @@ class MrfTask():
         logger.info('Extract objects from compact-object-subtracted low-resolution image with:')
         logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
         logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
-        objects, segmap = extract_obj(res.image.byteswap().newbyteorder(), 
+        objects, segmap = extract_obj(res.image, 
                                     b=64, f=3, sigma=sigma, minarea=minarea,
                                     deblend_nthresh=deblend_nthresh, 
                                     deblend_cont=deblend_cont, 
@@ -369,25 +369,27 @@ class MrfTask():
             try:
                 sstar = Star(res.image, header=res.header, starobj=obj, 
                              halosize=halosize, padsize=padsize)
-                if config.starhalo.mask_contam:
-                    sstar.mask_out_contam(show_fig=False, verbose=False)
-                sstar.centralize(method='iraf')
-                #sstar.sub_bkg(verbose=False)
+
                 cval = config.starhalo.cval
                 if isinstance(cval, str) and 'nan' in cval.lower():
                     cval = np.nan
                 else:
                     cval = float(cval)
 
+                if config.starhalo.mask_contam:
+                    sstar.mask_out_contam(show_fig=False, verbose=False, cval=cval)
+                sstar.centralize(method=config.starhalo.interp)
+                #sstar.sub_bkg(verbose=False)
                 if config.starhalo.norm == 'flux_ann':
-                    stack_set[i, :, :] = sstar.get_masked_image(cval=cval) / sstar.fluxann
+                    stack_set[i, :, :] = sstar.image / sstar.fluxann
                 else:
-                    stack_set[i, :, :] = sstar.get_masked_image(cval=cval) / sstar.flux
+                    stack_set[i, :, :] = sstar.image / sstar.flux
                     
             except Exception as e:
                 stack_set[i, :, :] = np.ones((size, size)) * 1e9
                 bad_indices.append(i)
                 logger.info(e)
+                print(e)
                 
         stack_set = np.delete(stack_set, bad_indices, axis=0)
         median_psf = np.nanmedian(stack_set, axis=0)
@@ -416,7 +418,7 @@ class MrfTask():
             y_int = y.astype(np.int)
             dx = -1.0 * (x - x_int)
             dy = -1.0 * (y - y_int)
-            spsf.shift_image(-dx, -dy, method='iraf')
+            spsf.shift_image(-dx, -dy, method=config.starhalo.interp)
             x_int, y_int = x_int + halosize, y_int + halosize
             if config.starhalo.norm == 'flux_ann':
                 im_halos_padded[y_int - halosize:y_int + halosize + 1, 
