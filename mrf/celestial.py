@@ -447,53 +447,6 @@ class Celestial(object):
             hdu.close()
             imdelete('./*temp.fits')
             return self.image
-            
-        """
-        elif method == 'spline':
-            ## This only works for ZOOM! NEED BKGAVG!
-            from scipy.ndimage import zoom
-            assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
-            ny, nx = self.image.shape
-            print(ny, nx, f)
-            result = zoom(self.image, float(f), order=order, mode='constant', cval=cval)
-            result /= f**2 # preserve total flux
-            self.header = self._resize_header_wcs(self.image, f)
-            self._image = result
-            self.shape = self.image.shape
-            self.header['NAXIS1'] = result.shape[1]
-            self.header['NAXIS2'] = result.shape[0]
-            self.pixel_scale /= f
-            self.wcs = wcs.WCS(self.header)
-            
-            #### Cautious! The following block could be wrong! ####
-            ## Probably you'll need extra shift of image
-            #dshift = 2 * (1 - f * 1) % 0.5
-            #self.shift_image(dshift, dshift, method=method)
-            # We don't want to shift wcs.
-            #self.header['CRPIX1'] -= dshift
-            #self.header['CRPIX2'] -= dshift 
-            #self.wcs = wcs.WCS(self.header)
-            #### Cautious! The above block could be wrong! ####
-
-            
-            print(result.shape[1], result.shape[0])
-            dx = int((nx - 1) * f + 1) - result.shape[1]
-            dy = int((ny - 1) * f + 1) - result.shape[0]
-            print(dx, dy)
-            result = self.image
-            # Pad the image to fit the shape of `iraf` results
-            if dy != 0:
-                if dy < 0:
-                    result = result[-dy:, :]
-            if dx != 0:
-                if dx < 0:
-                    result = result[:, -dx:]
-                    #result = np.append(result, np.zeros(result.shape[0], dx), axis=1)
-            self._image = result
-
-            
-            #return result
-        """
 
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos', 'spline' or 'iraf'.")
@@ -660,6 +613,54 @@ class Celestial(object):
                             scale_bar_length=self.scale_bar_length, **kwargs)
         else:
             self.display_image()
+
+
+"""
+elif method == 'spline':
+    ## This only works for ZOOM! NEED BKGAVG!
+    from scipy.ndimage import zoom
+    assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
+    ny, nx = self.image.shape
+    print(ny, nx, f)
+    result = zoom(self.image, float(f), order=order, mode='constant', cval=cval)
+    result /= f**2 # preserve total flux
+    self.header = self._resize_header_wcs(self.image, f)
+    self._image = result
+    self.shape = self.image.shape
+    self.header['NAXIS1'] = result.shape[1]
+    self.header['NAXIS2'] = result.shape[0]
+    self.pixel_scale /= f
+    self.wcs = wcs.WCS(self.header)
+    
+    #### Cautious! The following block could be wrong! ####
+    ## Probably you'll need extra shift of image
+    #dshift = 2 * (1 - f * 1) % 0.5
+    #self.shift_image(dshift, dshift, method=method)
+    # We don't want to shift wcs.
+    #self.header['CRPIX1'] -= dshift
+    #self.header['CRPIX2'] -= dshift 
+    #self.wcs = wcs.WCS(self.header)
+    #### Cautious! The above block could be wrong! ####
+
+    
+    print(result.shape[1], result.shape[0])
+    dx = int((nx - 1) * f + 1) - result.shape[1]
+    dy = int((ny - 1) * f + 1) - result.shape[0]
+    print(dx, dy)
+    result = self.image
+    # Pad the image to fit the shape of `iraf` results
+    if dy != 0:
+        if dy < 0:
+            result = result[-dy:, :]
+    if dx != 0:
+        if dx < 0:
+            result = result[:, -dx:]
+            #result = np.append(result, np.zeros(result.shape[0], dx), axis=1)
+    self._image = result
+
+    
+    #return result
+"""
 
 class Star(Celestial):
     """

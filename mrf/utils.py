@@ -389,7 +389,12 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
     # Subtract a mean sky value to achieve better object detection
     b = b  # Box size
     f = f  # Filter width
-    bkg = sep.Background(img, bw=b, bh=b, fw=f, fh=f)
+    try:
+        bkg = sep.Background(img, bw=b, bh=b, fw=f, fh=f)
+    except ValueError as e:
+        img = img.byteswap().newbyteorder()
+        bkg = sep.Background(img, bw=b, bh=b, fw=f, fh=f)
+    
     data_sub = img - bkg.back()
     
     sigma = sigma
@@ -397,28 +402,17 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
         input_data = data_sub
     else:
         input_data = img
-    try:
-        objects, segmap = sep.extract(input_data,
-                                    sigma,
-                                    err=bkg.globalrms,
-                                    segmentation_map=True,
-                                    filter_type='matched',
-                                    deblend_nthresh=deblend_nthresh,
-                                    deblend_cont=deblend_cont,
-                                    clean=True,
-                                    clean_param=clean_param,
-                                    minarea=minarea)
-    except ValueError as e:
-        objects, segmap = sep.extract(input_data.byteswap().newbyteorder(),
-                                    sigma,
-                                    err=bkg.globalrms,
-                                    segmentation_map=True,
-                                    filter_type='matched',
-                                    deblend_nthresh=deblend_nthresh,
-                                    deblend_cont=deblend_cont,
-                                    clean=True,
-                                    clean_param=clean_param,
-                                    minarea=minarea)
+
+    objects, segmap = sep.extract(input_data,
+                                sigma,
+                                err=bkg.globalrms,
+                                segmentation_map=True,
+                                filter_type='matched',
+                                deblend_nthresh=deblend_nthresh,
+                                deblend_cont=deblend_cont,
+                                clean=True,
+                                clean_param=clean_param,
+                                minarea=minarea)
 
     if verbose:
         if logger is not None:
