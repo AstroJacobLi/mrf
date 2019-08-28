@@ -194,7 +194,7 @@ class Celestial(object):
             self.wcs = wcs.WCS(self.header)
             hdu.close()
             imdelete('./*temp.fits')
-            return
+            return self.image
 
         elif method == 'spline':
             from scipy.ndimage.interpolation import shift
@@ -267,6 +267,7 @@ class Celestial(object):
             self.wcs = wcs.WCS(self.header)
             hdu.close()
             imdelete('./*temp.fits')
+            return self.mask
 
         elif method == 'spline':
             from scipy.ndimage.interpolation import shift
@@ -310,9 +311,10 @@ class Celestial(object):
     def _resize_header_wcs(self, img, f):
         hdr = copy.deepcopy(self.header)
         w = wcs.WCS(hdr)
-        hdr['CRPIX1'] = hdr['CRPIX1'] * f + (1 - f * 1)
-        hdr['CRPIX2'] = hdr['CRPIX2'] * f + (1 - f * 1)
-
+        hdr['CRPIX1'] = hdr['CRPIX1'] * f #+ (1 - f * 1)
+        # (1 - f * x1), where x1=1 is the starting index
+        hdr['CRPIX2'] = hdr['CRPIX2'] * f #+ (1 - f * 1)
+        
         # Delete "CDELT"
         if "CDELT1" in hdr or "CDELT2" in hdr:
             for i in hdr['CDELT*'].keys():
@@ -331,170 +333,6 @@ class Celestial(object):
 
         return hdr
 
-    """
-    # Resize image/mask
-    def _resize_wcs(self, img, w, f):
-        w_temp = copy.deepcopy(w)
-        # Calculate center position
-        #
-        #w_temp.wcs.crval = [ra_cen, dec_cen]
-        #w_temp.wcs.crpix = [0, 0]
-        # move the reference pixel to (0, 0)
-
-        #ra_cen, dec_cen = w.all_pix2world(1, 1, 1) 
-        # w.wcs_pix2world(img.shape[1]/2, img.shape[0]/2, 1)
-        #hdr['CRVAL1'] = float(ra_cen)
-        #hdr['CRVAL2'] = float(dec_cen)
-        #hdr['CRPIX1'] = 0 #img.shape[1]/2 * f
-        #hdr['CRPIX2'] = 0 #img.shape[0]/2 * f
-
-        ra_cen, dec_cen = w_temp.wcs_pix2world(img.shape[1]/2, img.shape[0]/2, 1)
-        w_temp.wcs.crval = [ra_cen, dec_cen]
-        w_temp.wcs.crpix = [img.shape[1]/2 * f, img.shape[0]/2 * f]
-        #ra_cen, dec_cen = w_temp.wcs_pix2world(0, 0, 1)
-        #w_temp.wcs.crval = [ra_cen, dec_cen]
-        #w_temp.wcs.crpix = [0, 0]
-        # move the reference pixel to (0, 0)
-        w_temp.wcs.cd /= f
-        w_temp.wcs.cdelt /= f
-        return w_temp
-
-    def _wcs_header_merge(self):
-        '''
-        Look! this function must be used just before `return`! If you use it earlier, you'll make big trouble!
-        '''
-        
-        self.header['NAXIS1'] = self.image.shape[1]
-        self.header['NAXIS2'] = self.image.shape[0]
-        if self.wcs is not None:
-            wcs_header = self.wcs.to_header()
-            import fnmatch
-            for i in self.header:
-                if i in wcs_header:
-                    self.header[i] = wcs_header[i]
-                if fnmatch.fnmatch(i, 'CD?_?'):
-                    self.header[i] = wcs_header['PC' + i.lstrip('CD')]
-        self.wcs = wcs.WCS(self.header)
-
-    def resize_image(self, f, method='iraf', order=5, cval=0.0):
-        '''
-        Zoom/Resize the image of Celestial object. 
-        f > 1 means the image will be resampled (finer)! f < 1 means the image will be degraded.
-
-        Parameters:
-            f (float): the positive factor of zoom. If 0 < f < 1, the image will be resized to smaller one.
-            method (str): interpolation method. Use 'lanczos' or 'iraf'. 'Lanczos' requires ``GalSim`` installed.
-            order (int): the order Lanczos interpolation (>0).
-            cval (float): value to fill the edges. Default is 0.
-
-        Returns:
-            resize_image (ndarray): resized image. The "image" attribute of ``Celestial`` class will also be changed accordingly.
-        '''
-
-        if method == 'lanczos':
-            try: # try to import galsim
-                from galsim import degrees, Angle
-                from galsim.interpolant import Lanczos
-                from galsim import Image, InterpolatedImage
-                from galsim.fitswcs import AstropyWCS
-            except:
-                raise ImportError('# Import ``galsim`` failed! Please check if ``galsim`` is installed!')
-
-            assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
-            galimg = InterpolatedImage(Image(self.image, dtype=float), 
-                                    scale=self.pixel_scale, x_interpolant=Lanczos(order))
-            #galimg = galimg.magnify(f)
-            if f > 1:
-                ny, nx = self.image.shape
-                result = galimg.drawImage(scale=self.pixel_scale / f, nx=round(nx * f), ny=round(ny * f))#, wcs=AstropyWCS(self.wcs))
-                self.wcs = self._resize_wcs(self.image, self.wcs, f)
-                self._image = result.array
-                self.shape = self.image.shape
-                self._wcs_header_merge()
-                self.pixel_scale /= f
-            else:
-                k = 1 / f
-                ny, nx = self.image.shape
-                result = galimg.drawImage(scale=self.pixel_scale / f, nx=round(nx * f), ny=round(ny * f))#, wcs=AstropyWCS(self.wcs))
-                self.wcs = self._resize_wcs(self.image, self.wcs, 1/round(k))
-                self._image = result.array
-                self.shape = self.image.shape
-                self._wcs_header_merge()
-                self.pixel_scale /= f
-
-            return result.array
-        elif method == 'iraf':
-            self.save_to_fits('./_temp.fits', 'image')
-            if f > 1:
-                magnify('./_temp.fits', './_resize_temp.fits', f, f)
-            else:
-                blkavg('./_temp.fits', './_resize_temp.fits', 
-                        round(1/f), round(1/f), option='sum')
-            hdu = fits.open('./_resize_temp.fits')
-            self.image = hdu[0].data
-            self.shape = hdu[0].data.shape
-            self.header = hdu[0].header
-            self.wcs = wcs.WCS(self.header)
-            self.pixel_scale /= f
-            hdu.close()
-            imdelete('./*temp.fits')
-        else:
-            raise ValueError("# Not supported interpolation method. Use 'lanczos' or 'iraf'.")
-
-    def resize_mask(self, f, method='iraf', order=5, cval=0.0):
-        '''
-        Zoom/Resize the mask of Celestial object. 
-        f > 1 means the mask will be resampled (finer)! f < 1 means the mask will be degraded.
-
-        Parameters:
-            f (float): the positive factor of zoom. If 0 < f < 1, the mask will be resized to smaller one.
-            method (str): interpolation method. Use 'lanczos' or 'spline' or 'iraf'. 'Lanczos' requires ``GalSim`` installed.
-            order (int): the order Lanczos interpolation (>0).
-            cval (float): value to fill the edges. Default is 0.
-
-        Returns:
-            resize_mask (ndarray): resized mask. The "mask" attribute of ``Celestial`` class will also be changed accordingly.
-        '''
-
-        if method == 'lanczos':
-            try: # try to import galsim
-                from galsim import degrees, Angle
-                from galsim.interpolant import Lanczos
-                from galsim import Image, InterpolatedImage
-                from galsim.fitswcs import AstropyWCS
-            except:
-                raise ImportError('# Import ``galsim`` failed! Please check if ``galsim`` is installed!')
-
-            assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
-            galimg = InterpolatedImage(Image(self.mask, dtype=float), 
-                                    scale=self.pixel_scale, x_interpolant=Lanczos(order))
-            ny, nx = self.mask.shape
-            result = galimg.drawImage(scale=self.pixel_scale / f, nx=round(nx * f), ny=round(ny * f))#, wcs=AstropyWCS(self.wcs))
-            self.wcs = self._resize_wcs(self.image, self.wcs, f)
-            self._image = result.array
-            self.shape = self.mask.shape
-            self._wcs_header_merge()
-            self.pixel_scale /= f
-            return result.array
-        elif method == 'iraf':
-            self.save_to_fits('./_temp.fits', 'mask')
-            if f > 1:
-                magnify('./_temp.fits', './_resize_temp.fits', f, f)
-            else:
-                blkavg('./_temp.fits', './_resize_temp.fits', 1/f, 1/f, option='sum')
-            hdu = fits.open('./_resize_temp.fits')
-            self.mask = hdu[0].data
-            self.shape = hdu[0].data.shape
-            self.header = hdu[0].header
-            self.wcs = wcs.WCS(self.header)
-            self.pixel_scale /= f
-            hdu.close()
-            imdelete('./*temp.fits')
-        else:
-            raise ValueError("# Not supported interpolation method. Use 'lanczos' or 'iraf'.")
-
-    """
-
     def resize_image(self, f, method='lanczos', order=5, cval=0.0):
         '''
         Zoom/Resize the image of Celestial object. 
@@ -512,6 +350,7 @@ class Celestial(object):
         '''
 
         if method == 'lanczos':
+            "Lanczos is all set!"
             try: # try to import galsim
                 from galsim import degrees, Angle
                 from galsim.interpolant import Lanczos
@@ -523,16 +362,18 @@ class Celestial(object):
             assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
             galimg = InterpolatedImage(Image(self.image, dtype=float), 
                                        scale=self.pixel_scale, x_interpolant=Lanczos(order))
-            #galimg = galimg.magnify(f)
             ny, nx = self.image.shape
-            result = galimg.drawImage(scale=self.pixel_scale / f, nx=round((nx -1) * f + 1), ny=round((ny - 1)* f + 1))#, wcs=AstropyWCS(self.wcs))
+            result = galimg.drawImage(scale=self.pixel_scale / f, nx=int((nx -1) * f + 1), ny=int((ny - 1)* f + 1))
             self.header = self._resize_header_wcs(self.image, f)
-            self.wcs = wcs.WCS(self.header)
+            self.header['CRPIX1'] += (1 - f * 1)
+            self.header['CRPIX2'] += (1 - f * 1)
             self._image = result.array
             self.shape = self.image.shape
             self.header['NAXIS1'] = result.array.shape[1]
             self.header['NAXIS2'] = result.array.shape[0]
             self.pixel_scale /= f
+            self.wcs = wcs.WCS(self.header)
+
             return result.array
 
         elif method == 'iraf':
@@ -550,19 +391,49 @@ class Celestial(object):
             self.pixel_scale /= f
             hdu.close()
             imdelete('./*temp.fits')
+            return self.image
 
         elif method == 'spline':
+            ## This only works for ZOOM! NEED BKGAVG!
             from scipy.ndimage import zoom
             assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
+            ny, nx = self.image.shape
+            print(ny, nx, f)
             result = zoom(self.image, float(f), order=order, mode='constant', cval=cval)
+            result /= f**2 # preserve total flux
             self.header = self._resize_header_wcs(self.image, f)
-            self.wcs = wcs.WCS(self.header)
             self._image = result
+
+            extra_shift = 1 - (f * 1)
+            self.shift_image(extra_shift, extra_shift, method=method)
+            self.header['CRPIX1'] += 1 * extra_shift # Empirically correct
+            self.header['CRPIX2'] += 1 * extra_shift
+
             self.shape = self.image.shape
             self.header['NAXIS1'] = result.shape[1]
             self.header['NAXIS2'] = result.shape[0]
             self.pixel_scale /= f
-            return result
+            self.wcs = wcs.WCS(self.header)
+
+            """
+            print(result.shape[1], result.shape[0])
+            dx = int((nx - 1) * f + 1) - result.shape[1]
+            dy = int((ny - 1) * f + 1) - result.shape[0]
+            print(dx, dy)
+            result = self.image
+            # Pad the image to fit the shape of `iraf` results
+            if dy != 0:
+                if dy < 0:
+                    result = result[:dy, :]
+            if dx != 0:
+                if dx < 0:
+                    result = result[:, :dx]
+                    #result = np.append(result, np.zeros(result.shape[0], dx), axis=1)
+            self._image = result
+
+            
+            #return result
+            """
 
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos', 'spline' or 'iraf'.")
@@ -625,6 +496,7 @@ class Celestial(object):
             self.pixel_scale /= f
             hdu.close()
             imdelete('./*temp.fits')
+            return self.mask
 
         elif method == 'spline':
             from scipy.ndimage import zoom
