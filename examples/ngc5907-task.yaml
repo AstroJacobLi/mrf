@@ -26,9 +26,9 @@ sex:
 fluxmodel:
   gaussian_radius: 1.5     # conv = convolve(mask, Gaussian2DKernel(1.5))
   gaussian_threshold: 0.05 # mask = conv > 0.05
-  unmask_lowsb: True
-  sb_lim: 24.0
-  unmask_ratio: 6
+  unmask_lowsb: False
+  sb_lim: 26.0
+  unmask_ratio: 3
   interp: 'lanczos'
 
 kernel:
@@ -41,7 +41,7 @@ kernel:
 
 starhalo:
   bright_lim: 17.5 # only stack stars brighter than bright_lim
-  fwhm_lim: 20 # only stack stars whose FWHM < fwhm_lim
+  fwhm_lim: 40 # only stack stars whose FWHM < fwhm_lim
   n_stack: 30
   halosize: 24 # radial size, in pixel, original size. Star cutout size will be 2 * halosize + 1
   padsize: 50
@@ -59,7 +59,7 @@ starhalo:
 
 clean:
   clean_img: True
-  clean_file: True
+  clean_file: False
   replace_with_noise: False
   gaussian_radius: 1.5
   gaussian_threshold: 10
