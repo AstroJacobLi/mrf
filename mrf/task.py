@@ -66,7 +66,7 @@ class MrfTask():
             logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO, 
                                 handlers=[logging.StreamHandler(sys.stdout),
                                           logging.FileHandler(log_filename, mode='w')])
-            self.logger = logging.getLogger(log_filename)                              
+            self.logger = logging.getLogger(log_filename)                          
         else:
             logger = logging.getLogger('mylogger')
             logger.propagate = False
