@@ -22,7 +22,7 @@ class Celestial(object):
     Then this ``Celestial`` object can be saved to FITS file, can be shifted, resized, rotated, etc. 
     What's more, the user could check the image/mask/masked image simply by invoke ``Celestial.display_image()``.
     
-    This class can also be inherited to form other classes.
+    This class can also be inherited to make other classes.
     '''
 
     def __init__(self, img, mask=None, header=None, dataset='Dragonfly', scale_bar_length=5):
