@@ -29,7 +29,7 @@ fluxmodel:
   unmask_lowsb: False
   sb_lim: 26.0
   unmask_ratio: 3
-  interp: 'lanczos'
+  interp: 'cubic'
 
 kernel:
   kernel_size: 8 # In original coordinate, before magnification
@@ -40,7 +40,7 @@ kernel:
   show_fig: True
 
 starhalo:
-  bright_lim: 17.5 # only stack stars brighter than bright_lim
+  bright_lim: 16.5 # only stack stars brighter than bright_lim
   fwhm_lim: 40 # only stack stars whose FWHM < fwhm_lim
   n_stack: 30
   halosize: 24 # radial size, in pixel, original size. Star cutout size will be 2 * halosize + 1
@@ -53,7 +53,7 @@ starhalo:
   deblend_nthresh: 32
   sky_subtract: False
   flux_aper: [3, 6]
-  interp: 'lanczos'
+  interp: 'cubic'
   cval: 0.0
   mask_contam: True
 
@@ -63,5 +63,5 @@ clean:
   replace_with_noise: False
   gaussian_radius: 1.5
   gaussian_threshold: 10
-  bright_lim: 17.5
-  r: 10.0
+  bright_lim: 16.5
+  r: 8.0
