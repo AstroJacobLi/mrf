@@ -1105,7 +1105,7 @@ def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir,
     im_seg = copy.deepcopy(segmap)
     im_highres = copy.deepcopy(flux_model)
     im_ratio = E
-    im_highres_new =  np.zeros_like(flux_model)
+    im_highres_new = np.zeros_like(flux_model)
     objects = Table.read(objcat_dir, format='fits')
 
     # calculate SB limit in counts per pixel

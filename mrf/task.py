@@ -102,7 +102,7 @@ class MrfTask():
         from mrf.display import display_single, SEG_CMAP, display_multiple, draw_circles
         from mrf.celestial import Celestial, Star
         from mrf.utils import Config
-        from reproject import reproject_interp
+        from reproject import reproject_interp, reproject_exact
 
         config = self.config
         logger = self.set_logger(verbose=verbose)
@@ -126,23 +126,36 @@ class MrfTask():
         # 2. Create magnified low-res image, and register high-res images with subsampled low-res ones
         f_magnify = config.lowres.magnify_factor
         logger.info('Magnify Dragonfly image with a factor of %.1f:', f_magnify)
-        lowres.resize_image(f_magnify)
+        lowres.resize_image(f_magnify, method=config.fluxmodel.interp)
         lowres.save_to_fits('_lowres_{}.fits'.format(int(f_magnify)))
+
         logger.info('Register high resolution image "{0}" with "{1}"'.format(dir_hires_b, dir_lowres))
         hdu = fits.open(dir_hires_b)
         if 'hsc' in dir_hires_b:
             array, _ = reproject_interp(hdu[1], lowres.header)
+            # Note that reproject_interp don't conserve total flux
+            # A factor is needed for correction.
+            factor = (lowres.pixel_scale / (hdu[1].header['CD2_2'] * 3600))**2
+            array *= factor
         else:
             array, _ = reproject_interp(hdu[0], lowres.header)
+            factor = (lowres.pixel_scale / (hdu[0].header['CD2_2'] * 3600))**2
+            array *= factor
+        
         hires_b = Celestial(array, header=lowres.header)
+        hires_b.save_to_fits('hires_b.fits')
         hdu.close()
         
         logger.info('Register high resolution image "{0}" with "{1}"'.format(dir_hires_r, dir_lowres))
         hdu = fits.open(dir_hires_r)
         if 'hsc' in dir_hires_r:
             array, _ = reproject_interp(hdu[1], lowres.header)
+            factor = (lowres.pixel_scale / (hdu[1].header['CD2_2'] * 3600))**2
+            array *= factor
         else:
             array, _ = reproject_interp(hdu[0], lowres.header)
+            factor = (lowres.pixel_scale / (hdu[0].header['CD2_2'] * 3600))**2
+            array *= factor
         hires_r = Celestial(array, header=lowres.header)
         hdu.close()
 
@@ -281,13 +294,13 @@ class MrfTask():
         
         # Optinally remove low surface brightness objects from model: 
         if config.fluxmodel.unmask_lowsb:
-            logger.info('    - Removing low-SB objects from flux model.')
+            logger.info('    - Removing low-SB objects (SB > {}) from flux model.'.format(config.fluxmodel.sb_lim))
             from .utils import remove_lowsb
             hires_flxmd = remove_lowsb(hires_fluxmod.image, conv_model, kernel_med, seg, 
                                         "_hires_obj_cat.fits", 
                                         SB_lim=config.fluxmodel.sb_lim, 
                                         zeropoint=config.hires.zeropoint, 
-                                        pixel_size=config.hires.pixel_scale / f_magnify, 
+                                        pixel_size=hires_fluxmod.pixel_scale, 
                                         unmask_ratio=config.fluxmodel.unmask_ratio, 
                                         gaussian_radius=config.fluxmodel.gaussian_radius, 
                                         gaussian_threshold=config.fluxmodel.gaussian_threshold, 
