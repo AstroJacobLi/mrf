@@ -42,11 +42,6 @@ class Celestial(object):
         Returns:
             None
         '''
-
-        try:
-            self.pixel_scale = abs(header['CD1_1'] * 3600)
-        except:
-            self.pixel_scale = abs(header['PC1_1'] * 3600)
         self.shape = img.shape # in ndarray format
         self.dataset = dataset
         self._image = img
@@ -59,6 +54,10 @@ class Celestial(object):
         if header is not None:
             self.header = header
             self.wcs = wcs.WCS(header)
+            try:
+                self.pixel_scale = abs(header['CD1_1'] * 3600)
+            except:
+                self.pixel_scale = abs(header['PC1_1'] * 3600)
             self.ra_cen, self.dec_cen = list(map(float, self.wcs.wcs_pix2world(ny // 2, nx // 2, 1)))
             # This follows lower-left, lower-right, upper-right, upper-left.
             self.ra_bounds, self.dec_bounds = self.wcs.wcs_pix2world([0, img.shape[1], img.shape[1], 0], 
@@ -66,6 +65,7 @@ class Celestial(object):
             self.sky_bounds = np.append(self.ra_bounds[2:], self.dec_bounds[1:3])
         else:
             self.header = None
+            self.pixel_scale = 1
             self.wcs = wcs.WCS(header)
 
         # initial length for scale bar when displaying
