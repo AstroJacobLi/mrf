@@ -161,7 +161,7 @@ class Celestial(object):
         ny, nx = self.image.shape
         if abs(dx) > nx or abs(ny) > ny:
             raise ValueError('# Shift distance is beyond the image size.')
-        if method == 'lanczos':
+        if method == 'lanczos' or method == 'cubic' or method == 'quintic':
             try: # try to import galsim
                 from galsim import degrees, Angle
                 from galsim.interpolant import Lanczos
@@ -171,8 +171,12 @@ class Celestial(object):
                 raise ImportError('# Import ``galsim`` failed! Please check if ``galsim`` is installed!')
             # Begin shift
             assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
-            galimg = InterpolatedImage(Image(self.image, dtype=float), 
-                                    scale=self.pixel_scale, x_interpolant=Lanczos(order))
+            if method == 'lanczos':
+                galimg = InterpolatedImage(Image(self.image, dtype=float), 
+                                       scale=self.pixel_scale, x_interpolant=Lanczos(order))
+            else:
+                galimg = InterpolatedImage(Image(self.image, dtype=float), 
+                                        scale=self.pixel_scale, x_interpolant=method)
             galimg = galimg.shift(dx=dx * self.pixel_scale, dy=dy * self.pixel_scale)
             result = galimg.drawImage(scale=self.pixel_scale, nx=nx, ny=ny)#, wcs=AstropyWCS(self.wcs))
             self._image = result.array
@@ -234,7 +238,7 @@ class Celestial(object):
         ny, nx = self.mask.shape
         if abs(dx) > nx or abs(ny) > ny:
             raise ValueError('# Shift distance is beyond the image size.')
-        if method == 'lanczos':
+        if method == 'lanczos' or method == 'cubic' or method == 'quintic':
             try: # try to import galsim
                 from galsim import degrees, Angle
                 from galsim.interpolant import Lanczos
@@ -244,8 +248,12 @@ class Celestial(object):
                 raise ImportError('# Import ``galsim`` failed! Please check if ``galsim`` is installed!')
             # Begin shift
             assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
-            galimg = InterpolatedImage(Image(self.mask, dtype=float), 
-                                    scale=self.pixel_scale, x_interpolant=Lanczos(order))
+            if method == 'lanczos':
+                galimg = InterpolatedImage(Image(self.image, dtype=float), 
+                                       scale=self.pixel_scale, x_interpolant=Lanczos(order))
+            else:
+                galimg = InterpolatedImage(Image(self.image, dtype=float), 
+                                        scale=self.pixel_scale, x_interpolant=method)
             galimg = galimg.shift(dx=dx * self.pixel_scale, dy=dy * self.pixel_scale)
             result = galimg.drawImage(scale=self.pixel_scale, nx=nx, ny=ny)#, wcs=AstropyWCS(self.wcs))
             self._mask = result.array
@@ -352,14 +360,15 @@ class Celestial(object):
 
         return hdr
 
-    def resize_image(self, f, method='lanczos', order=5, cval=0.0):
+    def resize_image(self, f, method='cubic', order=5, cval=0.0):
         '''
         Zoom/Resize the image of Celestial object. 
         f > 1 means the image will be resampled (finer)! f < 1 means the image will be degraded.
 
         Parameters:
             f (float): the positive factor of zoom. If 0 < f < 1, the image will be resized to smaller one.
-            method (str): interpolation method. Use 'lanczos' or 'iraf'. 'Lanczos' requires ``GalSim`` installed. 
+            method (str): interpolation method. Use 'lanczos', 'cubic', 'quintic' or 'iraf'. 
+                First three methods require ``GalSim`` installed. 
                 Other methods are now consistent with "iraf" results.
             order (int): the order Lanczos interpolation (>0).
             cval (float): value to fill the edges. Default is 0.
@@ -368,8 +377,7 @@ class Celestial(object):
             resize_image (ndarray): resized image. The "image" attribute of ``Celestial`` class will also be changed accordingly.
         '''
 
-        if method == 'lanczos':
-            "Lanczos is all set!"
+        if method == 'lanczos' or method == 'cubic' or method == 'quintic':
             try: # try to import galsim
                 from galsim import degrees, Angle
                 from galsim.interpolant import Lanczos
@@ -379,8 +387,13 @@ class Celestial(object):
                 raise ImportError('# Import `galsim` failed! Please check if `galsim` is installed!')
 
             assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
-            galimg = InterpolatedImage(Image(self.image, dtype=float), 
+            if method == 'lanczos':
+                galimg = InterpolatedImage(Image(self.image, dtype=float), 
                                        scale=self.pixel_scale, x_interpolant=Lanczos(order))
+            else:
+                galimg = InterpolatedImage(Image(self.image, dtype=float), 
+                                        scale=self.pixel_scale, x_interpolant=method)
+
             ny, nx = self.image.shape
             if f > 1:
                 result = galimg.drawImage(scale=self.pixel_scale / f, 
@@ -451,14 +464,15 @@ class Celestial(object):
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos', 'spline' or 'iraf'.")
     
-    def resize_mask(self, f, method='lanczos', order=5, cval=0.0):
+    def resize_mask(self, f, method='cubic', order=5, cval=0.0):
         '''
         Zoom/Resize the mask of Celestial object. 
         f > 1 means the mask will be resampled (finer)! f < 1 means the mask will be degraded.
 
         Parameters:
             f (float): the positive factor of zoom. If 0 < f < 1, the mask will be resized to smaller one.
-            method (str): interpolation method. Use 'lanczos' or 'iraf'. 'Lanczos' requires ``GalSim`` installed. 
+            method (str): interpolation method. Use 'lanczos', 'cubic', 'quintic' or 'iraf'. 
+                First three methods require ``GalSim`` installed. 
                 Other methods are now consistent with "iraf" results.
             order (int): the order Lanczos interpolation (>0).
             cval (float): value to fill the edges. Default is 0.
@@ -470,7 +484,7 @@ class Celestial(object):
         if not hasattr(self, 'mask'):
             raise ValueError("This object doesn't have mask yet!")
 
-        if method == 'lanczos':
+        if method == 'lanczos' or method == 'cubic' or method == 'quintic':
             try: # try to import galsim
                 from galsim import degrees, Angle
                 from galsim.interpolant import Lanczos
@@ -480,9 +494,12 @@ class Celestial(object):
                 raise ImportError('# Import `galsim` failed! Please check if `galsim` is installed!')
 
             assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
-            galimg = InterpolatedImage(Image(self.mask, dtype=float), 
+            if method == 'lanczos':
+                galimg = InterpolatedImage(Image(self.mask, dtype=float), 
                                        scale=self.pixel_scale, x_interpolant=Lanczos(order))
-            #galimg = galimg.magnify(f)
+            else:
+                galimg = InterpolatedImage(Image(self.mask, dtype=float), 
+                                        scale=self.pixel_scale, x_interpolant=method)
             ny, nx = self.mask.shape
             if f > 1:
                 result = galimg.drawImage(scale=self.pixel_scale / f, 
@@ -553,7 +570,7 @@ class Celestial(object):
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos', 'spline' or 'iraf'.")
     
-    def resize_Celestial(self, f, method='lanczos', order=5, cval=0.0):
+    def resize_Celestial(self, f, method='cubic', order=5, cval=0.0):
         '''
         Resize the Celestial object, including both image and mask.
         f > 1 means the image/mask will be resampled! f < 1 means the image/mask will be degraded.
