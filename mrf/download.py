@@ -525,7 +525,8 @@ def download_sdss_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose
         f.write('rm frame*')
         f.close()
     a = os.system('/bin/bash sdss_task.sh')
-    print(a)
+    if a == 0:
+        print('# The image is saved!')
 
 def download_highres(lowres_dir, high_res='hsc', band='g', overwrite=False):
     """ Download high resolution image which overlaps with the given low resolution image.
