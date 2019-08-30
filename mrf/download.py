@@ -3,8 +3,10 @@ import copy
 import numpy as np
 from astropy import wcs
 from astropy.io import fits
+import astropy.units as u
 from astropy.table import Table, Column
 from tqdm import tqdm
+from . import DECaLS_pixel_scale
 
 __all__ = ["TqdmUpTo", "megapipe_query_sql", "get_megapipe_catalog", "overlap_fraction",
     "wget_cfht", "download_cfht_megapipe", "download_highres"]
@@ -204,7 +206,328 @@ def download_cfht_megapipe(img, header, band='g', mega_cat_dir='_megapipe_cat.cs
         print('# The frame to be downloaded is ' + frame['productID'])
         wget_cfht(frame, band=band, output_dir=output_dir, 
                   output_name=output_name, overwrite=overwrite)
+
+def download_decals_cutout(ra, dec, size, band, layer='dr8-south', pixel_unit=False, 
+                    output_dir='./', output_name='DECaLS_img', overwrite=True):
+    '''Download DECaLS small image cutout of a given image. Maximum size is 3000 * 3000 pix.
     
+    Parameters:
+        ra (float): RA (degrees)
+        dec (float): DEC (degrees)
+        size (float): image size in pixel.
+        band (string): such as 'r' or 'g'
+        layer (string): data release of DECaLS. If your object is too north, try 'dr8-north'. 
+            For details, please check http://legacysurvey.org/dr8/description/.
+        pixel_unit (bool): If true, size will be in pixel unit.
+        output_dir (str): directory of output files.
+        output_name (str): prefix of output images.
+        overwrite (bool): overwrite files or not.
+
+    Return:
+        None
+    '''
+    import urllib
+
+    if pixel_unit is False:
+        s = size / DECaLS_pixel_scale
+    else:
+        s = size
+    
+    URL = 'http://legacysurvey.org/viewer/fits-cutout?ra={0}&dec={1}&pixscale={2}&layer={3}&size={4:.0f}&bands={5}'.format(ra, dec, DECaLS_pixel_scale, layer, s, band)
+    
+    filename = output_name + '_' + band + '.fits'
+    if not os.path.isfile(filename):
+        with TqdmUpTo(unit='B', unit_scale=True, miniters=1, desc=filename) as t:  # all optional kwargs
+            urllib.request.urlretrieve(URL, filename=output_dir + filename,
+                                    reporthook=t.update_to, data=None)
+        print('# Downloading ' + filename + ' finished! ') 
+    elif os.path.isfile(filename) and overwrite:
+        os.remove(filename)
+        with TqdmUpTo(unit='B', unit_scale=True, miniters=1, desc=filename) as t:  # all optional kwargs
+            urllib.request.urlretrieve(URL, filename=output_dir + filename,
+                                    reporthook=t.update_to, data=None)
+        print('# Downloading ' + filename + ' finished! ')                            
+    elif os.path.isfile(filename) and not overwrite:
+        print('!!!The image "' + output_dir + filename + '" already exists!!!')
+    return
+    
+def download_decals_brick(brickname, band, layer='dr8-south', output_dir='./', 
+                          output_name='DECaLS', overwrite=True, verbose=True):
+    '''Generate URL of the DECaLS coadd of a single brick.
+    
+    Parameters:
+        brickname (string): the name of the brick, such as "0283m005".
+        band (string): such as 'r' or 'g'.
+        layer (string): data release of DECaLS. If your object is too north, try 'dr8-north'. 
+            For details, please check http://legacysurvey.org/dr8/description/.
+        output_dir (str): directory of output files.
+        output_name (str): prefix of output images.
+        overwrite (bool): overwrite files or not.
+
+    Return:
+        None
+    '''
+    import urllib
+
+    if layer == 'dr8-north':
+        URL = 'http://portal.nersc.gov/project/cosmo/data/legacysurvey/dr8/north/coadd/{0}/{1}/legacysurvey-{2}-image-{3}.fits.fz'.format(brickname[:3], brickname, brickname, band)
+    else:
+        URL = 'http://portal.nersc.gov/project/cosmo/data/legacysurvey/dr8/south/coadd/{0}/{1}/legacysurvey-{2}-image-{3}.fits.fz'.format(brickname[:3], brickname, brickname, band)
+
+    filename = output_name + '_' + brickname + '_' +  band + '.fits'
+
+    if not os.path.isfile(filename):
+        if verbose:
+            with TqdmUpTo(unit='B', unit_scale=True, miniters=1, desc=filename) as t:  # all optional kwargs
+                urllib.request.urlretrieve(URL, filename=output_dir + filename,
+                                        reporthook=t.update_to, data=None)
+        else:
+            urllib.request.urlretrieve(URL, filename=output_dir + filename, data=None)
+        print('# Downloading ' + filename + ' finished! ') 
+
+    elif os.path.isfile(filename) and overwrite:
+        os.remove(filename)
+        if verbose:
+            with TqdmUpTo(unit='B', unit_scale=True, miniters=1, desc=filename) as t:  # all optional kwargs
+                urllib.request.urlretrieve(URL, filename=output_dir + filename,
+                                        reporthook=t.update_to, data=None)
+        else:
+            urllib.request.urlretrieve(URL, filename=output_dir + filename, data=None)
+        print('# Downloading ' + filename + ' finished! ') 
+
+    elif os.path.isfile(filename) and not overwrite:
+        print('!!!The image "' + output_dir + filename + '" already exists!!!')
+
+    return
+
+def download_decals_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, layer='dr8-south', verbose=True,
+                          output_dir='./', output_name='DECaLS', overwrite=True):
+    '''Download bricks and stitch them together using ``swarp``. Hence ``swarp`` must be installed!
+    ``swarp`` resamples the image, but doesn't correct background.
+
+    Parameters:
+        ra (float): RA of the object.
+        dec (float): DEC of the object.
+        band: string, such as 'r' or 'g'.
+        size (``astropy.units`` object): size of cutout, it should be comparable to ``radius``.
+        radius (``astropy.units`` object): bricks whose distances to the object are 
+            nearer than this radius will be download.  
+        layer (str): data release of DECaLS. If your object is too north, try 'dr8-north'. 
+            For details, please check http://legacysurvey.org/dr8/description/.
+        output_dir (str): directory of output files.
+        output_name (str): prefix of output images.
+        overwrite (bool): overwrite files or not.
+    
+    Return:
+        None
+    '''
+
+    import urllib
+    from astropy.coordinates import SkyCoord
+    from .utils import save_to_fits
+    import subprocess
+
+    ## Download survey-brick.fits
+    URL = 'https://portal.nersc.gov/project/cosmo/data/legacysurvey/dr8/survey-bricks.fits.gz'
+
+    if os.path.isfile('_survey_brick.fits'):
+        os.remove('_survey_brick.fits')
+    urllib.request.urlretrieve(URL, filename='_survey_brick.fits', data=None)
+
+    # Find nearby bricks 
+    bricks_cat = Table.read('_survey_brick.fits', format='fits')
+    bricks_sky = SkyCoord(ra=np.array(bricks_cat['RA']), 
+                          dec=np.array(bricks_cat['DEC']), unit='deg')
+    object_coord = SkyCoord(ra, dec, unit='deg')
+    to_download = bricks_cat[bricks_sky.separation(object_coord) <= radius]
+    print('# You have {} bricks to be downloaded.'.format(len(to_download)))
+    filenameset = []
+    for obj in to_download:
+        file = '_brick_' + obj['BRICKNAME'] + '_{}.fits'.format(band)
+        filenameset.append(os.path.join(output_dir, file))
+        if not os.path.isfile(file):
+            download_decals_brick(obj['BRICKNAME'], band.lower(), output_name='_brick', 
+                                output_dir=output_dir, verbose=verbose)
+            hdu = fits.open(os.path.join(output_dir, file))
+            img = hdu[1].data
+            hdr = hdu[1].header
+            hdr['XTENSION'] = 'IMAGE'
+            hdu.close()
+            save_to_fits(img, os.path.join(output_dir, file), header=hdr);
+
+    # Calculating image size in pixels
+    imgsize = int(size.to(u.arcsec).value / DECaLS_pixel_scale)
+    # Configure ``swarp``
+    with open("config_swarp.sh","w+") as f:
+        # check if swarp is installed
+        f.write('for cmd in swarp; do\n')
+        f.write('\t hasCmd=$(which ${cmd} 2>/dev/null)\n')
+        f.write('\t if [[ -z "${hasCmd}" ]]; then\n')
+        f.write('\t\t echo "This script requires ${cmd}, which is not in your \$PATH." \n')
+        f.write('\t\t exit 1 \n')
+        f.write('\t fi \n done \n\n')
+        
+        # Write ``default.swarp``.
+        f.write('/bin/rm -f default.swarp \n')
+        f.write('cat > default.swarp <<EOT \n')
+        f.write('IMAGEOUT_NAME \t\t {}.fits      # Output filename\n'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
+        f.write('WEIGHTOUT_NAME \t\t {}_weights.fits     # Output weight-map filename\n\n'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
+        f.write('HEADER_ONLY            N               # Only a header as an output file (Y/N)?\nHEADER_SUFFIX          .head           # Filename extension for additional headers\n\n')
+        f.write('#------------------------------- Input Weights --------------------------------\n\nWEIGHT_TYPE            NONE            # BACKGROUND,MAP_RMS,MAP_VARIANCE\n                                       # or MAP_WEIGHT\nWEIGHT_SUFFIX          weight.fits     # Suffix to use for weight-maps\nWEIGHT_IMAGE                           # Weightmap filename if suffix not used\n                                       # (all or for each weight-map)\n\n')
+        f.write('#------------------------------- Co-addition ----------------------------------\n\nCOMBINE                Y               # Combine resampled images (Y/N)?\nCOMBINE_TYPE           MEDIAN          # MEDIAN,AVERAGE,MIN,MAX,WEIGHTED,CHI2\n                                       # or SUM\n\n')
+        f.write('#-------------------------------- Astrometry ----------------------------------\n\nCELESTIAL_TYPE         NATIVE          # NATIVE, PIXEL, EQUATORIAL,\n                                       # GALACTIC,ECLIPTIC, or SUPERGALACTIC\nPROJECTION_TYPE        TAN             # Any WCS projection code or NONE\nPROJECTION_ERR         0.001           # Maximum projection error (in output\n                                       # pixels), or 0 for no approximation\nCENTER_TYPE            MANUAL          # MANUAL, ALL or MOST\n')
+        f.write('CENTER   {0}, {1} # Image Center\n'.format(ra, dec))
+        f.write('PIXELSCALE_TYPE        MANUAL          # MANUAL,FIT,MIN,MAX or MEDIAN\n')
+        f.write('PIXEL_SCALE            {}  # Pixel scale\n'.format(DECaLS_pixel_scale))
+        f.write('IMAGE_SIZE             {0},{1} # scale = 0.262 arcsec/pixel\n\n'.format(imgsize, imgsize))
+        f.write('#-------------------------------- Resampling ----------------------------------\n\nRESAMPLE               Y               # Resample input images (Y/N)?\nRESAMPLE_DIR           .               # Directory path for resampled images\nRESAMPLE_SUFFIX        .resamp.fits    # filename extension for resampled images\n\nRESAMPLING_TYPE        LANCZOS3        # NEAREST,BILINEAR,LANCZOS2,LANCZOS3\n                                       # or LANCZOS4 (1 per axis)\nOVERSAMPLING           0               # Oversampling in each dimension\n                                       # (0 = automatic)\nINTERPOLATE            N               # Interpolate bad input pixels (Y/N)?\n                                       # (all or for each image)\n\nFSCALASTRO_TYPE        FIXED           # NONE,FIXED, or VARIABLE\nFSCALE_KEYWORD         FLXSCALE        # FITS keyword for the multiplicative\n                                       # factor applied to each input image\nFSCALE_DEFAULT         1.0             # Default FSCALE value if not in header\n\nGAIN_KEYWORD           GAIN            # FITS keyword for effect. gain (e-/ADU)\nGAIN_DEFAULT           0.0             # Default gain if no FITS keyword found\n\n')
+        f.write('#--------------------------- Background subtraction ---------------------------\n\nSUBTRACT_BACK          N               # Subtraction sky background (Y/N)?\n                                       # (all or for each image)\n\nBACK_TYPE              AUTO            # AUTO or MANUAL\n                                       # (all or for each image)\nBACK_DEFAULT           0.0             # Default background value in MANUAL\n                                       # (all or for each image)\nBACK_SIZE              128             # Background mesh size (pixels)\n                                       # (all or for each image)\nBACK_FILTERSIZE        3               # Background map filter range (meshes)\n                                       # (all or for each image)\n\n')
+        f.write('#------------------------------ Memory management -----------------------------\n\nVMEM_DIR               .               # Directory path for swap files\nVMEM_MAX               2047            # Maximum amount of virtual memory (MB)\nMEM_MAX                2048            # Maximum amount of usable RAM (MB)\nCOMBINE_BUFSIZE        1024            # Buffer size for combine (MB)\n\n')
+        f.write('#------------------------------ Miscellaneous ---------------------------------\n\nDELETE_TMPFILES        Y               # Delete temporary resampled FITS files\n                                       # (Y/N)?\nCOPY_KEYWORDS          OBJECT          # List of FITS keywords to propagate\n                                       # from the input to the output headers\nWRITE_FILEINFO         Y               # Write information about each input\n                                       # file in the output image header?\nWRITE_XML              N               # Write XML file (Y/N)?\nXML_NAME               swarp.xml       # Filename for XML output\nVERBOSE_TYPE           QUIET           # QUIET,NORMAL or FULL\n\nNTHREADS               0               # Number of simultaneous threads for\n                                       # the SMP version of SWarp\n                                       # 0 = automatic \n')
+        f.write('EOT\n')
+        f.write('swarp ' + ' '.join(filenameset) + '\n\n')
+        f.write('rm ' + os.path.join(output_dir, '_*'))
+        f.close()
+    
+    os.system('/bin/bash config_swarp.sh')
+    print('# The image is save as {}'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
+
+def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=True,
+                       output_dir='./', output_name='HSC_large', overwrite=True):
+    '''Download HSC patches and stitch them together using ``swarp``. Hence ``swarp`` must be installed!
+    ``swarp`` resamples the image, but doesn't correct background.
+
+    Parameters:
+        ra (float): RA of the object.
+        dec (float): DEC of the object.
+        band: string, such as 'r' or 'g'.
+        size (``astropy.units`` object): size of cutout, it should be comparable to ``radius``.
+        radius (``astropy.units`` object): bricks whose distances to the object are 
+            nearer than this radius will be download.  
+        output_dir (str): directory of output files.
+        output_name (str): prefix of output images.
+        overwrite (bool): overwrite files or not.
+    
+    Return:
+        None
+    '''
+
+    import urllib
+    from astropy.coordinates import SkyCoord
+    from .utils import save_to_fits
+    import subprocess
+
+    ## Setup ``unagi``
+    try:
+        from unagi import hsc
+    except:
+        raise ImportError('`unagi` (https://github.com/dr-guangtou/unagi) must be installed to download HSC data!')
+    pdr2 = hsc.Hsc(dr='pdr2', rerun='pdr2_wide')
+
+    ## Download survey-summary
+    URL = 'https://github.com/AstroJacobLi/slug/raw/master/demo/HSC_tracts_patches_pdr2_wide.fits'
+
+    if os.path.isfile('_survey_summary.fits'):
+        os.remove('_survey_summary.fits')
+    urllib.request.urlretrieve(URL, filename='_survey_summary.fits', data=None)
+
+    # Find nearby bricks 
+    patch_cat = Table.read('_survey_summary.fits', format='fits')
+    patch_sky = SkyCoord(ra=np.array(patch_cat['ra_cen']), 
+                        dec=np.array(patch_cat['dec_cen']), unit='deg')
+    object_coord = SkyCoord(ra, dec, unit='deg')
+    flag = patch_sky.separation(object_coord) <= radius
+    to_download = patch_cat[flag]
+    distance = patch_sky.separation(object_coord)[flag]
+    to_download.add_column(Column(data=distance.value, name='distance'))
+    to_download.sort('distance')
+    #to_download = to_download[:]
+    print('# You have {} patches to be downloaded.'.format(len(to_download)))
+
+    filenameset = []
+    for obj in to_download:
+        file = 'calexp_{0}_{1}_{2}.fits'.format(obj['tract'], obj['patch'].replace(',', '_'), band)
+        filenameset.append(os.path.join(output_dir, file))
+        if not os.path.isfile(file):
+            pdr2.download_patch(obj['tract'], obj['patch'], filt='HSC-R', output_file=file);
+            hdu = fits.open(os.path.join(output_dir, file))
+            img = hdu[1].data
+            hdr = hdu[1].header
+            hdr['XTENSION'] = 'IMAGE'
+            hdu.close()
+            save_to_fits(img, os.path.join(output_dir, file), header=hdr);
+
+    # Calculating image size in pixels
+    imgsize = int(size.to(u.arcsec).value / DECaLS_pixel_scale)
+    # Configure ``swarp``
+    with open("config_swarp.sh","w+") as f:
+        # check if swarp is installed
+        f.write('for cmd in swarp; do\n')
+        f.write('\t hasCmd=$(which ${cmd} 2>/dev/null)\n')
+        f.write('\t if [[ -z "${hasCmd}" ]]; then\n')
+        f.write('\t\t echo "This script requires ${cmd}, which is not in your \$PATH." \n')
+        f.write('\t\t exit 1 \n')
+        f.write('\t fi \n done \n\n')
+        
+        # Write ``default.swarp``.
+        f.write('/bin/rm -f default.swarp \n')
+        f.write('cat > default.swarp <<EOT \n')
+        f.write('IMAGEOUT_NAME \t\t {}.fits      # Output filename\n'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
+        f.write('WEIGHTOUT_NAME \t\t {}_weights.fits     # Output weight-map filename\n\n'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
+        f.write('HEADER_ONLY            N               # Only a header as an output file (Y/N)?\nHEADER_SUFFIX          .head           # Filename extension for additional headers\n\n')
+        f.write('#------------------------------- Input Weights --------------------------------\n\nWEIGHT_TYPE            NONE            # BACKGROUND,MAP_RMS,MAP_VARIANCE\n                                       # or MAP_WEIGHT\nWEIGHT_SUFFIX          weight.fits     # Suffix to use for weight-maps\nWEIGHT_IMAGE                           # Weightmap filename if suffix not used\n                                       # (all or for each weight-map)\n\n')
+        f.write('#------------------------------- Co-addition ----------------------------------\n\nCOMBINE                Y               # Combine resampled images (Y/N)?\nCOMBINE_TYPE           MEDIAN          # MEDIAN,AVERAGE,MIN,MAX,WEIGHTED,CHI2\n                                       # or SUM\n\n')
+        f.write('#-------------------------------- Astrometry ----------------------------------\n\nCELESTIAL_TYPE         NATIVE          # NATIVE, PIXEL, EQUATORIAL,\n                                       # GALACTIC,ECLIPTIC, or SUPERGALACTIC\nPROJECTION_TYPE        TAN             # Any WCS projection code or NONE\nPROJECTION_ERR         0.001           # Maximum projection error (in output\n                                       # pixels), or 0 for no approximation\nCENTER_TYPE            MANUAL          # MANUAL, ALL or MOST\n')
+        f.write('CENTER   {0}, {1} # Image Center\n'.format(ra, dec))
+        f.write('PIXELSCALE_TYPE        MANUAL          # MANUAL,FIT,MIN,MAX or MEDIAN\n')
+        f.write('PIXEL_SCALE            {}  # Pixel scale\n'.format(DECaLS_pixel_scale))
+        f.write('IMAGE_SIZE             {0},{1} # scale = 0.262 arcsec/pixel\n\n'.format(imgsize, imgsize))
+        f.write('#-------------------------------- Resampling ----------------------------------\n\nRESAMPLE               Y               # Resample input images (Y/N)?\nRESAMPLE_DIR           .               # Directory path for resampled images\nRESAMPLE_SUFFIX        .resamp.fits    # filename extension for resampled images\n\nRESAMPLING_TYPE        LANCZOS3        # NEAREST,BILINEAR,LANCZOS2,LANCZOS3\n                                       # or LANCZOS4 (1 per axis)\nOVERSAMPLING           0               # Oversampling in each dimension\n                                       # (0 = automatic)\nINTERPOLATE            N               # Interpolate bad input pixels (Y/N)?\n                                       # (all or for each image)\n\nFSCALASTRO_TYPE        FIXED           # NONE,FIXED, or VARIABLE\nFSCALE_KEYWORD         FLXSCALE        # FITS keyword for the multiplicative\n                                       # factor applied to each input image\nFSCALE_DEFAULT         1.0             # Default FSCALE value if not in header\n\nGAIN_KEYWORD           GAIN            # FITS keyword for effect. gain (e-/ADU)\nGAIN_DEFAULT           0.0             # Default gain if no FITS keyword found\n\n')
+        f.write('#--------------------------- Background subtraction ---------------------------\n\nSUBTRACT_BACK          N               # Subtraction sky background (Y/N)?\n                                       # (all or for each image)\n\nBACK_TYPE              AUTO            # AUTO or MANUAL\n                                       # (all or for each image)\nBACK_DEFAULT           0.0             # Default background value in MANUAL\n                                       # (all or for each image)\nBACK_SIZE              128             # Background mesh size (pixels)\n                                       # (all or for each image)\nBACK_FILTERSIZE        3               # Background map filter range (meshes)\n                                       # (all or for each image)\n\n')
+        f.write('#------------------------------ Memory management -----------------------------\n\nVMEM_DIR               .               # Directory path for swap files\nVMEM_MAX               2047            # Maximum amount of virtual memory (MB)\nMEM_MAX                2048            # Maximum amount of usable RAM (MB)\nCOMBINE_BUFSIZE        1024            # Buffer size for combine (MB)\n\n')
+        f.write('#------------------------------ Miscellaneous ---------------------------------\n\nDELETE_TMPFILES        Y               # Delete temporary resampled FITS files\n                                       # (Y/N)?\nCOPY_KEYWORDS          OBJECT          # List of FITS keywords to propagate\n                                       # from the input to the output headers\nWRITE_FILEINFO         Y               # Write information about each input\n                                       # file in the output image header?\nWRITE_XML              N               # Write XML file (Y/N)?\nXML_NAME               swarp.xml       # Filename for XML output\nVERBOSE_TYPE           QUIET           # QUIET,NORMAL or FULL\n\nNTHREADS               0               # Number of simultaneous threads for\n                                       # the SMP version of SWarp\n                                       # 0 = automatic \n')
+        f.write('EOT\n')
+        f.write('swarp ' + ' '.join(filenameset) + '\n\n')
+        f.write('rm ' + os.path.join(output_dir, '_*'))
+        f.close()
+    
+    os.system('/bin/bash config_swarp.sh')
+    print('# The image is save as {}'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
+
+def download_sdss_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=True,
+                        output_dir='./', output_name='HSC_large', overwrite=True):
+    '''Download SDSS frames and stitch them together using ``swarp``. Hence ``swarp`` must be installed!
+    ``swarp`` resamples the image, but doesn't correct background.
+
+    Parameters:
+        ra (float): RA of the object.
+        dec (float): DEC of the object.
+        band: string, such as 'r' or 'g'.
+        size (``astropy.units`` object): size of cutout, it should be comparable to ``radius``.
+        radius (``astropy.units`` object): bricks whose distances to the object are 
+            nearer than this radius will be download.  
+        output_dir (str): directory of output files.
+        output_name (str): prefix of output images.
+        overwrite (bool): overwrite files or not.
+    
+    Return:
+        None
+    '''
+
+    import urllib
+    from astropy.coordinates import SkyCoord
+    from .utils import save_to_fits
+    import subprocess
+
+    URL = 'https://dr12.sdss.org/mosaics/script?onlyprimary=True&pixelscale=0.396&ra={0}&filters={2}&dec={1}&size={3}'.format(ra, dec, band, size.to(u.deg).value)
+    urllib.request.urlretrieve(URL, filename='sdss_task.sh')
+    with open('sdss_task.sh', 'a+') as f:
+        f.write('rm frame*')
+        f.close()
+    a = os.system('/bin/bash sdss_task.sh')
+    if a == 0:
+        print('# The image is saved!')
+
 def download_highres(lowres_dir, high_res='hsc', band='g', overwrite=False):
     """ Download high resolution image which overlaps with the given low resolution image.
         This could be **TIME CONSUMING**! Typically one frame could be 500M to 2G.
@@ -242,7 +565,10 @@ def download_highres(lowres_dir, high_res='hsc', band='g', overwrite=False):
     radius = c1.separation(c2).to(u.degree)
     print('# The diagnal size of input low-resolution image is ' + str(radius))
     
+    return
+
     if high_res.lower() == 'hsc': 
+        print(radius)
         if radius / 1.414 > 2116 * u.arcsec:
             raise ValueError('# Input image size is too large for HSC! Try other methods!')
         try:

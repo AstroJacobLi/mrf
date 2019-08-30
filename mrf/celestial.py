@@ -360,7 +360,7 @@ class Celestial(object):
 
         return hdr
 
-    def resize_image(self, f, method='cubic', order=5, cval=0.0):
+    def resize_image(self, f, method='cubic', order=3, cval=0.0):
         '''
         Zoom/Resize the image of Celestial object. 
         f > 1 means the image will be resampled (finer)! f < 1 means the image will be degraded.
