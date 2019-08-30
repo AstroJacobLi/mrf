@@ -392,7 +392,7 @@ def download_decals_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, layer
     os.system('/bin/bash config_swarp.sh')
     print('# The image is save as {}'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
 
-def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, layer='dr8-south', verbose=True,
+def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=True,
                        output_dir='./', output_name='HSC_large', overwrite=True):
     '''Download HSC patches and stitch them together using ``swarp``. Hence ``swarp`` must be installed!
     ``swarp`` resamples the image, but doesn't correct background.
@@ -404,8 +404,6 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, layer='d
         size (``astropy.units`` object): size of cutout, it should be comparable to ``radius``.
         radius (``astropy.units`` object): bricks whose distances to the object are 
             nearer than this radius will be download.  
-        layer (str): data release of DECaLS. If your object is too north, try 'dr8-north'. 
-            For details, please check http://legacysurvey.org/dr8/description/.
         output_dir (str): directory of output files.
         output_name (str): prefix of output images.
         overwrite (bool): overwrite files or not.
@@ -496,6 +494,38 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, layer='d
     os.system('/bin/bash config_swarp.sh')
     print('# The image is save as {}'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
 
+def download_sdss_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=True,
+                        output_dir='./', output_name='HSC_large', overwrite=True):
+    '''Download SDSS frames and stitch them together using ``swarp``. Hence ``swarp`` must be installed!
+    ``swarp`` resamples the image, but doesn't correct background.
+
+    Parameters:
+        ra (float): RA of the object.
+        dec (float): DEC of the object.
+        band: string, such as 'r' or 'g'.
+        size (``astropy.units`` object): size of cutout, it should be comparable to ``radius``.
+        radius (``astropy.units`` object): bricks whose distances to the object are 
+            nearer than this radius will be download.  
+        output_dir (str): directory of output files.
+        output_name (str): prefix of output images.
+        overwrite (bool): overwrite files or not.
+    
+    Return:
+        None
+    '''
+
+    import urllib
+    from astropy.coordinates import SkyCoord
+    from .utils import save_to_fits
+    import subprocess
+
+    URL = 'https://dr12.sdss.org/mosaics/script?onlyprimary=True&pixelscale=0.396&ra={0}&filters={2}&dec={1}&size={3}'.format(ra, dec, band, size.to(u.deg).value)
+    urllib.request.urlretrieve(URL, filename='sdss_task.sh')
+    with open('sdss_task.sh', 'a+') as f:
+        f.write('rm frame*')
+        f.close()
+    a = os.system('/bin/bash sdss_task.sh')
+    print(a)
 
 def download_highres(lowres_dir, high_res='hsc', band='g', overwrite=False):
     """ Download high resolution image which overlaps with the given low resolution image.
