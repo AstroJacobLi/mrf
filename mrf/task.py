@@ -95,6 +95,7 @@ class MrfTask():
         """
         from astropy.coordinates import SkyCoord, match_coordinates_sky
         from astropy.convolution import convolve, Box2DKernel, Gaussian2DKernel
+        import astropy.units as u
         from mrf.utils import (save_to_fits, Flux_Model, mask_out_stars, extract_obj, \
                             bright_star_mask, Autokernel, psf_bkgsub)
         from mrf.utils import seg_remove_obj, mask_out_certain_galaxy
@@ -143,7 +144,6 @@ class MrfTask():
             array *= factor
         
         hires_b = Celestial(array, header=lowres.header)
-        hires_b.save_to_fits('hires_b.fits')
         hdu.close()
         
         logger.info('Register high resolution image "{0}" with "{1}"'.format(dir_hires_r, dir_lowres))
@@ -289,7 +289,7 @@ class MrfTask():
         from astropy.convolution import convolve_fft
         logger.info('    - Convolving image, this could be a bit slow @_@')
         conv_model = convolve_fft(hires_fluxmod.image, kernel_med, boundary='fill', 
-                            fill_value=0, nan_treatment='fill', normalize_kernel=False)
+                            fill_value=0, nan_treatment='fill', normalize_kernel=False, allow_huge=True)
         save_to_fits(conv_model, '_lowres_model_{}.fits'.format(int(f_magnify)), header=hires_3.header)
         
         # Optinally remove low surface brightness objects from model: 
@@ -308,7 +308,7 @@ class MrfTask():
 
             logger.info('    - Convolving image, this could be a bit slow @_@')
             conv_model = convolve_fft(hires_flxmd, kernel_med, boundary='fill', 
-                                 fill_value=0, nan_treatment='fill', normalize_kernel=False)
+                                 fill_value=0, nan_treatment='fill', normalize_kernel=False, allow_huge=True)
             save_to_fits(conv_model, '_lowres_model_clean_{}.fits'.format(f_magnify), header=hires_3.header)
             setattr(results, 'hires_fluxmod', hires_flxmd)
 
@@ -362,6 +362,16 @@ class MrfTask():
         bright_star_cat = objects[np.unique(temp)]
         mag = config.lowres.zeropoint - 2.5 * np.log10(bright_star_cat['flux'])
         bright_star_cat.add_column(Column(data=mag, name='mag'))
+        ## Remove objects in GAL_CAT
+        temp, dist, _ = match_coordinates_sky(
+                            SkyCoord(ra=gal_cat['ra'], dec=gal_cat['dec'], unit='deg'),
+                            SkyCoord(ra=bright_star_cat['ra'], dec=bright_star_cat['dec'], unit='deg'))
+        to_remove = []
+        for i, obj in enumerate(dist):
+            if obj < 10 * u.arcsec:
+                to_remove.append(temp[i])
+        if len(to_remove) != 0:
+            bright_star_cat.remove_rows(np.unique(to_remove))
         bright_star_cat.write('_bright_star_cat.fits', format='fits', overwrite=True)
 
         # Select good stars to stack
