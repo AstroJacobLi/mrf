@@ -495,7 +495,7 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=
     print('# The image is save as {}'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
 
 def download_sdss_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=True,
-                        output_dir='./', output_name='HSC_large', overwrite=True):
+                        output_dir='./', output_name='SDSS_large', overwrite=True):
     '''Download SDSS frames and stitch them together using ``swarp``. Hence ``swarp`` must be installed!
     ``swarp`` resamples the image, but doesn't correct background.
 
@@ -513,7 +513,7 @@ def download_sdss_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose
     Return:
         None
     '''
-
+    import re
     import urllib
     from astropy.coordinates import SkyCoord
     from .utils import save_to_fits
@@ -521,12 +521,25 @@ def download_sdss_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose
 
     URL = 'https://dr12.sdss.org/mosaics/script?onlyprimary=True&pixelscale=0.396&ra={0}&filters={2}&dec={1}&size={3}'.format(ra, dec, band, size.to(u.deg).value)
     urllib.request.urlretrieve(URL, filename='sdss_task.sh')
-    with open('sdss_task.sh', 'a+') as f:
+    with open('sdss_task.sh', 'r') as f:
+        text = f.read()
+        f.close()
+
+    os.remove('sdss_task.sh')
+    imgname = re.compile('IMAGEOUT_NAME\s*(\S*)').search(text).groups()[0]
+    weightname = re.compile('WEIGHTOUT_NAME\s*(\S*)').search(text).groups()[0]
+    text = text.replace(imgname, '_'.join([output_name, band]) + '.fits')
+    text = text.replace(weightname, '_'.join([output_name, band, 'weight']) + '.fits')
+
+    with open('sdss_task.sh', 'w+') as f:
+        f.write(text)
+        f.write('\n\n')
         f.write('rm frame*')
         f.close()
+
     a = os.system('/bin/bash sdss_task.sh')
     if a == 0:
-        print('# The image is saved!')
+        print('# The image is saved as {}.fits!'.format('_'.join([output_name, band])))
 
 def download_highres(lowres_dir, high_res='hsc', band='g', overwrite=False):
     """ Download high resolution image which overlaps with the given low resolution image.
