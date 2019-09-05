@@ -793,7 +793,7 @@ def mask_out_certain_galaxy(segmap, header, gal_cat=None, logger=None):
                 x, y = obj['x'] * 3, obj['y'] * 3
             elif coor_sys == 'wrong':
                 raise ValueError("Wrong catalog format!")
-            if int(y) < segmap_cp.shape[0] and int(x) < segmap_cp.shape[1]:
+            if 0 < int(y) < segmap_cp.shape[0] and 0 < int(x) < segmap_cp.shape[1]:
                 obj_id = np.int(segmap_cp[int(y), int(x)])
                 if logger is not None:
                     logger.info('    - Removing object {} from flux model'.format(obj_id))
