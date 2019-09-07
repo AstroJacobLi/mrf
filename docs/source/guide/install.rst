@@ -2,6 +2,18 @@ Installation
 ============
 ``mrf`` is a Python package which also incorperates some ``iraf`` functions. You can download and install the package as follows.
 
+Install from ``pip``
+----------------------
+Probably the easiest way is to install with ``pip``. The version you installed from ``pip`` is stable, but may lack some new functions. If you find some bugs, please try to install the most up-to-date ``mrf`` from source code, or open an issue on GitHub.
+
+.. code-block:: bash
+
+  $ pip install --user mrf
+
+.. warning::
+   We are sorry that MRF has not been fully compatible with Windows. Please use Linux or MacOS!
+
+
 Install from source code
 --------------------------
 The source code of ``mrf`` is stored in GitHub repo https://github.com/AstroJacobLi/mrf. If you have configured ``git`` in your computer, you can make a new directory for this package and then clone the GitHub repository locally.
@@ -16,45 +28,16 @@ The source code of ``mrf`` is stored in GitHub repo https://github.com/AstroJaco
 
 If you don't have ``git`` configured, you can also download the ``zip`` file directly from https://github.com/AstroJacobLi/mrf/archive/master.zip, then unzip it and install it in the same way using ``$ python setup.py install``. 
 
-.. warning::
-   ``mrf`` has not been fully compatible with Windows. Use Linux or MacOS!
-
-..
-  Install from ``pip``
-  ----------------------
-  Probably the easiest way is to install with ``pip``. However, we recommend our users install most up-to-date version using ``git``. 
-
-  .. code-block:: bash
-
-    $ pip install --user mrf
-
 
 Test the Installation
 -----------------------
-**You need to export the path of** ``mrf`` **as an environment variable**. 
-
-So please open ``~/.bash_profile`` (or ``~/.bashrc``) with your favorite editor, and write 
-
-.. code-block:: bash
-
-  $ export PYTHONPATH=$PYTHONPATH:"<install dir>"
-  
-to it (replace ``<install dir>`` with your certain directory). Don't forget to validate it by 
-
-.. code-block:: bash
-
-  $ source ~/.bash_profile
-
-
-Then import ``mrf`` package in Python. The following snippet checks the availability of some ``iraf`` files. The output should be ``"<install dir>/mrf/mrf/iraf/macosx/"``.
+The following snippet checks the availability of some ``iraf`` files. ``True`` means you have installed ``mrf`` successfully! Bravo!
 
 .. code-block:: python
 
-    import mrf
-    print(mrf.__file__.rstrip('__init__.py') + 'iraf/macosx/') 
-    # It should be "<install dir>/mrf/mrf/iraf/macosx/"
-    # otherwise the environmental variable is not set correctly.
+    import mrf, os
+    print(os.path.isfile(mrf.__path__[0] + 'iraf/macosx/x_images.e'))
 
 Requirements
 -------------
-``Python>=3`` is needed, but you can try whether ``mrf`` still works under ``python2``. Check out the dependence of ``mrf`` depends from `requirements.txt <https://github.com/AstroJacobLi/mrf/blob/master/requirements.txt>`_.
+``Python>=3`` is needed, but you can try whether ``mrf`` still works under ``python2``. Check out the dependence of ``mrf`` from `requirements.txt <https://github.com/AstroJacobLi/mrf/blob/master/requirements.txt>`_.

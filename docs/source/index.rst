@@ -84,5 +84,4 @@ Need more help? Feel free to contact via pieter.vandokkum@yale.edu and jiaxuan_l
 
 Acknowledgment
 ---------------
-Many scripts and snippets are from `kungpao <https://github.com/dr-guangtou/kungpao>`_ (mainly written by `Song Huang <http://dr-guangtou.github.io>`_). `Johnny Greco <http://johnnygreco.github.io>`_ kindly shared his idea of the code structure. Here we acknowledge them for their help!
-
+Many scripts and snippets are from `kungpao <https://github.com/dr-guangtou/kungpao>`_ (mainly written by `Song Huang <http://dr-guangtou.github.io>`_). `Johnny Greco <http://johnnygreco.github.io>`_ kindly shared his idea of the code structure. `Roberto Abbraham <http://www.astro.utoronto.ca/~abraham/Web/Welcome.html>`_ found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
