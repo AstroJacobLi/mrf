@@ -1,7 +1,9 @@
 # MRF: Multi-Resolution Filtering
 Multi-Resolution Filtering: a method for isolating faint, extended emission in [Dragonfly](http://dragonflytelescope.org) data and other low resolution images.
 
-![](https://github.com/AstroJacobLi/mrf/blob/master/df-logo.png)
+<p align="center">
+  <img src="https://github.com/AstroJacobLi/mrf/blob/master/df-logo.png" width="40%">
+</p>
 
 Documentation
 -------------
