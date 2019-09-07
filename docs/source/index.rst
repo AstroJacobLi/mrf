@@ -14,7 +14,7 @@ Multi-Resolution Filtering is a method for isolating faint, extended emission in
     :target: https://mrfiltering.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://img.shields.io/badge/version-1.0.1-green
+.. image:: https://img.shields.io/badge/version-1.0.3-green
     :alt: Version
 
 .. image:: https://img.shields.io/badge/GitHub-astrojacobli%2Fmrf-blue
