@@ -5,7 +5,14 @@ warnings.simplefilter('ignore')
 __all__ = ["utils", "display", "celestial", "imtools", "task", "download"]
 
 # Version
-__version__ = "1.0.2"
+from pkg_resources import get_distribution, DistributionNotFound
+try:
+    __version__ = get_distribution(__name__).version
+except DistributionNotFound:
+    # package is not installed
+    pass
+    
+#__version__ = "1.0.2"
 __name__ = 'mrf'
 __author__ = ['Jiaxuan Li', 'Pieter van Dokkum']
 
