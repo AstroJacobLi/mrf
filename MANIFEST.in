@@ -1,0 +1,3 @@
+include *.txt *.yaml
+recursive-include examples *.txt *.py *.ipynb *.png *.yaml
+recursive-include mrf/iraf *.e *.par
