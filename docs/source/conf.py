@@ -15,7 +15,6 @@
 # sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
-#from mrf import __version__
 # contents of docs/conf.py
 from pkg_resources import get_distribution
 release = get_distribution('mrf').version
@@ -25,10 +24,6 @@ version = '.'.join(release.split('.')[:2])
 project = 'mrf'
 copyright = '2019, Jiaxuan Li, Pieter van Dokkum'
 author = 'Jiaxuan Li, Pieter van Dokkum'
-
-# The full version, including alpha/beta/rc tags
-#release = __version__
-#version = __version__
 
 # -- General configuration ---------------------------------------------------
 
