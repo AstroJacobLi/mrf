@@ -1,9 +1,7 @@
 # MRF: Multi-Resolution Filtering
 Multi-Resolution Filtering: a method for isolating faint, extended emission in [Dragonfly](http://dragonflytelescope.org) data and other low resolution images.
 
-<p align="center">
-  <img src="https://github.com/AstroJacobLi/mrf/blob/master/df-logo.png" width="40%">
-</p>
+![](https://github.com/AstroJacobLi/mrf/blob/master/df-logo.png)
 
 Documentation
 -------------
@@ -49,15 +47,15 @@ To test if `mrf` is installed successfully, import `mrf` in Python:
 
 ```python
 import mrf, os
-print(os.path.isfile(mrf.__path__[0] + 'iraf/macosx/x_images.e'))
+print(os.path.isfile(os.path.join(mrf.__path__[0], 'iraf/macosx/x_images.e')))
 ```
 `True` means you have installed `mrf` successfully! Bravo!
 
-`Python>=3` is needed, but you can try whether `mrf` still works under `python2`. Check out the dependence of `mrf` depends from `requirements.txt`.
+If you need to use ``lanczos`` or ``cubic`` interpolation, you must have [``galsim``](https://github.com/GalSim-developers/GalSim) installed. You will also need [``unagi``](https://github.com/dr-guangtou/unagi) to download HSC images. `Python>=3` is needed, but you can try whether `mrf` still works under `python2`. Check out the dependence of `mrf` depends from `requirements.txt`.
 
 Acknowledgement
 ---------------
-Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io) and [Jiaxuan Li](http://astrojacobli.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abbraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
+Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io) and [Jiaxuan Li](http://astrojacobli.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
 
 Citation
 -------
