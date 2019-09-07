@@ -5,8 +5,9 @@ warnings.simplefilter('ignore')
 __all__ = ["utils", "display", "celestial", "imtools", "task", "download"]
 
 # Version
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __name__ = 'mrf'
+__author__ = ['Jiaxuan Li', 'Pieter van Dokkum']
 
 # Define pixel scale of different surveys, unit = arcsec / pixel
 HSC_pixel_scale = 0.168

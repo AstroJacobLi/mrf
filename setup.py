@@ -1,6 +1,6 @@
 '''This sets up the package.
 '''
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 from setuptools import setup, find_packages
 
@@ -31,10 +31,11 @@ setup(name='mrf',
         "Programming Language :: Python :: 3.7",
     ],
 	url='https://github.com/AstroJacobLi/mrf',
-	author='Pieter van Dokkum, Jiaxuan Li',
-	author_email='pieter.vandokkum@yale.edu, jiaxuan_li@pku.edu.cn',
+	author='Jiaxuan Li, Pieter van Dokkum',
+	author_email='jiaxuan_li@pku.edu.cn, pieter.vandokkum@yale.edu',
 	license='MIT',
 	packages=find_packages(),
+    pacakge_data=[('mrf', ['iraf/macosx/*'])],
 	install_requires=INSTALL_REQUIRES,
     include_package_data=True,
     zip_safe=False,

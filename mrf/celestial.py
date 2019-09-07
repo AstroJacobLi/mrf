@@ -327,6 +327,9 @@ class Celestial(object):
             if "CDELT1" in hdr or "CDELT2" in hdr:
                 for i in hdr['CDELT*'].keys():
                     del hdr[i]
+            if "PC1_1" in hdr or "PC2_2" in hdr:
+                for i in hdr['PC?_?'].keys():
+                    del hdr[i]
             if "LTV1" in hdr:
                 for i in hdr['LTV*'].keys():
                     del hdr[i]
@@ -345,6 +348,9 @@ class Celestial(object):
             # Delete "CDELT"
             if "CDELT1" in hdr or "CDELT2" in hdr:
                 for i in hdr['CDELT*'].keys():
+                    del hdr[i]
+            if "PC1_1" in hdr or "PC2_2" in hdr:
+                for i in hdr['PC?_?'].keys():
                     del hdr[i]
             if "LTV1" in hdr:
                 for i in hdr['LTV*'].keys():

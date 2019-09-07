@@ -6,6 +6,7 @@ sep
 photutils
 palettable
 shapely
-reproject
+reproject>=0.5.1
 tqdm
 PyYAML
+GalSim

@@ -2,12 +2,13 @@
 Multi-Resolution Filtering: a method for isolating faint, extended emission in [Dragonfly](http://dragonflytelescope.org) data and other low resolution images.
 
 <p align="center">
-  <img src="df-logo.png" width="40%">
+  <img src="https://github.com/AstroJacobLi/mrf/blob/master/df-logo.png" width="40%">
 </p>
 
 Documentation
 -------------
 Please read the documentation and tutorial at https://mrfiltering.readthedocs.io/en/latest/.
+
 
 Applications
 ------------
@@ -44,26 +45,19 @@ python setup.py install
 
 If you don't have `git` configured, you can also download the `zip` file directly from https://github.com/AstroJacobLi/mrf/archive/master.zip, then unzip it and install in the same way. 
 
-**You need to export the path of `mrf` as an environment variable**, so open `~/.bash_profile` (or `~/.bashrc`), and write `export PYTHONPATH=$PYTHONPATH:"<install dir>"` to it. Don't forget to validate it by `. ~/.bash_profile`.
-
-Then import `mrf` in Python:
+To test if `mrf` is installed successfully, import `mrf` in Python:
 
 ```python
-import mrf
-print(mrf.__file__.rstrip('__init__.py') + 'iraf/macosx/') 
-# It should be "<install dir>/mrf/mrf/iraf/macosx/"
-# otherwise the environmental variable is not set correctly.
+import mrf, os
+print(os.path.isfile(mrf.__path__[0] + 'iraf/macosx/x_images.e'))
 ```
+`True` means you have installed `mrf` successfully! Bravo!
 
 `Python>=3` is needed, but you can try whether `mrf` still works under `python2`. Check out the dependence of `mrf` depends from `requirements.txt`.
 
-TODO
-------------
-- Analyze color terms between Dragonfly, CFHT, DES, HSC, etc.
-
 Acknowledgement
 ---------------
-Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io) and [Jiaxuan Li](http://astrojacobli.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. Here we acknowledge them for their help!
+Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io) and [Jiaxuan Li](http://astrojacobli.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abbraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
 
 Citation
 -------
@@ -71,4 +65,4 @@ If you use this code, please reference the `doi` below, and make sure to cite th
 
 `mrf` is a free software made available under MIT License. For details see the LICENSE file. 
 
-Copyright 2019 [Pieter van Dokkum](http://pietervandokkum.com) and [Jiaxuan Li](http://astrojacobli.github.io). 
+Copyright 2019 [Jiaxuan Li](http://astrojacobli.github.io) and [Pieter van Dokkum](http://pietervandokkum.com). 
