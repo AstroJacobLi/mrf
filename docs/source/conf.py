@@ -21,7 +21,6 @@ from pkg_resources import get_distribution
 release = get_distribution('mrf').version
 # for example take major/minor
 version = '.'.join(release.split('.')[:2])
-release = version
 
 project = 'mrf'
 copyright = '2019, Jiaxuan Li, Pieter van Dokkum'

@@ -1,7 +1,5 @@
 '''This sets up the package.
 '''
-#__version__ = '1.0.2'
-
 from setuptools import setup, find_packages
 
 def readme():
@@ -15,7 +13,6 @@ with open('requirements.txt') as infd:
     print(INSTALL_REQUIRES)
 
 setup(name='mrf', 
-	#version=__version__,
 	description='Multi-Resolution Filtering (MRF) is a method for isolating faint, extended emission in low-resolution images.',
 	long_description=readme(),
 	long_description_content_type="text/markdown",
