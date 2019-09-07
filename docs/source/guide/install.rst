@@ -36,7 +36,7 @@ The following snippet checks the availability of some ``iraf`` files. ``True`` m
 .. code-block:: python
 
     import mrf, os
-    print(os.path.isfile(mrf.__path__[0] + 'iraf/macosx/x_images.e'))
+    print(os.path.isfile(os.path.join(mrf.__path__[0], 'iraf/macosx/x_images.e')))
 
 Requirements
 -------------

@@ -49,7 +49,7 @@ To test if `mrf` is installed successfully, import `mrf` in Python:
 
 ```python
 import mrf, os
-print(os.path.isfile(mrf.__path__[0] + 'iraf/macosx/x_images.e'))
+print(os.path.isfile(os.path.join(mrf.__path__[0], 'iraf/macosx/x_images.e')))
 ```
 `True` means you have installed `mrf` successfully! Bravo!
 
@@ -57,7 +57,7 @@ print(os.path.isfile(mrf.__path__[0] + 'iraf/macosx/x_images.e'))
 
 Acknowledgement
 ---------------
-Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io) and [Jiaxuan Li](http://astrojacobli.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abbraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
+Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io) and [Jiaxuan Li](http://astrojacobli.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
 
 Citation
 -------
