@@ -2,6 +2,9 @@
 Multi-Resolution Filtering: a method for isolating faint, extended emission in [Dragonfly](http://dragonflytelescope.org) data and other low resolution images.
 
 ![](https://readthedocs.org/projects/mrfiltering/badge/?version=latest)
+![](https://img.shields.io/badge/license-MIT-blue)
+![](https://img.shields.io/badge/arXiv-88.8888-yellow)
+![](https://img.shields.io/github/repo-size/astrojacobli/mrf)
 
 <p align="center">
   <img src="https://github.com/AstroJacobLi/mrf/blob/master/df-logo.png" width="40%">
