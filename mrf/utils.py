@@ -963,7 +963,6 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
     good_cat = obj_cat[non_edge_flag]
     good_cat.sort('flux')
     good_cat.reverse()     
-    
     # create array for kernels, with odd dimensions
     kernels = np.zeros((nkernels, 2 * s + 1, 2 * s + 1))
     cuts_high = np.zeros((nkernels, 2 * s + 1, 2 * s + 1))
