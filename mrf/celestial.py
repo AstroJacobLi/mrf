@@ -44,7 +44,8 @@ class Celestial(object):
         '''
         self.shape = img.shape # in ndarray format
         self.dataset = dataset
-        self._image = img
+        hdu = fits.PrimaryHDU(img, header=header)
+        self._image = hdu.data
         if mask is not None:
             self._mask = mask
         # Sky position
@@ -52,7 +53,7 @@ class Celestial(object):
         self.ny = ny
         self.nx = nx
         if header is not None:
-            self.header = header
+            self.header = hdu.header
             self.wcs = wcs.WCS(header)
             try:
                 self.pixel_scale = abs(header['CD1_1'] * 3600)
