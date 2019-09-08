@@ -44,7 +44,8 @@ class Celestial(object):
         '''
         self.shape = img.shape # in ndarray format
         self.dataset = dataset
-        self._image = img
+        hdu = fits.PrimaryHDU(img, header=header)
+        self._image = hdu.data
         if mask is not None:
             self._mask = mask
         # Sky position
@@ -52,7 +53,7 @@ class Celestial(object):
         self.ny = ny
         self.nx = nx
         if header is not None:
-            self.header = header
+            self.header = hdu.header
             self.wcs = wcs.WCS(header)
             try:
                 self.pixel_scale = abs(header['CD1_1'] * 3600)
@@ -691,7 +692,8 @@ class Star(Celestial):
     It represents a small cutout, which is typically a star. 
     Other than the functions inherited from ``Celestial``, ``Star`` object has extra functions such as ``centralize``, ``mask_out_contam``.
     """
-    def __init__(self, img, header, starobj, colnames=['x', 'y'], halosize=40, padsize=40, mask=None, hscmask=None):
+    def __init__(self, img, header, starobj, colnames=['x', 'y'], halosize=40, 
+        padsize=50, mask=None, hscmask=None):
         """
         Initialize ``Star`` object. 
         
@@ -777,7 +779,6 @@ class Star(Celestial):
         Returns:
             None
         """
-
         self.shift_Celestial(self.dx, self.dy, method=method, order=order, cval=cval)
 
     def sub_bkg(self, sigma=4.5, deblend_cont=0.0001, verbose=True):

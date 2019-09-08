@@ -430,7 +430,7 @@ def _display_single(img,
         return fig, zmin, zmax
     return ax1, zmin, zmax
 
-def display_multiple(data_array, text=None, ax=None, **kwargs):
+def display_multiple(data_array, text=None, ax=None, scale_bar=True, **kwargs):
     """
     Display multiple images together using the same strecth and scale.
 
@@ -450,9 +450,9 @@ def display_multiple(data_array, text=None, ax=None, **kwargs):
         axes = ax
 
     if text is None:
-        _, zmin, zmax = _display_single(data_array[0], ax=axes[0], **kwargs)
+        _, zmin, zmax = _display_single(data_array[0], ax=axes[0], scale_bar=scale_bar, **kwargs)
     else:
-        _, zmin, zmax = _display_single(data_array[0], add_text=text[0], ax=axes[0], **kwargs)
+        _, zmin, zmax = _display_single(data_array[0], add_text=text[0], ax=axes[0], scale_bar=scale_bar, **kwargs)
     for i in range(1, len(data_array)):
         if text is None:
             _display_single(data_array[i], ax=axes[i], scale_manual=[zmin, zmax], scale_bar=False, **kwargs)
