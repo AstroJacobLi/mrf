@@ -780,17 +780,12 @@ def mask_out_certain_galaxy(segmap, header, gal_cat=None, logger=None):
             if 'ra' in item.lower():
                 coor_sys = 'sky'
                 break
-            elif 'x' in item.lower():
-                coor_sys = 'image'
-                break
             else:
                 coor_sys = 'wrong'
 
         for obj in gal_cat:
             if coor_sys == 'sky':
                 x, y = w.wcs_world2pix(obj['ra'], obj['dec'], 0)
-            elif coor_sys == 'image':
-                x, y = obj['x'] * 3, obj['y'] * 3
             elif coor_sys == 'wrong':
                 raise ValueError("Wrong catalog format!")
             if 0 < int(y) < segmap_cp.shape[0] and 0 < int(x) < segmap_cp.shape[1]:
@@ -1133,7 +1128,7 @@ def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir,
         ind = np.where(np.isin(im_seg_slice, obj['index']))
         flux_hires = im_highres_slice[ind]
         flux_ratio = im_ratio_slice[ind]
-        if ((np.mean(flux_hires) < sb_lim_cpp) and (len(flux_hires) > 20) and (np.mean(flux_ratio) < unmask_ratio)) and (np.mean(flux_ratio) != 0):
+        if ((np.mean(flux_hires) < sb_lim_cpp) and (len(flux_hires) > 40) and (np.mean(flux_ratio) < unmask_ratio)) and (np.mean(flux_ratio) != 0):
             im_highres_new_slice[ind] = 1
             num += 1
     im_highres_new[im_seg_ind] = im_highres_new_slice
