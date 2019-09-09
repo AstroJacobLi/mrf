@@ -468,8 +468,8 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
         # plot an ellipse for each object
         for obj in objects:
             e = Ellipse(xy=(obj['x'], obj['y']),
-                        width=8*obj['a'],
-                        height=8*obj['b'],
+                        width=5*obj['a'],
+                        height=5*obj['b'],
                         angle=obj['theta'] * 180. / np.pi)
             e.set_facecolor('none')
             e.set_edgecolor('red')
@@ -525,7 +525,7 @@ def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3,
     return objects, segmap, im_fluxes
 
 # Simply remove stars by masking them out
-def query_star(img, header, method='gaia', bright_lim=15.5, catalog_dir=None):
+def query_star(img, header, method='gaia', catalog_dir=None):
     """ 
     Query stars within a given field, return a catalog.
 
@@ -534,7 +534,6 @@ def query_star(img, header, method='gaia', bright_lim=15.5, catalog_dir=None):
         header (``astropy.io.fits.header`` object): the header of this image.
         method (str): here three methods are provided: 'gaia', 'apass' or 'usno'.
             "gaia" will be slower than the other two methods.
-        bright_lim (float): the magnitude limit of stars to be masked out. 
         catalog_dir (str): optional, you can provide local catalog here.
 
     Returns:
@@ -548,7 +547,6 @@ def query_star(img, header, method='gaia', bright_lim=15.5, catalog_dir=None):
                                                        pix=header['CD2_2'] * 3600, 
                                                        size_buffer=4, gaia_bright=bright_lim, 
                                                        factor_f=2.0, factor_b=1.2)
-        #gaia_stars = gaia_stars[gaia_stars['phot_bp_mean_mag'] < bright_lim]                                               
         return gaia_stars
     elif method.lower() == 'apass' or method.lower() == 'usno':
         if catalog_dir is not None: # catalog is provided

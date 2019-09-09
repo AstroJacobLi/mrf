@@ -140,7 +140,7 @@ class Celestial(object):
         return img_hdu
     
     # Shift image/mask
-    def shift_image(self, dx, dy, method='spline', order=5, cval=0.0):
+    def shift_image(self, dx, dy, method='spline', order=3, cval=0.0):
         '''Shift the image of Celestial object. The WCS of image will also be changed.
 
         Parameters:
@@ -217,7 +217,7 @@ class Celestial(object):
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos' or 'iraf'.")
 
-    def shift_mask(self, dx, dy, method='spline', order=5, cval=0.0):
+    def shift_mask(self, dx, dy, method='spline', order=3, cval=0.0):
         '''Shift the mask of Celestial object.
 
         Parameters:
@@ -294,7 +294,7 @@ class Celestial(object):
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos' or 'iraf'.")
 
-    def shift_Celestial(self, dx, dy, method='spline', order=5, cval=0.0):
+    def shift_Celestial(self, dx, dy, method='spline', order=3, cval=0.0):
         '''Shift the Celestial object, including image and mask.
 
         Parameters:
@@ -746,11 +746,15 @@ class Star(Celestial):
         self.shape = halo.shape
         self.cen_xy = [x_int, y_int]
         self.dx = dx
-        self.dy = dy   
-        # FLux
-        self.flux = starobj['flux']
-        self.fluxann = starobj['flux_ann']
-        self.fluxauto = starobj['flux_auto']
+        self.dy = dy
+
+        try:
+            # FLux
+            self.flux = starobj['flux']
+            self.fluxann = starobj['flux_ann']
+            self.fluxauto = starobj['flux_auto']
+        except:
+            pass #raise Warning('No flux assigned to the star!')
 
         if hasattr(self, 'mask'):
             im_padded = np.zeros((ny + 2 * padsize, nx + 2 * padsize))
@@ -829,7 +833,8 @@ class Star(Celestial):
             imgcp[self.mask.astype(bool)] = cval
             return imgcp
 
-    def mask_out_contam(self, sigma=4.5, deblend_cont=0.0005, blowup=True, cval=np.nan, show_fig=True, verbose=True):
+    def mask_out_contam(self, sigma=4.5, deblend_cont=0.0001, blowup=True, 
+                        cval=np.nan, show_fig=True, verbose=True):
         """
         Mask out contamination in the cutout of star. Contamination may be stars, galaxies or artifacts. 
         This function uses ``sep`` to identify and mask contamination.
@@ -848,16 +853,17 @@ class Star(Celestial):
         from astropy.convolution import convolve, Box2DKernel
         from .utils import extract_obj, seg_remove_cen_obj
         img_blur = convolve(abs(self.image), Box2DKernel(2))
-        img_objects, img_segmap = extract_obj(abs(img_blur), b=5, f=4, sigma=sigma, minarea=2, pixel_scale=self.pixel_scale,
-                                                deblend_nthresh=32, deblend_cont=deblend_cont, 
+        img_objects, img_segmap = extract_obj(abs(img_blur), b=5, f=4, sigma=sigma, minarea=1, pixel_scale=self.pixel_scale,
+                                                deblend_nthresh=72, deblend_cont=deblend_cont, flux_aper=[3, 5],
                                                 sky_subtract=False, show_fig=show_fig, verbose=verbose)
         # remove central object from segmap
+        cen_obj = img_objects[img_segmap[img_segmap.shape[1]//2, img_segmap.shape[0]//2] - 1]
         img_segmap = seg_remove_cen_obj(img_segmap) 
         detect_mask = (img_segmap != 0).astype(float)
         if blowup is True:
             from astropy.convolution import convolve, Gaussian2DKernel
             cv = convolve(detect_mask, Gaussian2DKernel(1.5))
-            detect_mask = (cv > 0.1).astype(float)
+            detect_mask = (cv > 0.2).astype(float)
         
         imgcp = copy.copy(self.image)
         imgcp[detect_mask.astype(bool)] = cval
