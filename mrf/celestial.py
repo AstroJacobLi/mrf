@@ -140,7 +140,7 @@ class Celestial(object):
         return img_hdu
     
     # Shift image/mask
-    def shift_image(self, dx, dy, method='spline', order=5, cval=0.0):
+    def shift_image(self, dx, dy, method='spline', order=3, cval=0.0):
         '''Shift the image of Celestial object. The WCS of image will also be changed.
 
         Parameters:
@@ -217,7 +217,7 @@ class Celestial(object):
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos' or 'iraf'.")
 
-    def shift_mask(self, dx, dy, method='spline', order=5, cval=0.0):
+    def shift_mask(self, dx, dy, method='spline', order=3, cval=0.0):
         '''Shift the mask of Celestial object.
 
         Parameters:
@@ -294,7 +294,7 @@ class Celestial(object):
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos' or 'iraf'.")
 
-    def shift_Celestial(self, dx, dy, method='spline', order=5, cval=0.0):
+    def shift_Celestial(self, dx, dy, method='spline', order=3, cval=0.0):
         '''Shift the Celestial object, including image and mask.
 
         Parameters:
