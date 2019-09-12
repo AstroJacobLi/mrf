@@ -54,9 +54,9 @@ HSC_binray_mask_dict = {0: 'BAD',
                         15: 'SENSOR_EDGE',
                         16: 'INEXACT_PSF'}
 
-filter_corr_dict = {'df-des': {'r': 0.13, 'g': 0.05},
-                    'df-cfht': {'r': 0.06, 'g': 0.10},
-                    'df-kids': {'r': 0.06, 'g': -0.01}
+filter_corr_dict = {'df-des': {'r': 0.10, 'g': 0.06},
+                    'df-cfht': {'r': 0.01, 'g': 0.05},
+                    'df-kids': {'r': 0.01, 'g': -0.01}
                    }
 
 
