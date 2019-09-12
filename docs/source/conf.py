@@ -22,8 +22,8 @@ release = get_distribution('mrf').version
 version = '.'.join(release.split('.')[:2])
 
 project = 'mrf'
-copyright = '2019, Jiaxuan Li, Pieter van Dokkum'
-author = 'Jiaxuan Li, Pieter van Dokkum'
+copyright = '2019, Pieter van Dokkum, Jiaxuan Li'
+author = 'Pieter van Dokkum, Jiaxuan Li'
 
 # -- General configuration ---------------------------------------------------
 

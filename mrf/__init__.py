@@ -13,7 +13,7 @@ except DistributionNotFound:
     pass
 
 __name__ = 'mrf'
-__author__ = ['Jiaxuan Li', 'Pieter van Dokkum']
+__author__ = ['Pieter van Dokkum', 'Jiaxuan Li']
 
 # Define pixel scale of different surveys, unit = arcsec / pixel
 HSC_pixel_scale = 0.168
