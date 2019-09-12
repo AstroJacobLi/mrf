@@ -3,7 +3,7 @@ Multi-Resolution Filtering: a method for isolating faint, extended emission in [
 
 ![](https://readthedocs.org/projects/mrfiltering/badge/?version=latest)
 ![](https://img.shields.io/badge/license-MIT-blue)
-![](https://img.shields.io/badge/arXiv-88.8888-yellow)
+<!--![](https://img.shields.io/badge/arXiv-88.8888-yellow)-->
 ![](https://img.shields.io/github/repo-size/astrojacobli/mrf)
 
 <p align="center">
@@ -17,16 +17,16 @@ Please read the documentation and tutorial at https://mrfiltering.readthedocs.io
 Applications
 ------------
 - Subtract compact objects from low-resolution images (such as Dragonfly) to reveal low surface brightness features.
-- Download corresponding high resolution image (HSC, CFHT) of given Dragonfly image.
 - Characterize and subtract stellar halos in Dragonfly image.
+- Download corresponding high resolution image (HSC, CFHT) of given Dragonfly image.
 
 Examples
 ------------
-This example shows the tidal feature of NGC 5907, described in [van Dokkum et al. (2019)](https://ui.adsabs.harvard.edu/abs/2019arXiv190611260V/abstract). The images presented there just used this algorithm. Full resolution Dragonfly images and MRF results can be found [here](https://www.pietervandokkum.com/ngc5907). Check [this notebook](https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-n5907.ipynb) for more details in how to do MRF using this Python package! :rocket: 
+This example shows the tidal feature of NGC 5907, described in [van Dokkum et al. (2019)](https://ui.adsabs.harvard.edu/abs/2019arXiv190611260V/abstract). The images presented there used this algorithm. Full resolution Dragonfly images and MRF results can be found [here](https://www.pietervandokkum.com/ngc5907). Check [this notebook](https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-n5907.ipynb) for more details in how to do MRF using this Python package! :rocket: 
 
 ![MRF on NGC 5907](https://github.com/AstroJacobLi/mrf/raw/master/examples/n5907-demo.png)
 
-This example shows how powerful MRF is in extracting low surface brightness features. The ultra-diffuse galaxy M101-DF3 is revealed by MRF after subtracting compact objects and bright star halos according to [van Dokkum et al. (in prep)](https://www.pietervandokkum.com). Check [this notebook](https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-m101df3.ipynb) for more details.
+This example shows how powerful MRF is in revealing low surface brightness features. The ultra-diffuse galaxy M101-DF3 is revealed by MRF after subtracting compact objects and bright star halos according to [van Dokkum et al. (in prep)](https://www.pietervandokkum.com). Check [this notebook](https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-m101df3.ipynb) for more details.
 
 ![MRF on M101-DF3](https://github.com/AstroJacobLi/mrf/raw/master/examples/m101-df3-demo.png)
 
@@ -49,7 +49,7 @@ python setup.py install
 
 If you don't have `git` configured, you can also download the `zip` file directly from https://github.com/AstroJacobLi/mrf/archive/master.zip, then unzip it and install in the same way. 
 
-To test if `mrf` is installed successfully, import `mrf` in Python:
+To test whether `mrf` is installed successfully, import `mrf` in Python:
 
 ```python
 import mrf, os
@@ -61,12 +61,12 @@ If you need to use ``lanczos`` or ``cubic`` interpolation, you must have [``gals
 
 Acknowledgement
 ---------------
-Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io) and [Jiaxuan Li](http://astrojacobli.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
+Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
 
 Citation
--------
-If you use this code, please reference the `doi` below, and make sure to cite the dependencies as listed in [requirements](https://github.com/AstroJacobLi/mrf/blob/master/requirements.txt). 
+---------
+If you use this code, please cite the `doi` below, and make sure to cite the dependencies as listed in [requirements](https://github.com/AstroJacobLi/mrf/blob/master/requirements.txt). Pieter van Dokkum came up with the idea of MRF and wrote the primary scripts. Jiaxuan Li wrote the scripts into a standard Python Package and setup the documentation website.
 
 `mrf` is a free software made available under MIT License. For details see the LICENSE file. 
 
-Copyright 2019 [Jiaxuan Li](http://astrojacobli.github.io) and [Pieter van Dokkum](http://pietervandokkum.com). 
+Copyright 2019 [Pieter van Dokkum](http://pietervandokkum.com) and [Jiaxuan Li](http://astrojacobli.github.io).

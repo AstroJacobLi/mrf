@@ -8,7 +8,7 @@ Probably the easiest way is to install with ``pip``. The version you installed f
 
 .. code-block:: bash
 
-  $ pip install --user mrf
+  $ pip install -U mrf
 
 .. warning::
    We are sorry that MRF has not been fully compatible with Windows. Please use Linux or MacOS!
@@ -40,4 +40,4 @@ The following snippet checks the availability of some ``iraf`` files. ``True`` m
 
 Requirements
 -------------
-``Python>=3`` is needed, but you can try whether ``mrf`` still works under ``python2``. Check out the dependence of ``mrf`` from `requirements.txt <https://github.com/AstroJacobLi/mrf/blob/master/requirements.txt>`_.
+``Python>=3`` is needed, but you can try whether ``mrf`` still works under ``python2``. Check out other dependences of ``mrf`` from `requirements.txt <https://github.com/AstroJacobLi/mrf/blob/master/requirements.txt>`_.

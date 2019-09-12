@@ -588,6 +588,42 @@ def draw_rectangles(img, catalog, colnames=['x', 'y'], header=None, ax=None, rec
     if ax is not None:
         return ax
 
+def df_color_image(img_r, img_g, b=1.0, vmin=0.0, Q=10, stretch=25, filename=None):
+    '''
+    Display tri-color image of Dragonfly based on ``g`` and ``r`` band images.
+    The red channel uses ``img_r``, blue channel uses ``b * img_g``, 
+    and we make up the green channel to be ``(img_r + b * img_g) * 0.5``. 
+
+    Parameters:
+        img_r (numpy 2-D array): image of r-band. Must have subtracted background.
+        img_g (numpy 2-D array): image of g-band. Must have subtracted background.
+        b (float): the proportion of ``img_g`` in blue channel, default is 1.0.
+        vmin (float): the minimum value shown in tri-color image.
+        Q (float): The asinh softening parameter. Smaller Q means higher contrast.
+        stretch (float): The linear stretch of the image. Smaller value gives more low-SB details.
+        save (bool): whether save the RGB image.
+        filename (str): Write the resulting RGB image to a file (file type determined from extension).
+
+    Returns:
+        None
+    '''
+    from astropy.visualization import make_lupton_rgb
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    red = img_r.copy()
+    blue = img_g.copy()
+    blue *= b
+    green = (red + blue) * 0.5
+
+    fig = plt.figure(figsize=(13, 13))
+    rgb = make_lupton_rgb(red, green, blue, Q=Q, stretch=stretch, minimum=vmin, filename=filename)
+    plt.imshow(rgb, origin='lower')
+    plt.axis('off')
+    plt.show()
+    if filename is not None:
+        print('# RGB image has been save at {}'.format(filename))
+
 ############ Surface brightness profiles related ############
 def display_isophote(img, ell, pixel_scale, scale_bar=True, scale_bar_length=50, 
     physical_scale=None, text=None, ax=None, contrast=None, circle=None):

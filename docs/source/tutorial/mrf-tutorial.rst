@@ -4,9 +4,9 @@ This page shows the applications of MRF on various objects. You can download the
 
 NGC 5907
 ^^^^^^^^^
-NGC 5907 is an edge-on spiral galaxy, which is famous for its prominent tidal streams. Recently the images taken by Dragonfly Telephoto Array reveal more details about the low surface brightness features around this galaxy (`van Dokkum et al. 2019 <https://ui.adsabs.harvard.edu/abs/2019arXiv190611260V/abstract>`_). In this paper, we isolate diffuse low surface brightness streams using "Multi-Resolution Filtering" (MRF). Now we show how to do it using Python package ``mrf``. Check `this notebook <https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-n5907.ipynb>`_ for the whole process of MRF using this Python package. Below I briefly show the key steps.
+NGC 5907 is an edge-on spiral galaxy, which is famous for its prominent tidal streams. Recently the images taken by Dragonfly Telephoto Array reveal more details about the low surface brightness features around this galaxy (`van Dokkum et al. 2019 <https://ui.adsabs.harvard.edu/abs/2019arXiv190611260V/abstract>`_). In this paper, we isolate diffuse low surface brightness streams using "Multi-Resolution Filtering" (MRF). Now we show how to do it using Python package ``mrf``. Check `this notebook <https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-n5907.ipynb>`_ for the whole process of MRF using this Python package. We briefly show the key steps below.
 
-Dragonfly images in ``g`` and ``r`` band can be found `here <https://www.pietervandokkum.com/ngc5907>`_ along with MRF results. The corresponding CFHT images can be found on `Canadian Astronomy Data Center <http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/?collection=CFHTMEGAPIPE&noexec=true#queryFormTab>`_. Besides, ``mrf`` provides functions to download high-resolution images (including `CFHT <https://www.cfht.hawaii.edu>`_ and `HSC <https://hsc.mtk.nao.ac.jp>`_), shown as follows:
+Dragonfly images in ``g`` and ``r`` band can be found `here <https://www.pietervandokkum.com/ngc5907>`_ along with MRF results. The corresponding CFHT images can be found in `Canadian Astronomy Data Center <http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/?collection=CFHTMEGAPIPE&noexec=true#queryFormTab>`_. Besides, ``mrf`` provides functions to download high-resolution images (including `CFHT <https://www.cfht.hawaii.edu>`_, `DECaLS <http://legacysurvey.org>`_ and `HSC <https://hsc.mtk.nao.ac.jp>`_), shown as follows:
 
 .. code-block:: python
 
@@ -20,7 +20,7 @@ Dragonfly images in ``g`` and ``r`` band can be found `here <https://www.pieterv
     # CFHT images will be saved as "CFHT_megapipe_img_G.fits" 
     # and "CFHT_megapipe_img_R.fits".
 
-After downloading high-resolution images, you need to bin it by a :math:`2\times2` pixel box and convolve with a :math:`\sigma=1` pixel Gaussian kernel to mitigate projection errors. 
+After downloading high-resolution images, you need to bin it by a :math:`2\times2` pixel box and convolve with a :math:`\sigma=1` pixel 2-D Gaussian kernel to mitigate projection errors. 
 
 .. code-block:: python
 
@@ -32,9 +32,9 @@ After downloading high-resolution images, you need to bin it by a :math:`2\times
     cfht.resize_image(0.5) # bin with 2*2 box
     cfht.image = convolve(cfht.image, Gaussian2DKernel(1))
     cfht.save_to_fits('ngc5907_cfht_g.fits')
-    # Then do the same for R-band image
+    # Then do the same thing for R-band image
 
-The main part of MRF can be simply done by the following code. A configuration YAML file is needed to provide parameters for relevant functions such as SExtractor (``sep``). Check `here <https://github.com/AstroJacobLi/mrf/blob/master/examples/ngc5907-task.yaml>`_ for more explanation on the configuration file. If you want to retain certain galaxies during MRF, make an ASCII catalog which contains the ``RA`` and ``DEC`` of galaxies (see `gal_cat_n5907.txt <https://github.com/AstroJacobLi/mrf/blob/master/examples/gal_cat_n5907.txt>`_ for an example). If you don't want to reserve any galaxy, just leave ``certain_gal_cat = None``.
+The main part of MRF can be simply done by the following code. A configuration YAML file is needed to provide parameters for relevant functions such as SExtractor (``sep``). Check `here <https://github.com/AstroJacobLi/mrf/blob/master/examples/ngc5907-task.yaml>`_ for more explanation on the configuration file. If you want to retain certain galaxies during MRF, make an ASCII file which contains the ``RA`` and ``DEC`` of galaxies (see `gal_cat_n5907.txt <https://github.com/AstroJacobLi/mrf/blob/master/examples/gal_cat_n5907.txt>`_ for an example). If you don't want to preserve any galaxy, just leave ``certain_gal_cat = None``.
 
 .. code-block:: python
 
@@ -90,7 +90,7 @@ The Dragonfly ``r`` band image of M101-DF3 and CFHT counterpart can be found `he
     :alt: alternate text
     :figclass: align-center
 
-After having ``results``, you can show the flux model, kernels and PSF as follows. 
+After having ``results``, you can show the flux model, kernels and stacked PSF as follows. 
 
 .. code-block:: python
 

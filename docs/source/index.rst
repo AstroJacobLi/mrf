@@ -6,10 +6,6 @@ Multi-Resolution Filtering is a method for isolating faint, extended emission in
     :target: https://opensource.org/licenses/mit-license.php
     :alt: License
 
-.. image:: https://img.shields.io/badge/arXiv-88.8888-yellow
-    :target: https://github.com/AstroJacobLi/mrf
-    :alt: arXiv
-
 .. image:: https://readthedocs.org/projects/mrfiltering/badge/?version=latest
     :target: https://mrfiltering.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
@@ -75,7 +71,7 @@ Index
 Citation
 --------
 
-``mrf`` is a free software made available under MIT License, developed mainly by `Pieter van Dokkum <http://pietervandokkum.com>`_ and `Jiaxuan Li <https://astrojacobli.github.io>`_. For details please see the LICENSE file. If you use this package in your work, please cite van Dokkum et al. (in prep). 
+``mrf`` is a free software made available under MIT License, developed by `Pieter van Dokkum <http://pietervandokkum.com>`_ and maintained by `Jiaxuan Li <https://astrojacobli.github.io>`_. If you use this package in your work, please cite van Dokkum et al. (in prep). Pieter van Dokkum came up with the idea of MRF and wrote the primary scripts. Jiaxuan Li wrote the scripts into a standard Python Package and setup the documentation website.
 
 You are welcome to report bugs in ``mrf`` via creating issues at https://github.com/AstroJacobLi/mrf/issues.
 
@@ -84,4 +80,4 @@ Need more help? Feel free to contact via pieter.vandokkum@yale.edu and jiaxuan_l
 
 Acknowledgment
 ---------------
-Many scripts and snippets are from `kungpao <https://github.com/dr-guangtou/kungpao>`_ (mainly written by `Song Huang <http://dr-guangtou.github.io>`_). `Johnny Greco <http://johnnygreco.github.io>`_ kindly shared his idea of the code structure. `Roberto Abbraham <http://www.astro.utoronto.ca/~abraham/Web/Welcome.html>`_ found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
+Many scripts and snippets are from `kungpao <https://github.com/dr-guangtou/kungpao>`_ (mainly written by `Song Huang <http://dr-guangtou.github.io>`_). `Johnny Greco <http://johnnygreco.github.io>`_ kindly shared his idea of the code structure. `Roberto Abraham <http://www.astro.utoronto.ca/~abraham/Web/Welcome.html>`_ found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
