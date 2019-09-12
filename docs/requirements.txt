@@ -9,4 +9,4 @@ shapely
 reproject>=0.5.1
 tqdm
 PyYAML
-mrf>=1.0.3
+mrf==1.0.3
