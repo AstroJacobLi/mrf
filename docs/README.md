@@ -3,8 +3,8 @@ Multi-Resolution Filtering: a method for isolating faint, extended emission in [
 
 ![](https://readthedocs.org/projects/mrfiltering/badge/?version=latest)
 ![](https://img.shields.io/badge/license-MIT-blue)
-![](https://img.shields.io/badge/arXiv-88.8888-yellow)
 ![](https://img.shields.io/github/repo-size/astrojacobli/mrf)
+<!--![](https://img.shields.io/badge/arXiv-88.8888-yellow)-->
 
 <p align="center">
   <img src="https://github.com/AstroJacobLi/mrf/blob/master/df-logo.png" width="40%">
@@ -61,11 +61,11 @@ If you need to use ``lanczos`` or ``cubic`` interpolation, you must have [``gals
 
 Acknowledgement
 ---------------
-Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io) and [Jiaxuan Li](http://astrojacobli.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
+Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
 
 Citation
--------
-If you use this code, please cite the `doi` below, and make sure to cite the dependencies as listed in [requirements](https://github.com/AstroJacobLi/mrf/blob/master/requirements.txt).  
+---------
+If you use this code, please cite the `doi` below, and make sure to cite the dependencies as listed in [requirements](https://github.com/AstroJacobLi/mrf/blob/master/requirements.txt). Pieter van Dokkum came up with the idea of MRF and wrote the primary scripts. Jiaxuan Li wrote the scripts into a standard Python Package and setup the documentation website.
 
 `mrf` is a free software made available under MIT License. For details see the LICENSE file. 
 
