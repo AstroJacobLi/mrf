@@ -237,10 +237,11 @@ class MrfTask():
             seg = seg_remove_obj(seg, obj['x'], obj['y'])
         objects[flag].write('_bright_stars_3.fits', format='fits', overwrite=True)
         logger.info('    - {} stars removed. '.format(len(flag[0])))
-        # Mask out certain galaxy here.
-        logger.info('Remove objects from catalog "{}"'.format(certain_gal_cat))
-        gal_cat = Table.read(certain_gal_cat, format='ascii')
-        seg = mask_out_certain_galaxy(seg, hires_3.header, gal_cat=gal_cat, logger=logger)
+        if certain_gal_cat is not None:
+            # Mask out certain galaxy here.
+            logger.info('Remove objects from catalog "{}"'.format(certain_gal_cat))
+            gal_cat = Table.read(certain_gal_cat, format='ascii')
+            seg = mask_out_certain_galaxy(seg, hires_3.header, gal_cat=gal_cat, logger=logger)
         save_to_fits(seg, '_seg_3.fits', header=hires_3.header)
         
         setattr(results, 'segmap_nostar_nogal', seg)
@@ -362,16 +363,18 @@ class MrfTask():
         bright_star_cat = objects[np.unique(temp)]
         mag = config.lowres.zeropoint - 2.5 * np.log10(bright_star_cat['flux'])
         bright_star_cat.add_column(Column(data=mag, name='mag'))
-        ## Remove objects in GAL_CAT
-        temp, dist, _ = match_coordinates_sky(
-                            SkyCoord(ra=gal_cat['ra'], dec=gal_cat['dec'], unit='deg'),
-                            SkyCoord(ra=bright_star_cat['ra'], dec=bright_star_cat['dec'], unit='deg'))
-        to_remove = []
-        for i, obj in enumerate(dist):
-            if obj < 10 * u.arcsec:
-                to_remove.append(temp[i])
-        if len(to_remove) != 0:
-            bright_star_cat.remove_rows(np.unique(to_remove))
+        
+        if certain_gal_cat is not None:
+            ## Remove objects in GAL_CAT
+            temp, dist, _ = match_coordinates_sky(
+                                SkyCoord(ra=gal_cat['ra'], dec=gal_cat['dec'], unit='deg'),
+                                SkyCoord(ra=bright_star_cat['ra'], dec=bright_star_cat['dec'], unit='deg'))
+            to_remove = []
+            for i, obj in enumerate(dist):
+                if obj < 10 * u.arcsec:
+                    to_remove.append(temp[i])
+            if len(to_remove) != 0:
+                bright_star_cat.remove_rows(np.unique(to_remove))
         bright_star_cat.write('_bright_star_cat.fits', format='fits', overwrite=True)
 
         # Select good stars to stack
