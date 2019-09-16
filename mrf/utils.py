@@ -1126,7 +1126,11 @@ def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir,
         ind = np.where(np.isin(im_seg_slice, obj['index']))
         flux_hires = im_highres_slice[ind]
         flux_ratio = im_ratio_slice[ind]
-        if ((np.mean(flux_hires) < sb_lim_cpp) and (len(flux_hires) > 40) and (np.mean(flux_ratio) < unmask_ratio)) and (np.mean(flux_ratio) != 0):
+        try:
+            minarea = config.fluxmodel.minarea
+        except:
+            minarea = 40
+        if ((np.mean(flux_hires) < sb_lim_cpp) and (len(flux_hires) > minarea) and (np.mean(flux_ratio) < unmask_ratio)) and (np.mean(flux_ratio) != 0):
             im_highres_new_slice[ind] = 1
             num += 1
     im_highres_new[im_seg_ind] = im_highres_new_slice
