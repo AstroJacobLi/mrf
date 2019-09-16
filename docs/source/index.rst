@@ -70,8 +70,7 @@ Index
 
 Citation
 --------
-
-``mrf`` is a free software made available under MIT License, developed by `Pieter van Dokkum <http://pietervandokkum.com>`_ and maintained by `Jiaxuan Li <https://astrojacobli.github.io>`_. If you use this package in your work, please cite van Dokkum et al. (in prep). Pieter van Dokkum came up with the idea of MRF and wrote the primary scripts. Jiaxuan Li wrote the scripts into a standard Python Package and setup the documentation website.
+``mrf`` is a free software made available under the MIT License by `Pieter van Dokkum <http://pietervandokkum.com>`_ (initial development) and Jiaxuan Li (implementation, maintenance, and documentation). If you use this package in your work, please cite van Dokkum et al. (in prep).
 
 You are welcome to report bugs in ``mrf`` via creating issues at https://github.com/AstroJacobLi/mrf/issues.
 

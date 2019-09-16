@@ -834,10 +834,11 @@ class Star(Celestial):
             return imgcp
 
     def mask_out_contam(self, sigma=4.5, deblend_cont=0.0001, blowup=True, 
-                        cval=np.nan, show_fig=True, verbose=True):
+                        show_fig=True, verbose=True):
         """
         Mask out contamination in the cutout of star. Contamination may be stars, galaxies or artifacts. 
         This function uses ``sep`` to identify and mask contamination.
+        ** DO THIS AFTER CENTERIZING! **
 
         Parameters:
             sigma (float): The sigma in ``SExtractor``. Default is 4.5.
@@ -865,9 +866,10 @@ class Star(Celestial):
             cv = convolve(detect_mask, Gaussian2DKernel(1.5))
             detect_mask = (cv > 0.2).astype(float)
         
-        imgcp = copy.copy(self.image)
-        imgcp[detect_mask.astype(bool)] = cval
-        self.image = imgcp
+        self.mask = detect_mask
+        #imgcp = copy.copy(self.image)
+        #imgcp[detect_mask.astype(bool)] = cval
+        #self.image = imgcp
         # Shift mask will be very horrible!!! Hence we still don't use self.mask. 
         # Instead we directly mask out on the image.
 
