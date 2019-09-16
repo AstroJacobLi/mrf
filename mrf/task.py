@@ -402,9 +402,9 @@ class MrfTask():
                 else:
                     cval = float(cval)
 
+                sstar.centralize(method=config.starhalo.interp)
                 if config.starhalo.mask_contam:
                     sstar.mask_out_contam(show_fig=False, verbose=False)
-                sstar.centralize(method=config.starhalo.interp)
                 #sstar.sub_bkg(verbose=False)
                 if config.starhalo.norm == 'flux_ann':
                     stack_set[i, :, :] = sstar.get_masked_image(cval=cval) / sstar.fluxann

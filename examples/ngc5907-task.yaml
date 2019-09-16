@@ -29,7 +29,7 @@ fluxmodel:
   unmask_lowsb: False
   sb_lim: 26.0
   unmask_ratio: 3
-  interp: 'cubic'
+  interp: 'iraf'
 
 kernel:
   kernel_size: 8 # In original coordinate, before magnification
@@ -53,7 +53,7 @@ starhalo:
   deblend_nthresh: 32
   sky_subtract: False
   flux_aper: [3, 6]
-  interp: 'cubic'
+  interp: 'iraf'
   cval: 0.0
   mask_contam: True
 
