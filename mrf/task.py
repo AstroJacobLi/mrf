@@ -403,13 +403,13 @@ class MrfTask():
                     cval = float(cval)
 
                 if config.starhalo.mask_contam:
-                    sstar.mask_out_contam(show_fig=False, verbose=False, cval=cval)
+                    sstar.mask_out_contam(show_fig=False, verbose=False)
                 sstar.centralize(method=config.starhalo.interp)
                 #sstar.sub_bkg(verbose=False)
                 if config.starhalo.norm == 'flux_ann':
-                    stack_set[i, :, :] = sstar.image / sstar.fluxann
+                    stack_set[i, :, :] = sstar.get_masked_image(cval=cval) / sstar.fluxann
                 else:
-                    stack_set[i, :, :] = sstar.image / sstar.flux
+                    stack_set[i, :, :] = sstar.get_masked_image(cval=cval) / sstar.flux
                     
             except Exception as e:
                 stack_set[i, :, :] = np.ones((size, size)) * 1e9
