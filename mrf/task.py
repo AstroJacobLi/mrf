@@ -365,7 +365,7 @@ class MrfTask():
         bright_star_cat = objects[np.unique(temp)]
         mag = config.lowres.zeropoint - 2.5 * np.log10(bright_star_cat['flux'])
         bright_star_cat.add_column(Column(data=mag, name='mag'))
-        '''
+        
         if certain_gal_cat is not None:
             ## Remove objects in GAL_CAT
             temp, dist, _ = match_coordinates_sky(
@@ -377,7 +377,7 @@ class MrfTask():
                     to_remove.append(temp[i])
             if len(to_remove) != 0:
                 bright_star_cat.remove_rows(np.unique(to_remove))
-        '''
+        
         bright_star_cat.write('_bright_star_cat.fits', format='fits', overwrite=True)
 
         # Select good stars to stack
@@ -486,15 +486,18 @@ class MrfTask():
             totmask[totmask > 0] = 1
             if config.clean.replace_with_noise:
                 logger.info('    - Replace artifacts with noise.')
-                from compsub.utils import img_replace_with_noise
+                from mrf.utils import img_replace_with_noise
                 final_image = img_replace_with_noise(img_sub.byteswap().newbyteorder(), totmask)
             else:
                 logger.info('    - Replace artifacts with void.')
                 final_image = img_sub * (~totmask.astype(bool))
             
             save_to_fits(final_image, output_name + '_final.fits', header=res.header)
+            save_to_fits(totmask.astype(float), output_name + '_mask.fits', header=res.header)
             setattr(results, 'lowres_final', Celestial(final_image, header=res.header))
+            setattr(results, 'lowres_mask', Celestial(totmask.astype(float), header=res.header))
             logger.info('The final result is saved as "{}"!'.format(output_name + '_final.fits'))
+            logger.info('The mask is saved as "{}"!'.format(output_name + '_mask.fits'))
         # Delete temp files
         if config.clean.clean_file:
             logger.info('Delete all temporary files!')
