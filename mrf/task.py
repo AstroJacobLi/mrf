@@ -175,14 +175,14 @@ class MrfTask():
         logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
         _, _, b_imflux = Flux_Model(hires_b.image, hires_b.header, sigma=sigma, minarea=minarea, 
                                     deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, 
-                                    save=True, logger=logger)
+                                    sky_subtract=sky_subtract, save=True, logger=logger)
         
         logger.info('Build flux models on high-resolution images: Red band')
         logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
         logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
         _, _, r_imflux = Flux_Model(hires_r.image, hires_b.header, sigma=sigma, minarea=minarea, 
                                     deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, 
-                                    save=True, logger=logger)
+                                    sky_subtract=sky_subtract, save=True, logger=logger)
         
 
         # 4. Make color correction, remove artifacts as well
@@ -221,7 +221,7 @@ class MrfTask():
         logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
         logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
         objects, segmap = extract_obj(hires_3.image, b=b, f=f, sigma=sigma, minarea=minarea, 
-                                      show_fig=False, flux_aper=flux_aper, 
+                                      show_fig=False, flux_aper=flux_aper, sky_subtract=sky_subtract,
                                       deblend_nthresh=deblend_nthresh, 
                                       deblend_cont=deblend_cont, logger=logger)
         objects.write('_hires_obj_cat.fits', format='fits', overwrite=True)
@@ -335,6 +335,8 @@ class MrfTask():
         ra, dec = res.wcs.wcs_pix2world(star_cat['x'], star_cat['y'], 0)
         star_cat.add_columns([Column(data=ra, name='ra'), Column(data=dec, name='dec')])
 
+        b = config.starhalo.b
+        f = config.starhalo.f
         sigma = config.starhalo.sigma
         minarea = config.starhalo.minarea
         deblend_cont = config.starhalo.deblend_cont
@@ -346,7 +348,7 @@ class MrfTask():
         logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
         logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
         objects, segmap = extract_obj(res.image, 
-                                    b=64, f=3, sigma=sigma, minarea=minarea,
+                                    b=b, f=f, sigma=sigma, minarea=minarea,
                                     deblend_nthresh=deblend_nthresh, 
                                     deblend_cont=deblend_cont, 
                                     sky_subtract=sky_subtract, show_fig=False, 
@@ -363,7 +365,7 @@ class MrfTask():
         bright_star_cat = objects[np.unique(temp)]
         mag = config.lowres.zeropoint - 2.5 * np.log10(bright_star_cat['flux'])
         bright_star_cat.add_column(Column(data=mag, name='mag'))
-        
+        '''
         if certain_gal_cat is not None:
             ## Remove objects in GAL_CAT
             temp, dist, _ = match_coordinates_sky(
@@ -375,6 +377,7 @@ class MrfTask():
                     to_remove.append(temp[i])
             if len(to_remove) != 0:
                 bright_star_cat.remove_rows(np.unique(to_remove))
+        '''
         bright_star_cat.write('_bright_star_cat.fits', format='fits', overwrite=True)
 
         # Select good stars to stack

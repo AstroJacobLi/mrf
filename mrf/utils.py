@@ -405,7 +405,7 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
 
     objects, segmap = sep.extract(input_data,
                                 sigma,
-                                err=bkg.globalrms,
+                                err=bkg.rms(),
                                 segmentation_map=True,
                                 filter_type='matched',
                                 deblend_nthresh=deblend_nthresh,
@@ -463,7 +463,7 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
     if show_fig:
         fig, ax = plt.subplots(1,2, figsize=(12,6))
 
-        ax[0] = display_single(data_sub, ax=ax[0], scale_bar_length=60, pixel_scale=pixel_scale)
+        ax[0] = display_single(input_data, ax=ax[0], scale_bar_length=60, pixel_scale=pixel_scale)
         from matplotlib.patches import Ellipse
         # plot an ellipse for each object
         for obj in objects:
@@ -480,8 +480,8 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
 
 # Detect sources and make flux map
 def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3, 
-                deblend_cont=0.005, deblend_nthresh=32, save=False, 
-                output_suffix='flux_model', logger=None):
+                deblend_cont=0.005, deblend_nthresh=32, sky_subtract=False, 
+                save=False, output_suffix='flux_model', logger=None):
     """ 
     Extract sources from given image and return a flux map (not segmentation map).
     The flux map will be saved as '_flux_' + output_suffix + '.fits', along with segmentation map.
@@ -505,7 +505,7 @@ def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3,
 
     objects, segmap = extract_obj(img, b=b, f=f, sigma=sigma, minarea=minarea, show_fig=False,
                                   deblend_nthresh=deblend_nthresh, deblend_cont=deblend_cont, 
-                                  sky_subtract=False, logger=logger)
+                                  sky_subtract=sky_subtract, logger=logger)
     im_seg = segmap
     galid = objects['index'].data.astype(np.float)
     flux = objects['flux_auto'].data.astype(np.float)
@@ -1034,7 +1034,7 @@ def bright_star_mask(mask, catalog, bright_lim=17.5, r=2.0):
     import sep
     # Make stars to be zero on segmap
     for obj in catalog:
-        if obj['mag'] < bright_lim and obj['b'] / obj['a'] > 0.6:
+        if obj['mag'] < bright_lim and obj['b'] / obj['a'] > 0.3:
             sep.mask_ellipse(mask, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], r=r)
     return mask
 
@@ -1349,6 +1349,102 @@ def tractor_iteration(obj_cat, w, img_data, invvar, psf_obj, pixel_scale, shape_
 
 
     return sources, trac_obj, fig
+
+#########################################################################
+############################ SBP related ################################
+#########################################################################
+
+# Run surface brightness profile for the given image and mask
+def run_SBP(img_path, msk_path, pixel_scale, phys_size, iraf_path, step=0.10, 
+    stage=2, cen=None, sma_ini=10.0, sma_max=900.0, n_clip=3, maxTry=5, low_clip=3.0, upp_clip=2.5, 
+    force_e=None, outPre=None):
+    '''
+    Run surface brightness profile for the given image and mask
+
+    Parameters:
+        phys_size: kpc/arcsec
+        stage: 1 (everything is free); 2(center is fixed); 3(everything is fixed)
+        cen (list): center position. Should be ``x_cen, y_cen = int(img_data.shape[1]/2), int(img_data.shape[0]/2)``.
+            x, y is seen in DS9.
+        
+    '''
+    from kungpao.galsbp import galSBP
+    # Centeral coordinate 
+    img_data = fits.open(img_path)[0].data
+    if cen is not None:
+        x_cen = cen[0]
+        y_cen = cen[1]
+    else:
+        x_cen, y_cen = int(img_data.shape[1]/2), int(img_data.shape[0]/2)
+
+    # Initial guess of axis ratio and position angle 
+    ba_ini, pa_ini = 0.5, 90.0
+
+    # Initial radius of Ellipse fitting
+    sma_ini = sma_ini
+
+    # Minimum and maximum radiuse of Ellipse fitting
+    sma_min, sma_max = 0.0, sma_max
+
+    # Stepsize of Ellipse fitting. By default we are not using linear step size
+    step = step
+
+    # Behaviour of Ellipse fitting
+    stage = stage 
+
+    # Pixel scale of the image.
+    pix_scale = pixel_scale
+
+    # Photometric zeropoint 
+    zeropoint = 27.0
+
+    # Exposure time
+    exptime = 1.0
+
+    # Along each isophote, Elipse will perform sigmal clipping to remove problematic pixels
+    # The behaviour is decided by these three parameters: Number of sigma cliping, lower, and upper clipping threshold 
+    n_clip, low_clip, upp_clip = n_clip, low_clip, upp_clip
+
+    # After the clipping, Ellipse can use the mean, median, or bi-linear interpolation of the remain pixel values
+    # as the "average intensity" of that isophote 
+    integrade_mode = 'median'   # or 'mean', or 'bi-linear'
+
+    ISO = iraf_path + 'x_isophote.e'
+    # This is where `x_isophote.e` exists
+
+    TBL = iraf_path + 'x_ttools.e'
+    # This is where `x_ttools.e` exists. Actually it's no need to install IRAF at all.
+
+    # Make 'Data' to save your output data
+    if not os.path.isdir('Data'):
+        os.mkdir('Data')
+
+    # Start running Ellipse
+    ell, _ = galSBP.galSBP(img_path, 
+                        mask=msk_path,
+                        galX=x_cen, galY=y_cen,
+                        galQ=ba_ini, galPA=pa_ini,
+                        iniSma=sma_ini, 
+                        minSma=sma_min, maxSma=sma_max,
+                        pix=1/pix_scale, zpPhoto=zeropoint,
+                        expTime=exptime, 
+                        stage=stage,
+                        ellipStep=step,
+                        isophote=ISO, 
+                        xttools=TBL, 
+                        uppClip=upp_clip, lowClip=low_clip, 
+                        nClip=n_clip, 
+                        maxTry=maxTry,
+                        fracBad=0.8,
+                        maxIt=300,
+                        harmonics="none",
+                        intMode=integrade_mode, 
+                        saveOut=True, plMask=True,
+                        verbose=True, savePng=False, 
+                        updateIntens=False, saveCsv=True,
+                        suffix='', location='./Data/', outPre=outPre+'-ellip-2')
+
+    return ell
 
 
 #########################################################################
