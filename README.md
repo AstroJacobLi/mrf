@@ -65,6 +65,6 @@ Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/ku
 
 Citation
 ---------
-``mrf`` is a free software made available under the MIT License by `Pieter van Dokkum <http://pietervandokkum.com>`_ (initial development) and Jiaxuan Li (implementation, maintenance, and documentation). If you use this package in your work, please cite van Dokkum et al. (in prep).
+``mrf`` is a free software made available under the MIT License by [Pieter van Dokkum](http://pietervandokkum.com) (initial development) and Jiaxuan Li (implementation, maintenance, and documentation). If you use this package in your work, please cite van Dokkum et al. (in prep).
 
 Copyright 2019 [Pieter van Dokkum](http://pietervandokkum.com) and [Jiaxuan Li](http://astrojacobli.github.io).
