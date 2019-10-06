@@ -33,7 +33,7 @@ def phys_size(redshift, H0=70, Omegam=0.3, verbose=True):
         verbose (bool): If true, it will print out the physical scale at the given redshift.
 
     Returns:
-        physical_size (float): The corresponding physical size (not comoving) per arcsec of a given redshift.
+        physical_size (float): The corresponding physical size (not co-moving) per arcsec of a given redshift.
     '''
     from astropy.cosmology import FlatLambdaCDM
     cosmos = FlatLambdaCDM(H0=H0, Om0=Omegam) 
@@ -1082,7 +1082,6 @@ def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir,
         gaussian_radius (float): A 2-D Gaussian is called to smooth the mask a little bit.
         gaussian_threshold (float): A 2-D Gaussian is called to smooth the mask a little bit.
         logger (``logging.logger`` object): logger for this task.
-
     Returns:
         im_highres (numpy 2-D array): Flux model after removing low-SB features.
     """

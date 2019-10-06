@@ -192,7 +192,11 @@ class Celestial(object):
         elif method == 'iraf':
             self.save_to_fits('./_temp.fits', 'image')
             imshift('./_temp.fits', './_shift_temp.fits', dx, dy, interp_type='poly3', boundary_type='constant')
-            hdu = fits.open('./_shift_temp.fits')
+            try:
+                hdu = fits.open('./_shift_temp.fits')
+            except Exception as e:
+                raise ValueError('Interpolation using IRAF filed with error "{}". \n Please try another interpolation method!'.format(e))
+            
             self.image = hdu[0].data
             self.shape = hdu[0].data.shape
             self.header = hdu[0].header
@@ -269,7 +273,11 @@ class Celestial(object):
         elif method == 'iraf':
             self.save_to_fits('./_temp.fits', 'mask')
             imshift('./_temp.fits', './_shift_temp.fits', dx, dy, interp_type='poly3', boundary_type='constant')
-            hdu = fits.open('./_shift_temp.fits')
+            try:
+                hdu = fits.open('./_shift_temp.fits')
+            except Exception as e:
+                raise ValueError('Interpolation using IRAF filed with error "{}". \n Please try another interpolation method!'.format(e))
+            
             self.mask = hdu[0].data
             self.shape = hdu[0].data.shape
             self.header = hdu[0].header
@@ -396,10 +404,10 @@ class Celestial(object):
             assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
             if method == 'lanczos':
                 galimg = InterpolatedImage(Image(self.image, dtype=float), 
-                                       scale=self.pixel_scale, x_interpolant=Lanczos(order))
+                                           scale=self.pixel_scale, x_interpolant=Lanczos(order))
             else:
                 galimg = InterpolatedImage(Image(self.image, dtype=float), 
-                                        scale=self.pixel_scale, x_interpolant=method)
+                                           scale=self.pixel_scale, x_interpolant=method)
 
             ny, nx = self.image.shape
             if f > 1:
@@ -458,7 +466,10 @@ class Celestial(object):
             else:
                 blkavg('./_temp.fits', './_resize_temp.fits', 
                         round(1/f), round(1/f), option='sum')
-            hdu = fits.open('./_resize_temp.fits')
+            try:
+                hdu = fits.open('./_resize_temp.fits')
+            except Exception as e:
+                raise ValueError('Interpolation using IRAF filed with error "{}". \n Please try another interpolation method!'.format(e))
             self.image = hdu[0].data
             self.shape = hdu[0].data.shape
             self.header = hdu[0].header
@@ -564,7 +575,11 @@ class Celestial(object):
             else:
                 blkavg('./_temp.fits', './_resize_temp.fits', 
                         round(1/f), round(1/f), option='sum')
-            hdu = fits.open('./_resize_temp.fits')
+            try:
+                hdu = fits.open('./_resize_temp.fits')
+            except Exception as e:
+                raise ValueError('Interpolation using IRAF filed with error "{}". \n Please try another interpolation method!'.format(e))
+            
             self.mask = hdu[0].data
             self.shape = hdu[0].data.shape
             self.header = hdu[0].header

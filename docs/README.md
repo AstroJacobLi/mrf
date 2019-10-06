@@ -59,14 +59,14 @@ print(os.path.isfile(os.path.join(mrf.__path__[0], 'iraf/macosx/x_images.e')))
 
 If you need to use ``lanczos`` or ``cubic`` interpolation, you must have [``galsim``](https://github.com/GalSim-developers/GalSim) installed. You will also need [``unagi``](https://github.com/dr-guangtou/unagi) to download HSC images. `Python>=3` is needed, but you can try whether `mrf` still works under `python2`. Check out the dependence of `mrf` depends from `requirements.txt`.
 
+Citation
+---------
+``mrf`` is a free software made available under the MIT License by [Pieter van Dokkum](http://pietervandokkum.com) (initial development) and [Jiaxuan Li](https://astrojacobli.github.io) (implementation, maintenance, and documentation). If you use this package in your work, please cite van Dokkum et al. (in prep).
+
 Acknowledgement
 ---------------
 Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
 
-Citation
----------
-If you use this code, please cite the `doi` below, and make sure to cite the dependencies as listed in [requirements](https://github.com/AstroJacobLi/mrf/blob/master/requirements.txt). Pieter van Dokkum came up with the idea of MRF and wrote the primary scripts. Jiaxuan Li wrote the scripts into a standard Python Package and setup the documentation website.
 
-`mrf` is a free software made available under MIT License. For details see the LICENSE file. 
 
 Copyright 2019 [Pieter van Dokkum](http://pietervandokkum.com) and [Jiaxuan Li](http://astrojacobli.github.io).

@@ -214,7 +214,7 @@ def download_decals_cutout(ra, dec, size, band, layer='dr8-south', pixel_unit=Fa
     Parameters:
         ra (float): RA (degrees)
         dec (float): DEC (degrees)
-        size (float): image size in pixel.
+        size (float): image size in pixel or arcsec. If pixel_unit = True, it's in pixel.
         band (string): such as 'r' or 'g'
         layer (string): data release of DECaLS. If your object is too north, try 'dr8-north'. 
             For details, please check http://legacysurvey.org/dr8/description/.

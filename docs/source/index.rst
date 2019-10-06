@@ -52,10 +52,12 @@ User Guide
 
    guide/install
    tutorial/mrf-tutorial
+   
 
 .. toctree::
    :maxdepth: 1
 
+   tutorial/configuration
    tutorial/misc
    license
    guide/changelog
@@ -70,7 +72,7 @@ Index
 
 Citation
 --------
-``mrf`` is a free software made available under the MIT License by `Pieter van Dokkum <http://pietervandokkum.com>`_ (initial development) and Jiaxuan Li (implementation, maintenance, and documentation). If you use this package in your work, please cite van Dokkum et al. (in prep).
+``mrf`` is a free software made available under the MIT License by `Pieter van Dokkum <http://pietervandokkum.com>`_ (initial development) and `Jiaxuan Li <https://astrojacobli.github.io>`_ (implementation, maintenance, and documentation). If you use this package in your work, please cite van Dokkum et al. (in prep).
 
 You are welcome to report bugs in ``mrf`` via creating issues at https://github.com/AstroJacobLi/mrf/issues.
 
