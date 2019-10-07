@@ -1003,11 +1003,11 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
             for j in range(3):
                 ax = axes[j + 3 * (i // 8 - 1), i%8]
                 if i == 0 or i == 8:
-                    display_single(data_set[j][i], pixel_scale=2.5, 
+                    display_single(abs(data_set[j][i]), pixel_scale=2.5, 
                                    scale_bar=False, ax=ax, 
                                    add_text=text_set[j], text_fontsize=15)
                 else:
-                    display_single(data_set[j][i], pixel_scale=2.5, scale_bar=False, ax=ax)
+                    display_single(abs(data_set[j][i]), pixel_scale=2.5, scale_bar=False, ax=ax)
                         
         plt.subplots_adjust(wspace=0.0, hspace=0.0)
         plt.savefig('./kernel_stars.png', bbox_inches='tight', dpi=150)

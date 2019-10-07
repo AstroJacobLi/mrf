@@ -162,8 +162,12 @@ class MrfTask():
         # 3. Extract sources on hires images using SEP
         sigma = config.sex.sigma
         minarea = config.sex.minarea
-        b = config.sex.b
-        f = config.sex.f
+        try:
+            b = config.sex.b
+            f = config.sex.f
+        except:
+            b = 64
+            f = 5
         deblend_cont = config.sex.deblend_cont
         deblend_nthresh = config.sex.deblend_nthresh
         sky_subtract = config.sex.sky_subtract
