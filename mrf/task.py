@@ -507,7 +507,13 @@ class MrfTask():
             logger.info('Delete all temporary files!')
             os.system('rm -rf _*.fits')
 
-
+        # 12. determine detection depth
+        from .sblim import cal_sblimit
+        _  = cal_sblimit(final_image, totmask.astype(int), 
+                        config.lowres.pixel_scale, config.lowres.zeropoint, 
+                        scale_arcsec=60, minfrac=0.8, minback=6, verbose=True, logger=logger);
+        
+        # 13. Plot out the result
         plt.rcParams['text.usetex'] = False
         fig, [ax1, ax2, ax3] = plt.subplots(1, 3, figsize=(15, 8))
         hdu = fits.open(dir_lowres)

@@ -180,18 +180,33 @@ def block_reduce(image, block_size, func=np.sum, cval=0):
 
     return func(flatten, axis=(flatten.ndim - 1))
 
-def cal_sblimit(image, mask, pixel_scale, zeropoint, scale_arcsec=60, minfrac=0.8, minback=6, verbose=True):
+def cal_sblimit(image, mask, pixel_scale, zeropoint, scale_arcsec=60, 
+                minfrac=0.8, minback=6, verbose=True, logger=None):
+    """
+    Calculate the surface brightness detection limit on a given angular scale. 
+    The error of SB limit is calculated according to https://stats.stackexchange.com/questions/631/standard-deviation-of-standard-deviation.
+
+    Parameters:
+        image (numpy 2-D array): input image.
+        mask (numpy 2-D array): if you want to mask out a pixel, set its value to 1; otherwise set to zero.
+        pixel_scale (float): pixel scale of the input image, in the unit of ``arcsec/pixel``.
+        zeropoint (float): photometric zeropoint of the input image.
+        scale_arcsec (float): on which scale we calculate SB limit, in the unit of ``arcsec``. 
+            If ``scale_arcsec=60``, this function prints out SB limit on the scale of 60 arcsec * 60 arcsec square. 
+        minfrac (float): Must be less than 1.0. We discard super-pixels in which less than ``minfrac`` fraction of pixels are available. 
+            Hence super-pixels with too many pixels masked out are discarded.
+        minback (int): Given a super-pixel, we discard it (set to zero) if there are less than ``minback`` non-zero super-pixels surrounding it.
+        verbose (bool): whether print out results.
+        logger (``logging.logger`` object): logger for this function. Default is ``None``.
+
+    """
     import copy
     from astropy.stats import biweight_midvariance
     from astropy.stats import biweight_location
     
-    print('### Determine surface brightness detection limit ###')
     ## read image
     ny, nx = image.shape
-    if verbose:
-        print('Dimensions of the input image: nx = {0}, ny = {1}'.format(nx, ny))
-        print('Pixel scale of the input image: {0:.2f} arcsec/pix'.format(pixel_scale))
-    
+
     scale_pix = scale_arcsec / pixel_scale # scale in pixel
     scale_x = np.array([scale_pix, int(scale_pix), int(scale_pix), int(scale_pix) + 1])
     scale_y = np.array([scale_pix, int(scale_pix), int(scale_pix) + 1, int(scale_pix) + 1])
@@ -203,10 +218,18 @@ def cal_sblimit(image, mask, pixel_scale, zeropoint, scale_arcsec=60, minfrac=0.
     bin_x = int(scale_x[np.argmin(area) + 1])
     bin_y = int(scale_y[np.argmin(area) + 1])
     area_ratio = bin_x * bin_y / scale_pix**2 
+
     if verbose:
-        print('Binning factors: dx = {0}, dy = {1}'.format(bin_x, bin_y))
-        print('Used bin area / True bin area = {:.5f}'.format(area_ratio))
-    
+        if logger is not None:
+            logger.info("Determine surface brightness detection limit")
+            logger.info('    - Binning factors: dx = {0}, dy = {1}'.format(bin_x, bin_y))
+            logger.info('    - Used bin area / True bin area = {:.5f}'.format(area_ratio))
+        else:
+            print('# Determine surface brightness detection limit')
+            print('    - Binning factors: dx = {0}, dy = {1}'.format(bin_x, bin_y))
+            print('    - Used bin area / True bin area = {:.5f}'.format(area_ratio))
+
+
     nbins_x = np.int(nx / bin_x)
     nbins_y = np.int(ny / bin_y)
 
@@ -257,9 +280,14 @@ def cal_sblimit(image, mask, pixel_scale, zeropoint, scale_arcsec=60, minfrac=0.
     # convert to magnitudes
     sb_lim = zeropoint - 2.5 * np.log10(sig_adu / pixel_scale**2)
     dsb_lim = 2.5 / np.log(10) / sig_adu * dsig_adu
+
     if verbose:
-        print('1-sigma variation in counts = {0:.4f} +- {1:.04f}'.format(sig_adu, dsig_adu))
-        print('Surface brightness limit = {0:.4f} +- {1:.04f}'.format(sb_lim, dsb_lim))
+        if logger is not None:
+            logger.info('    - 1-sigma variation in counts = {0:.4f} +- {1:.04f}'.format(sig_adu, dsig_adu))
+            logger.info('    - Surface brightness limit on {0} arcsec scale is {1:.4f} +- {2:.04f}'.format(scale_arcsec, sb_lim, dsb_lim))
+        else:
+            print('    - 1-sigma variation in counts = {0:.4f} +- {1:.04f}'.format(sig_adu, dsig_adu))
+            print('    - Surface brightness limit on {0} arcsec scale is {1:.4f} +- {2:.04f}'.format(scale_arcsec, sb_lim, dsb_lim))
 
     return sb_lim, sig_adu, [im_fluct, im_loc, im_var, im_frac]
 

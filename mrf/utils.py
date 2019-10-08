@@ -1082,6 +1082,7 @@ def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir,
         gaussian_radius (float): A 2-D Gaussian is called to smooth the mask a little bit.
         gaussian_threshold (float): A 2-D Gaussian is called to smooth the mask a little bit.
         logger (``logging.logger`` object): logger for this task.
+        
     Returns:
         im_highres (numpy 2-D array): Flux model after removing low-SB features.
     """
