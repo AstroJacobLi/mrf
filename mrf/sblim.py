@@ -180,15 +180,17 @@ def block_reduce(image, block_size, func=np.sum, cval=0):
 
     return func(flatten, axis=(flatten.ndim - 1))
 
-def sblimit_bin(image, mask, pixel_scale, zeropoint, scale_arcsec=60, minfrac=0.8, minback=6):
+def cal_sblimit(image, mask, pixel_scale, zeropoint, scale_arcsec=60, minfrac=0.8, minback=6, verbose=True):
     import copy
     from astropy.stats import biweight_midvariance
     from astropy.stats import biweight_location
     
+    print('### Determine surface brightness detection limit ###')
     ## read image
     ny, nx = image.shape
-    print('Dimensions of the input image: nx={0}, ny={1}'.format(nx, ny))
-    print('Pixel scale of the input image: {0:.2f} arcsec/pix'.format(pixel_scale))
+    if verbose:
+        print('Dimensions of the input image: nx = {0}, ny = {1}'.format(nx, ny))
+        print('Pixel scale of the input image: {0:.2f} arcsec/pix'.format(pixel_scale))
     
     scale_pix = scale_arcsec / pixel_scale # scale in pixel
     scale_x = np.array([scale_pix, int(scale_pix), int(scale_pix), int(scale_pix) + 1])
@@ -200,13 +202,32 @@ def sblimit_bin(image, mask, pixel_scale, zeropoint, scale_arcsec=60, minfrac=0.
     
     bin_x = int(scale_x[np.argmin(area) + 1])
     bin_y = int(scale_y[np.argmin(area) + 1])
-    print('Binning factors: dx={0}, dy={1}'.format(bin_x, bin_y))
     area_ratio = bin_x * bin_y / scale_pix**2 
-    print('Used bin area / True bin area = {:.5f}'.format(area_ratio))
+    if verbose:
+        print('Binning factors: dx = {0}, dy = {1}'.format(bin_x, bin_y))
+        print('Used bin area / True bin area = {:.5f}'.format(area_ratio))
     
     nbins_x = np.int(nx / bin_x)
     nbins_y = np.int(ny / bin_y)
+
+    im_var = np.zeros((nbins_y, nbins_x))
+    im_loc = np.zeros((nbins_y, nbins_x))
+    im_frac = np.zeros((nbins_y, nbins_x))
+    im_fluct = np.zeros((nbins_y, nbins_x))
+
     
+    for i in range(nbins_x - 1):
+        for j in range(nbins_y - 1):
+            x1, x2, y1, y2 = i * bin_x, (i + 1) * bin_x, j * bin_y, (j + 1) * bin_y
+            im_sec = image[y1:y2, x1:x2]
+            im_mask_sec = mask[y1:y2, x1:x2]
+            im_sec_in = im_sec[(im_mask_sec == 0)]
+            if im_sec_in.size > 0:
+                im_var[j, i] = biweight_midvariance(im_sec_in)
+                im_loc[j, i] = biweight_location(im_sec_in)
+            im_frac[j, i] = 1 - np.float(im_sec_in.size) / np.float(im_sec.size)
+            
+    '''
     temp = copy.deepcopy(image)
     temp[mask==1] = np.nan
     # var
@@ -215,11 +236,11 @@ def sblimit_bin(image, mask, pixel_scale, zeropoint, scale_arcsec=60, minfrac=0.
     im_loc = block_reduce(temp, (bin_y, bin_x), func=np.nanmedian, cval=np.nan)
     # frac
     im_frac = block_reduce(mask, (bin_y, bin_x), func=np.sum, cval=np.nan) / (bin_x * bin_y)
-    
+    '''
+
     # calculate fluctuation
-    im_fluct = np.zeros((nbins_y,nbins_x))
-    for i in range(1, nbins_x):
-        for j in range(1, nbins_y):
+    for i in range(1, nbins_x - 1):
+        for j in range(1, nbins_y - 1):
             backvec = im_loc[j-1:j+2, i-1:i+2]
             backvec = np.delete(backvec.flatten(), 4)
             maskvec = im_frac[j-1:j+2, i-1:i+2]
@@ -229,11 +250,16 @@ def sblimit_bin(image, mask, pixel_scale, zeropoint, scale_arcsec=60, minfrac=0.
                 im_fluct[j,i] = im_loc[j,i] - biweight_location(backvec_in)
             
     im_fluct_in = im_fluct[im_fluct != 0]
-    sig_adu = np.sqrt(biweight_midvariance(im_fluct_in))
-    print('1-sigma variation in counts = {:.3f}'.format(sig_adu))
+    sig_adu = np.sqrt(biweight_midvariance(im_fluct_in)) * 0.80  # 8/9 is area correction
+    dsig_adu = sig_adu / np.sqrt(2 * (im_fluct_in.size - 1)) 
+    # For the standard deviation of standard deviation, see this: https://stats.stackexchange.com/questions/631/standard-deviation-of-standard-deviation
+    
     # convert to magnitudes
-    sb_lim = zeropoint - 2.5 * np.log10(sig_adu/pixel_scale**2)
-    print('Surface brightness limit = {:.3f}'.format(sb_lim))
+    sb_lim = zeropoint - 2.5 * np.log10(sig_adu / pixel_scale**2)
+    dsb_lim = 2.5 / np.log(10) / sig_adu * dsig_adu
+    if verbose:
+        print('1-sigma variation in counts = {0:.4f} +- {1:.04f}'.format(sig_adu, dsig_adu))
+        print('Surface brightness limit = {0:.4f} +- {1:.04f}'.format(sb_lim, dsb_lim))
 
-    return sb_lim, [im_fluct, im_loc, im_var, im_frac]
+    return sb_lim, sig_adu, [im_fluct, im_loc, im_var, im_frac]
 
