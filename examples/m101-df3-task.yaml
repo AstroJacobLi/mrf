@@ -9,7 +9,7 @@ lowres:
   pixel_scale: 2.0
   sub_bkgval: False # highly recommend True
   magnify_factor: 3.0
-  zeropoint: 20.0  # don't need to be very accurate
+  zeropoint: 20.0
   color_term: 0.00    # -0.15
 
 sex:

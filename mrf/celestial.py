@@ -52,9 +52,10 @@ class Celestial(object):
         ny, nx = img.shape
         self.ny = ny
         self.nx = nx
+
+        self.header = hdu.header
+        self.wcs = wcs.WCS(header)
         if header is not None:
-            self.header = hdu.header
-            self.wcs = wcs.WCS(header)
             try:
                 self.pixel_scale = abs(header['CD1_1'] * 3600)
             except:
@@ -65,9 +66,7 @@ class Celestial(object):
                                                 [0, 0, img.shape[0], img.shape[0]], 1)
             self.sky_bounds = np.append(self.ra_bounds[2:], self.dec_bounds[1:3])
         else:
-            self.header = None
             self.pixel_scale = 1
-            self.wcs = wcs.WCS(header)
 
         # initial length for scale bar when displaying
         self.scale_bar_length = scale_bar_length 
@@ -126,12 +125,7 @@ class Celestial(object):
         else:
             raise ValueError('Data can only be "image" or "mask".')
         
-        img_hdu = fits.PrimaryHDU(data_use)
-
-        if self.header is not None:
-            img_hdu.header = self.header
-        else:
-            img_hdu = fits.PrimaryHDU(data_use)
+        img_hdu = fits.PrimaryHDU(data_use, header=self.header)
 
         if os.path.islink(fits_file_name):
             os.unlink(fits_file_name)

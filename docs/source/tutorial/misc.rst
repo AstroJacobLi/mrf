@@ -1,9 +1,19 @@
 Miscellaneous Functions
 ------------------------
+``mrf.sblim.cal_sblimit``
+++++++++++++++++++++++++++
+This function calculates the surface brightness detection limit on a given angular scale. It requires the image and corresponding mask which masks out contamination after MRF. The usage is as follows:
+
+.. code-block:: python
+
+    _ = cal_sblimit(imaeg, mask, zeropoint=27.31, pixel_scale=2.5, 
+                    scale_arcsec=60, minfrac=0.8, minback=6)
+
+Then it prints out the SB detection limit on the scale of 60 arcsec * 60 arcsec. 
+
 
 ``mrf.celestial.Celestial``
 +++++++++++++++++++++++++++++
-
 This class is a convenient tool for you to manipulate astronomical images. It is almost a celestial body from an observational perspective. It has its image, header, WCS. The mask which masks out contaminations can also be stored as an attribute. Then this ``Celestial`` object can be saved to FITS file, can be shifted, resized, rotated, etc. What's more, the user could check the image/mask/masked image simply by invoke ``Celestial.display_image()``.
 
 ``mrf.celestial.Star``

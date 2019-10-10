@@ -112,7 +112,8 @@ class MrfTask():
         logger.info('Running Multi-Resolution Filtering (MRF) on "{0}" and "{1}" images!'.format(config.hires.dataset, config.lowres.dataset))
         setattr(results, 'lowres_name', config.lowres.dataset)
         setattr(results, 'hires_name', config.hires.dataset)
-
+        setattr(results, 'output_name', output_name)
+        
         # 1. subtract background of lowres, if desired
         assert isinstance(dir_lowres, str), 'Input "img_lowres" must be string!'
         hdu = fits.open(dir_lowres)
@@ -383,6 +384,7 @@ class MrfTask():
                 bright_star_cat.remove_rows(np.unique(to_remove))
         
         bright_star_cat.write('_bright_star_cat.fits', format='fits', overwrite=True)
+        setattr(results, 'bright_star_cat', bright_star_cat)
 
         # Select good stars to stack
         psf_cat = bright_star_cat[bright_star_cat['fwhm_custom'] < config.starhalo.fwhm_lim] # FWHM selection
@@ -463,6 +465,7 @@ class MrfTask():
         im_halos = im_halos_padded[halosize: ny + halosize, halosize: nx + halosize]
         setattr(results, 'lowres_model_star', Celestial(im_halos, header=lowres_model.header))
         img_sub = res.image - im_halos
+        setattr(results, 'lowres_final_unmask', Celestial(img_sub, header=res.header))
         lowres_model.image += im_halos
         setattr(results, 'lowres_model', lowres_model)
 
@@ -478,7 +481,7 @@ class MrfTask():
         # 11. Mask out dirty things!
         if config.clean.clean_img:
             logger.info('Clean the image!')
-            model_mask = convolve(lowres_model.image, 
+            model_mask = convolve(1e3 * lowres_model.image / np.nansum(lowres_model.image),
                                   Gaussian2DKernel(config.clean.gaussian_radius))
             model_mask[model_mask < config.clean.gaussian_threshold] = 0
             model_mask[model_mask != 0] = 1
@@ -507,7 +510,13 @@ class MrfTask():
             logger.info('Delete all temporary files!')
             os.system('rm -rf _*.fits')
 
-
+        # 12. determine detection depth
+        from .sblim import cal_sblimit
+        _  = cal_sblimit(final_image, totmask.astype(int), 
+                         config.lowres.pixel_scale, config.lowres.zeropoint, 
+                         scale_arcsec=60, minfrac=0.8, minback=6, verbose=True, logger=logger);
+        
+        # 13. Plot out the result
         plt.rcParams['text.usetex'] = False
         fig, [ax1, ax2, ax3] = plt.subplots(1, 3, figsize=(15, 8))
         hdu = fits.open(dir_lowres)
