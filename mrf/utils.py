@@ -1162,7 +1162,7 @@ def adjust_mask(results, gaussian_radius=1.5, gaussian_threshold=0.01, bright_li
         results: ``Results`` object returned by ``mrf.task.MrfTask``.
         gaussian_radius (float): radius of a Gaussian kernel, in pixel.
         gaussian_threshold (float): the threshold of making the mask. 
-            This should be around 0.01, lower value makes more aggresive mask.
+            This should be around 0.01 or 0.001, lower value makes more aggresive mask.
         bright_lim (float): we seperately mask out bright stars brighter than this limit.
         r (float): we blow up bright stars by the factor of ``r``.
 
@@ -1171,6 +1171,7 @@ def adjust_mask(results, gaussian_radius=1.5, gaussian_threshold=0.01, bright_li
 
     """
     from mrf.utils import bright_star_mask, save_to_fits
+    from mrf.celestial import Celestial
     from astropy.convolution import convolve, Box2DKernel, Gaussian2DKernel
     bright_star_cat = results.bright_star_cat
     model_mask = convolve(1e3 * results.lowres_model.image / np.nansum(results.lowres_model.image), 
