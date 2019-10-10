@@ -1062,7 +1062,7 @@ def psf_bkgsub(psf, edge):
 
 # Remove low surface brightness features from Flux Model
 def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir, 
-                 SB_lim=24.0, zeropoint=30.0, pixel_size=0.83, unmask_ratio=6, 
+                 SB_lim=25.0, zeropoint=30.0, pixel_size=0.83, unmask_ratio=2, minarea=40,
                  gaussian_radius=1.5, gaussian_threshold=0.01, logger=None):
     """
     Remove low surface brightness features from Flux Model. 
@@ -1125,10 +1125,6 @@ def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir,
         ind = np.where(np.isin(im_seg_slice, obj['index']))
         flux_hires = im_highres_slice[ind]
         flux_ratio = im_ratio_slice[ind]
-        try:
-            minarea = config.fluxmodel.minarea
-        except:
-            minarea = 40
         if ((np.mean(flux_hires) < sb_lim_cpp) and (len(flux_hires) > minarea) and (np.mean(flux_ratio) < unmask_ratio)) and (np.mean(flux_ratio) != 0):
             im_highres_new_slice[ind] = 1
             num += 1

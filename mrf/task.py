@@ -308,6 +308,7 @@ class MrfTask():
                                         zeropoint=config.hires.zeropoint, 
                                         pixel_size=hires_fluxmod.pixel_scale, 
                                         unmask_ratio=config.fluxmodel.unmask_ratio, 
+                                        minarea=config.fluxmodel.minarea * f_magnify**2,
                                         gaussian_radius=config.fluxmodel.gaussian_radius, 
                                         gaussian_threshold=config.fluxmodel.gaussian_threshold, 
                                         logger=logger)
