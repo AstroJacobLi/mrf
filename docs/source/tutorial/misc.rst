@@ -1,5 +1,6 @@
 Miscellaneous Functions
 ------------------------
+
 ``mrf.sblim.cal_sblimit``
 ++++++++++++++++++++++++++
 This function calculates the surface brightness detection limit on a given angular scale. It requires the image and corresponding mask which masks out contamination after MRF. The usage is as follows:

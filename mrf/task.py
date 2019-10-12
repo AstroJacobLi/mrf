@@ -51,7 +51,7 @@ class MrfTask():
         self.config_file = config_file
         self.config = config
 
-    def set_logger(self, verbose=True):
+    def set_logger(self, output_name='mrf', verbose=True):
         """
         Set logger for ``MrfTask``. The logger will record the time and each output. The log file will be saved locally.
 
@@ -62,7 +62,7 @@ class MrfTask():
             logger (``logging.logger`` object)
         """
         if verbose:
-            log_filename = self.config_file.rstrip('yaml') + 'log'
+            log_filename = output_name + '.log'
             logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO, 
                                 handlers=[logging.StreamHandler(sys.stdout),
                                           logging.FileHandler(log_filename, mode='w')])
@@ -106,7 +106,7 @@ class MrfTask():
         from reproject import reproject_interp, reproject_exact
 
         config = self.config
-        logger = self.set_logger(verbose=verbose)
+        logger = self.set_logger(output_name=output_name, verbose=verbose)
         results = Results(config)
 
         logger.info('Running Multi-Resolution Filtering (MRF) on "{0}" and "{1}" images!'.format(config.hires.dataset, config.lowres.dataset))
@@ -387,17 +387,23 @@ class MrfTask():
         bright_star_cat.write('_bright_star_cat.fits', format='fits', overwrite=True)
         setattr(results, 'bright_star_cat', bright_star_cat)
 
-        # Select good stars to stack
+        # Select non-edge good stars to stack
+        halosize = config.starhalo.halosize
+        padsize = config.starhalo.padsize
+
         psf_cat = bright_star_cat[bright_star_cat['fwhm_custom'] < config.starhalo.fwhm_lim] # FWHM selection
         psf_cat = psf_cat[psf_cat['mag'] < config.starhalo.bright_lim]
+
+        ny, nx = res.image.shape
+        non_edge_flag = np.logical_and.reduce([(psf_cat['x'] > padsize), (psf_cat['x'] < nx - padsize), 
+                                               (psf_cat['y'] > padsize), (psf_cat['y'] < ny - padsize)])
+        psf_cat = psf_cat[non_edge_flag]                                        
         psf_cat.sort('flux')
         psf_cat.reverse()
         psf_cat = psf_cat[:int(config.starhalo.n_stack)]
         logger.info('    - Get {} stars to be stacked!'.format(len(psf_cat)))
 
         # Construct and stack `Stars`.
-        halosize = config.starhalo.halosize
-        padsize = config.starhalo.padsize
         size = 2 * halosize + 1
         stack_set = np.zeros((len(psf_cat), size, size))
         bad_indices = []
@@ -413,14 +419,14 @@ class MrfTask():
                     cval = float(cval)
 
                 sstar.centralize(method=config.starhalo.interp)
-                if config.starhalo.mask_contam:
+                if config.starhalo.mask_contam is True:
                     sstar.mask_out_contam(show_fig=False, verbose=False)
                 #sstar.sub_bkg(verbose=False)
                 if config.starhalo.norm == 'flux_ann':
                     stack_set[i, :, :] = sstar.get_masked_image(cval=cval) / sstar.fluxann
                 else:
                     stack_set[i, :, :] = sstar.get_masked_image(cval=cval) / sstar.flux
-                    
+
             except Exception as e:
                 stack_set[i, :, :] = np.ones((size, size)) * 1e9
                 bad_indices.append(i)
