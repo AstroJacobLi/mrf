@@ -6,8 +6,10 @@ The configuration file has several sections. Under each section several importan
 
 TL;DR
 ^^^^^^
+* Please write pixel scales, zeropoints correctly. 
 * ``frac_maxflux`` is very important, you need to adjust this parameter several times to make the residual image cleanest.
-* 
+* ``fluxmodel.unmask_lowsb``, ``fluxmodel.sb_lim`` and ``fluxmodel.unmask_ratio`` are important for discovering low-SB objects! Please follow the instructions in the corresponding section below.
+* You can iterate mask size using ``mrf.utils.adjust_mask``.
 
 ``hires`` and ``lowres``
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -75,7 +77,7 @@ If you use Dragonfly as low-resolution image, we recommend to subtract a global 
         gaussian_threshold: 0.05 # mask = conv > 0.05
         unmask_lowsb: False
         sb_lim: 26.0
-        unmask_ratio: 3
+        unmask_ratio: 2.0
         interp: 'cubic'
 
     kernel:
