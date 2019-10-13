@@ -4,6 +4,13 @@ A configuration file is needed to run MRF properly. In this page we guide you th
 
 The configuration file has several sections. Under each section several important parameters are listed after a colon. Please see `here <https://github.com/AstroJacobLi/mrf/blob/master/examples/ngc5907-task.yaml>`_ as an example. 
 
+TL;DR
+^^^^^^
+* Please write pixel scales, zeropoints correctly. 
+* ``frac_maxflux`` is very important, you need to adjust this parameter several times to make the residual image cleanest.
+* ``fluxmodel.unmask_lowsb``, ``fluxmodel.sb_lim`` and ``fluxmodel.unmask_ratio`` are important for discovering low-SB objects! Please follow the instructions in the corresponding section below.
+* You can iterate mask size using ``mrf.utils.adjust_mask``.
+
 ``hires`` and ``lowres``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: yaml
@@ -70,7 +77,7 @@ If you use Dragonfly as low-resolution image, we recommend to subtract a global 
         gaussian_threshold: 0.05 # mask = conv > 0.05
         unmask_lowsb: False
         sb_lim: 26.0
-        unmask_ratio: 3
+        unmask_ratio: 2.0
         interp: 'cubic'
 
     kernel:
@@ -95,11 +102,54 @@ Section ``fluxmodel`` and ``kernel`` controls the key process in MRF, please see
 
 where :math:`F^{\text{H}(3)}` is the flux model, and :math:`K` is the kernel. If :math:`\langle E \rangle \ll 1`, it is a compact object that should be retained in the flux model and subtracted from the Dragonfly data. Hence we retain (compact) objects in flux model by :math:`E > \texttt{unmask_ratio}`. Small ``unmask_ratio`` leaves very extended objects in the final product. The value of ``unmask_ratio`` and ``sb_lim`` depends on your science goals.
 
-Interpolation of images is important in MRF. We provide several interpolation methods including ``'iraf', 'cubic', 'lanczos', 'quintic'``. IRAF method uses 3rd order polynomial interpolation, which might not work under Windows system. However we recommend using IRAF interpolation under most circumstances. 
+Interpolation of images is important in MRF. We provide several interpolation methods including ``'iraf', 'cubic', 'lanczos', 'quintic'``. IRAF method uses 3rd order polynomial interpolation, which might not work under Windows system. However we recommend using IRAF interpolation under most circumstances. When using the other three, you may see crosses around very bright stars. 
 
 Parameters in ``kernel`` section are very important. ``kernel_size`` is the size of kernel in the original low-resolution image coordinate (before magnification). For example, ``kernel_size: 8`` and ``magnify_factor: 3.0`` means the actual kernel is 24 pixel * 24 pixel. ``nkernel: 25`` indicates that the kernel will be generated based on 25 objects. Only objects fainter than "``frac_maxflux`` * flux of brightest object" will be used. Hence ``frac_maxflux`` is very important, you need to adjust this parameter several times to make the residual image cleanest. Typically it should be less than 0.3. Please note that it could be different between bands. The kernel will be circularized if ``circularize: True``, however it's not necessary to circularize kernel in most cases. 
 
+``starhalo``
+^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+    starhalo:
+        bright_lim: 17.5 # only stack stars brighter than bright_lim
+        fwhm_lim: 50 # only stack stars whose FWHM < fwhm_lim
+        n_stack: 30
+        halosize: 30 # radial size, in pixel, on low-res image. Star cutout size will be 2 * halosize + 1
+        padsize: 50
+        edgesize: 3
+        norm: 'flux_ann' # or 'flux' or 'flux_auto'
+        b: 32
+        f: 3
+        sigma: 4
+        minarea: 5
+        deblend_cont: 0.005
+        deblend_nthresh: 32
+        sky_subtract: True
+        flux_aper: [3, 6] # pixels
+        mask_contam: True
+        cval: 'nan'
+        interp: 'iraf'
+
+Parameters in this section are used to stack PSF using bright stars. The PSF will further be used to subtract bright stars from the image. We already identified bright stars on low-resolution image using ``sep``, and here we only select stars brighter than ``bright_lim`` and FWHM less than ``fwhm_lim``, avoiding too saturated stars. The maximum number of stars selected is ``n_stack`` (typically 20-30). We make a cutout of each star with a ``2 * halosize + 1`` pixel width square. Since stars have different brightness, we normalize each cutout using either the total flux measured by ``sep`` (i.e. ``norm: 'flux'``) or the flux within a certain annulus (i.e. ``norm: 'flux_ann'``). The default annulus is between 3 pix and 6 pix, since the saturation peak (if exists) drops quickly before 3 pixels. You can adjust the annulus size in ``flux_aper``. 
+
+After making a cutout of a star, you may need to mask out contaminations around it by indicating ``mask_contam: True``. If so, the masked region will be filled with ``cval``, which could be any float number or `nan`. The ``interp`` parameter means the same as in ``fluxmodel`` section.
 
 
+``clean``
+^^^^^^^^^^^^^
 
+.. code-block:: yaml
 
+    clean:
+        clean_img: True
+        clean_file: False
+        replace_with_noise: False
+        gaussian_radius: 1.5
+        gaussian_threshold: 0.003
+        bright_lim: 17.5
+        r: 5.0
+
+Now we have already subtracted both compact objects and bright stars in the field. To make things neat, we apply masks on the residual image by indicating ``clean_img: True``. We generate mask by convolving the segmentation map with a ``gaussian_radius: 1.5`` Gaussian kernel and filtering it with a threshold ``gaussian_threshold: 0.003``. Larger radius and smaller threshold give you more aggressive mask. We additionally mask out bright stars (brighter than ``bright_lim: 17.5``) by drawing an ellipse on the image with a blow-up factor ``r: 5.0``. You can adjust the mask afterward using `mrf.utils.adjust_mask <https://mrfiltering.readthedocs.io/en/latest/api.html#mrf.utils.adjust_mask>`_ function.
+
+Since MRF creates many temporary files whose names star with an underline (such as ``_median_psf.fits``), we remove these files by indicating ``clean_file: True``. 
