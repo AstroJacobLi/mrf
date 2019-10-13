@@ -331,6 +331,7 @@ class MrfTask():
         res.save_to_fits(output_name + '_res.fits')
         setattr(results, 'res', res)
 
+
         logger.info('Compact objects has been subtracted from low-resolution image! Saved as "{}".'.format(output_name + '_res.fits'))
 
 
@@ -366,8 +367,9 @@ class MrfTask():
         # Match two catalogs
         logger.info('Stack stars to get PSF model!')
         logger.info('    - Match detected objects with previously discard stars')
-        temp = match_coordinates_sky(SkyCoord(ra=star_cat['ra'], dec=star_cat['dec'], unit='deg'),
-                                     SkyCoord(ra=objects['ra'], dec=objects['dec'], unit='deg'))[0]
+        temp, sep2d, _ = match_coordinates_sky(SkyCoord(ra=star_cat['ra'], dec=star_cat['dec'], unit='deg'),
+                                               SkyCoord(ra=objects['ra'], dec=objects['dec'], unit='deg'))
+        temp = temp[sep2d < 3 * u.arcsec]
         bright_star_cat = objects[np.unique(temp)]
         mag = config.lowres.zeropoint - 2.5 * np.log10(bright_star_cat['flux'])
         bright_star_cat.add_column(Column(data=mag, name='mag'))
@@ -402,6 +404,7 @@ class MrfTask():
         psf_cat.reverse()
         psf_cat = psf_cat[:int(config.starhalo.n_stack)]
         logger.info('    - Get {} stars to be stacked!'.format(len(psf_cat)))
+        setattr(results, 'psf_cat', psf_cat)
 
         # Construct and stack `Stars`.
         size = 2 * halosize + 1
@@ -409,9 +412,8 @@ class MrfTask():
         bad_indices = []
         for i, obj in enumerate(psf_cat):
             try:
-                sstar = Star(res.image, header=res.header, starobj=obj, 
+                sstar = Star(results.lowres_input.image, header=results.lowres_input.header, starobj=obj, 
                              halosize=halosize, padsize=padsize)
-
                 cval = config.starhalo.cval
                 if isinstance(cval, str) and 'nan' in cval.lower():
                     cval = np.nan
@@ -419,30 +421,34 @@ class MrfTask():
                     cval = float(cval)
 
                 sstar.centralize(method=config.starhalo.interp)
+                
                 if config.starhalo.mask_contam is True:
-                    sstar.mask_out_contam(show_fig=False, verbose=False)
+                    sstar.mask_out_contam(sigma=5.0, deblend_cont=0.0001, show_fig=False, verbose=False)
+                    #sstar.image = sstar.get_masked_image(cval=cval)
+                    #sstar.mask_out_contam(sigma=3, deblend_cont=0.0001, show_fig=False, verbose=False)
+                
                 #sstar.sub_bkg(verbose=False)
                 if config.starhalo.norm == 'flux_ann':
                     stack_set[i, :, :] = sstar.get_masked_image(cval=cval) / sstar.fluxann
                 else:
                     stack_set[i, :, :] = sstar.get_masked_image(cval=cval) / sstar.flux
-
+                
             except Exception as e:
                 stack_set[i, :, :] = np.ones((size, size)) * 1e9
                 bad_indices.append(i)
                 logger.info(e)
                 print(e)
-                
+
         stack_set = np.delete(stack_set, bad_indices, axis=0)
         median_psf = np.nanmedian(stack_set, axis=0)
         median_psf = psf_bkgsub(median_psf, int(config.starhalo.edgesize))
         median_psf = convolve(median_psf, Box2DKernel(3))
         save_to_fits(median_psf, '_median_psf.fits');
         setattr(results, 'PSF', median_psf)
-
+        
         logger.info('    - Stars are stacked successfully!')
         save_to_fits(stack_set, '_stack_bright_stars.fits')
-
+        
         # 11. Build starhalo models and then subtract from "res" image
         logger.info('Draw star halo models onto the image, and subtract them!')
         # Make an extra edge, move stars right

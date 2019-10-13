@@ -863,9 +863,9 @@ class Star(Celestial):
         from astropy.convolution import convolve, Box2DKernel
         from .utils import extract_obj, seg_remove_cen_obj
         img_blur = convolve(abs(self.image), Box2DKernel(2))
-        img_objects, img_segmap = extract_obj(abs(img_blur), b=5, f=4, sigma=sigma, minarea=1, pixel_scale=self.pixel_scale,
+        img_objects, img_segmap = extract_obj(abs(img_blur), b=5, f=3, sigma=sigma, minarea=1, pixel_scale=self.pixel_scale,
                                                 deblend_nthresh=72, deblend_cont=deblend_cont, flux_aper=[3, 5],
-                                                sky_subtract=False, show_fig=show_fig, verbose=verbose)
+                                                sky_subtract=True, show_fig=show_fig, verbose=verbose)
         # remove central object from segmap
         cen_obj = img_objects[img_segmap[img_segmap.shape[1]//2, img_segmap.shape[0]//2] - 1]
         img_segmap = seg_remove_cen_obj(img_segmap) 
