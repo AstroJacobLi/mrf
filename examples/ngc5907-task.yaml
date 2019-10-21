@@ -10,7 +10,7 @@ lowres:
   sub_bkgval: True # highly recommend True
   magnify_factor: 3.0
   zeropoint: 27.0  # don't need to be very accurate
-  color_term: -0.05    # -0.15
+  color_term: 0.05    # -0.15
 
 sex:
   sigma: 2.5
