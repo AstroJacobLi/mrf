@@ -180,8 +180,8 @@ def block_reduce(image, block_size, func=np.sum, cval=0):
 
     return func(flatten, axis=(flatten.ndim - 1))
 
-def cal_sblimit(image, mask, pixel_scale, zeropoint, scale_arcsec=60, 
-                minfrac=0.8, minback=6, verbose=True, logger=None):
+def _cal_contrast(image, mask, pixel_scale, zeropoint, scale_arcsec=60, 
+                  minfrac=0.8, minback=6, verbose=True, logger=None):
     """
     Calculate the surface brightness detection limit on a given angular scale. 
     The error of SB limit is calculated according to https://stats.stackexchange.com/questions/631/standard-deviation-of-standard-deviation.
@@ -279,7 +279,8 @@ def cal_sblimit(image, mask, pixel_scale, zeropoint, scale_arcsec=60,
     
     # convert to magnitudes
     sb_lim = zeropoint - 2.5 * np.log10(sig_adu / pixel_scale**2)
-    dsb_lim = 2.5 / np.log(10) / sig_adu * dsig_adu
+    dsb_lim = 2.5 * np.log10(1 + 1/np.sqrt(im_fluct_in.size)) 
+    #2.5 / np.log(10) / sig_adu * dsig_adu
 
     if verbose:
         if logger is not None:
@@ -289,5 +290,48 @@ def cal_sblimit(image, mask, pixel_scale, zeropoint, scale_arcsec=60,
             print('    - 1-sigma variation in counts = {0:.4f} +- {1:.04f}'.format(sig_adu, dsig_adu))
             print('    - Surface brightness limit on {0} arcsec scale is {1:.4f} +- {2:.04f}'.format(scale_arcsec, sb_lim, dsb_lim))
 
-    return sb_lim, sig_adu, [im_fluct, im_loc, im_var, im_frac]
+    return (sb_lim, dsb_lim), (sig_adu, dsig_adu), [im_fluct, im_loc, im_var, im_frac]
 
+def cal_sbcontrast(image, mask, pixel_scale, zeropoint, scale_arcsec=60, 
+                minfrac=0.8, minback=6, verbose=True, logger=None):
+    """
+    Calculate the surface brightness detection limit on a given angular scale. 
+    The error of SB limit is calculated according to https://stats.stackexchange.com/questions/631/standard-deviation-of-standard-deviation.
+
+    Parameters:
+        image (numpy 2-D array): input image.
+        mask (numpy 2-D array): if you want to mask out a pixel, set its value to 1; otherwise set to zero.
+        pixel_scale (float): pixel scale of the input image, in the unit of ``arcsec/pixel``.
+        zeropoint (float): photometric zeropoint of the input image.
+        scale_arcsec (float): on which scale we calculate SB limit, in the unit of ``arcsec``. 
+            If ``scale_arcsec=60``, this function prints out SB limit on the scale of 60 arcsec * 60 arcsec square.  
+            If ``scale_arcsec=None`` is given, the code loops over spatial scales ranging from 5 arcsec to 5 arcmin 
+            and provides the surface brightness limit as a numpy array rather than a single number.
+        minfrac (float): Must be less than 1.0. We discard super-pixels in which less than ``minfrac`` fraction of pixels are available. 
+            Hence super-pixels with too many pixels masked out are discarded.
+        minback (int): Given a super-pixel, we discard it (set to zero) if there are less than ``minback`` non-zero super-pixels surrounding it.
+        verbose (bool): whether print out results.
+        logger (``logging.logger`` object): logger for this function. Default is ``None``.
+
+    """
+    if scale_arcsec is None:
+        sb_lim_set = []
+        dsb_lim_set = []
+        aperture_set = [5, 10, 20, 60, 120, 240, 300]
+        for scale in aperture_set:
+            sb_lim, _, _ = _cal_contrast(image, mask, pixel_scale, zeropoint, scale_arcsec=scale, 
+                                         minfrac=minfrac, minback=minback, verbose=False, logger=logger)
+            sb_lim_set.append(sb_lim[0])
+            dsb_lim_set.append(sb_lim[1])
+        if logger is not None:
+            for k, scale in enumerate(aperture_set):
+                logger.info('    - Surface brightness limit on {0} arcsec scale is {1:.4f} +- {2:.04f}'.format(scale, sb_lim_set[k], dsb_lim_set[k]))
+        else:
+            for k, scale in enumerate(aperture_set):
+                print('    - Surface brightness limit on {0} arcsec scale is {1:.4f} +- {2:.04f}'.format(scale, sb_lim_set[k], dsb_lim_set[k]))
+        return np.array([aperture_set, sb_lim_set])
+    
+    else:
+        return _cal_contrast(image, mask, pixel_scale, zeropoint, scale_arcsec=scale_arcsec, 
+                             minfrac=minfrac, minback=minback, verbose=verbose, logger=logger)
+         
