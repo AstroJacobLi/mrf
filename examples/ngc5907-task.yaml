@@ -30,6 +30,7 @@ fluxmodel:
   sb_lim: 26.0
   unmask_ratio: 3
   interp: 'iraf'
+  minarea: 25
 
 kernel:
   kernel_size: 8 # In original coordinate, before magnification
@@ -47,6 +48,8 @@ starhalo:
   padsize: 50
   edgesize: 3
   norm: 'flux_ann' # or 'flux' or 'flux_auto'
+  b: 32
+  f: 3
   sigma: 4
   minarea: 5
   deblend_cont: 0.005
@@ -62,6 +65,6 @@ clean:
   clean_file: False
   replace_with_noise: False
   gaussian_radius: 1.5
-  gaussian_threshold: 10
+  gaussian_threshold: 0.01
   bright_lim: 16.5
   r: 8.0
