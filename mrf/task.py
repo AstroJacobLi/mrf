@@ -369,7 +369,7 @@ class MrfTask():
         logger.info('    - Match detected objects with previously discard stars')
         temp, sep2d, _ = match_coordinates_sky(SkyCoord(ra=star_cat['ra'], dec=star_cat['dec'], unit='deg'),
                                                SkyCoord(ra=objects['ra'], dec=objects['dec'], unit='deg'))
-        temp = temp[sep2d < 3 * u.arcsec]
+        #temp = temp[sep2d < 5 * u.arcsec]
         bright_star_cat = objects[np.unique(temp)]
         mag = config.lowres.zeropoint - 2.5 * np.log10(bright_star_cat['flux'])
         bright_star_cat.add_column(Column(data=mag, name='mag'))
@@ -524,10 +524,10 @@ class MrfTask():
             os.system('rm -rf _*.fits')
 
         # 12. determine detection depth
-        from .sblim import cal_sblimit
-        _  = cal_sblimit(final_image, totmask.astype(int), 
-                         config.lowres.pixel_scale, config.lowres.zeropoint, 
-                         scale_arcsec=60, minfrac=0.8, minback=6, verbose=True, logger=logger);
+        from .sbcontrast import cal_sbcontrast
+        _  = cal_sbcontrast(final_image, totmask.astype(int), 
+                             config.lowres.pixel_scale, config.lowres.zeropoint, 
+                             scale_arcsec=60, minfrac=0.8, minback=6, verbose=True, logger=logger);
         
         # 13. Plot out the result
         plt.rcParams['text.usetex'] = False

@@ -10,7 +10,7 @@ lowres:
   sub_bkgval: False # highly recommend True
   magnify_factor: 3.0
   zeropoint: 20.0
-  color_term: 0.00    # -0.15
+  color_term: 0.00
 
 sex:
   sigma: 2.5
@@ -30,6 +30,7 @@ fluxmodel:
   sb_lim: 24.0
   unmask_ratio: 6
   interp: 'iraf'
+  minarea: 25
 
 kernel:
   kernel_size: 8 # In original coordinate, before magnification
@@ -59,7 +60,7 @@ starhalo:
 
 clean:
   clean_img: True
-  clean_file: True
+  clean_file: False
   replace_with_noise: False
   gaussian_radius: 1.5
   gaussian_threshold: 0.05
