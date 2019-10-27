@@ -25,7 +25,7 @@ from palettable.colorbrewer.sequential import (Greys_9,
                                                YlGn_9)
 
 __all__ = [
-    "display_single", "display_multiple", "draw_rectangles", 
+    "display_single", "display_multiple", "draw_rectangles", "df_color_image",
     "draw_circles", "display_isophote", "SBP_single", "random_cmap"
     ]
 

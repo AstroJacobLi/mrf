@@ -1,6 +1,10 @@
 Changelog
 ----------
-* 2019-10-15: Version 1.0.4 released. New features:
+* 2019-10-27: New features:
+    1. Add ``sbcontrast.py`` to calculate surface brightness limit of a given spatial scale.
+    2. Add examples including self-MRF and cross-MRF.
+
+* 2019-10-15: Version 1.0.3 released. New features:
     1. Add code to determine surface brightness detection limit
     2. Add function ``adjust_mask``, which can be a convenient tool to adjust mask size after running MRF.
     3. Minor adjustment for cross-MRF.

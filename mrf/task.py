@@ -442,7 +442,7 @@ class MrfTask():
         stack_set = np.delete(stack_set, bad_indices, axis=0)
         median_psf = np.nanmedian(stack_set, axis=0)
         median_psf = psf_bkgsub(median_psf, int(config.starhalo.edgesize))
-        median_psf = convolve(median_psf, Box2DKernel(3))
+        median_psf = convolve(median_psf, Box2DKernel(2))
         save_to_fits(median_psf, '_median_psf.fits');
         setattr(results, 'PSF', median_psf)
         

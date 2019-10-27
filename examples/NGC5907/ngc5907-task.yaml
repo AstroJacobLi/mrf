@@ -6,10 +6,10 @@ hires:
 lowres:
   dataset: 'df'
   band: 'r'
-  pixel_scale: 2.0
-  sub_bkgval: False # highly recommend True
+  pixel_scale: 2.5
+  sub_bkgval: True # highly recommend True
   magnify_factor: 3.0
-  zeropoint: 20.0
+  zeropoint: 26.97189937757109  # don't need to be very accurate
   color_term: 0.00
 
 sex:
@@ -26,43 +26,45 @@ sex:
 fluxmodel:
   gaussian_radius: 1.5     # conv = convolve(mask, Gaussian2DKernel(1.5))
   gaussian_threshold: 0.05 # mask = conv > 0.05
-  unmask_lowsb: True
-  sb_lim: 24.0
-  unmask_ratio: 6
+  unmask_lowsb: False
+  sb_lim: 26.0
+  unmask_ratio: 3
   interp: 'iraf'
-  minarea: 25
 
 kernel:
   kernel_size: 8 # In original coordinate, before magnification
   kernel_edge: 1
   nkernel: 25
-  frac_maxflux: 0.1
+  frac_maxflux: 0.03
   circularize: False
   show_fig: True
 
 starhalo:
-  bright_lim: 18.5 # only stack stars brighter than bright_lim
+  bright_lim: 16.5 # only stack stars brighter than bright_lim
   fwhm_lim: 200 # only stack stars whose FWHM < fwhm_lim
-  n_stack: 30
+  n_stack: 10
   halosize: 24 # radial size, in pixel, original size. Star cutout size will be 2 * halosize + 1
   padsize: 50
-  edgesize: 3
+  edgesize: 5
   norm: 'flux_ann' # or 'flux' or 'flux_auto'
-  sigma: 4
-  minarea: 5
-  deblend_cont: 0.005
+  b: 32
+  f: 3
+  sigma: 3.5
+  minarea: 3
+  deblend_cont: 0.003
   deblend_nthresh: 32
-  sky_subtract: False
+  sky_subtract: True
   flux_aper: [3, 6]
-  interp: 'iraf'
-  cval: 0.0
   mask_contam: True
+  interp: 'iraf'
+  cval: nan
+
 
 clean:
   clean_img: True
   clean_file: False
   replace_with_noise: False
   gaussian_radius: 1.5
-  gaussian_threshold: 0.05
-  bright_lim: 15
-  r: 10.0
+  gaussian_threshold: 0.001
+  bright_lim: 16.5
+  r: 8.0
