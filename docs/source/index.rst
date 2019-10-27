@@ -10,7 +10,7 @@ Multi-Resolution Filtering is a method for isolating faint, extended emission in
     :target: https://mrfiltering.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://img.shields.io/badge/version-1.0.3-green
+.. image:: https://img.shields.io/badge/version-1.0.4-green
     :alt: Version
 
 .. image:: https://img.shields.io/badge/GitHub-astrojacobli%2Fmrf-blue
@@ -36,7 +36,7 @@ Basic Usage
                     output_name='m101_df3', verbose=True)
     results.lowres_final.display_image()
 
-.. figure:: https://github.com/AstroJacobLi/mrf/raw/master/examples/m101-df3-demo.png
+.. figure:: https://github.com/AstroJacobLi/mrf/raw/master/examples/M101-DF3/m101-df3-demo.png
     :width: 640px
     :align: center
     :alt: alternate text

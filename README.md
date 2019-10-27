@@ -22,13 +22,13 @@ Applications
 
 Examples
 ------------
-This example shows the tidal feature of NGC 5907, described in [van Dokkum et al. (2019)](https://ui.adsabs.harvard.edu/abs/2019arXiv190611260V/abstract). The images presented there used this algorithm. Full resolution Dragonfly images and MRF results can be found [here](https://www.pietervandokkum.com/ngc5907). Check [this notebook](https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-n5907.ipynb) for more details in how to do MRF using this Python package! :rocket: 
+This example shows the tidal feature of NGC 5907, described in [van Dokkum et al. (2019)](https://ui.adsabs.harvard.edu/abs/2019arXiv190611260V/abstract). The images presented there used this algorithm. Full resolution Dragonfly images and MRF results can be found [here](https://www.pietervandokkum.com/ngc5907). Check [this notebook](https://github.com/AstroJacobLi/mrf/blob/master/examples/NGC5907/mrfTask-n5907.ipynb) for more details in how to do MRF using this Python package! :rocket: 
 
-![MRF on NGC 5907](https://github.com/AstroJacobLi/mrf/raw/master/examples/n5907-demo.png)
+![MRF on NGC 5907](https://github.com/AstroJacobLi/mrf/raw/master/examples/NGC5907/n5907-demo.png)
 
-This example shows how powerful MRF is in revealing low surface brightness features. The ultra-diffuse galaxy M101-DF3 is revealed by MRF after subtracting compact objects and bright star halos according to [van Dokkum et al. (in prep)](https://www.pietervandokkum.com). Check [this notebook](https://github.com/AstroJacobLi/mrf/blob/master/examples/mrfTask-m101df3.ipynb) for more details.
+This example shows how powerful MRF is in revealing low surface brightness features. The ultra-diffuse galaxy M101-DF3 is revealed by MRF after subtracting compact objects and bright star halos according to [van Dokkum et al. (in prep)](https://www.pietervandokkum.com). Check [this notebook](https://github.com/AstroJacobLi/mrf/blob/master/examples/M101-DF3/mrfTask-m101df3.ipynb) for more details.
 
-![MRF on M101-DF3](https://github.com/AstroJacobLi/mrf/raw/master/examples/m101-df3-demo.png)
+![MRF on M101-DF3](https://github.com/AstroJacobLi/mrf/raw/master/examples/M101-DF3/m101-df3-demo.png)
 
 You can also use [this script](https://github.com/AstroJacobLi/mrf/blob/master/examples/mrf-task.py) to run the MRF task. Take NGC 5907 as an example:
 

@@ -1,0 +1,70 @@
+hires:
+  dataset: 'cfht'
+  zeropoint: 30.0
+  pixel_scale: 0.372
+
+lowres:
+  dataset: 'df'
+  band: 'r'
+  pixel_scale: 2.5
+  sub_bkgval: True # highly recommend True
+  magnify_factor: 3.0
+  zeropoint: 26.97189937757109  # don't need to be very accurate
+  color_term: 0.00
+
+sex:
+  sigma: 2.5
+  minarea: 2
+  b: 64
+  f: 3
+  deblend_cont: 0.005
+  deblend_nthresh: 32
+  sky_subtract: False
+  flux_aper: [3, 6]
+  show_fig: False
+
+fluxmodel:
+  gaussian_radius: 1.5     # conv = convolve(mask, Gaussian2DKernel(1.5))
+  gaussian_threshold: 0.05 # mask = conv > 0.05
+  unmask_lowsb: False
+  sb_lim: 26.0
+  unmask_ratio: 3
+  interp: 'iraf'
+
+kernel:
+  kernel_size: 8 # In original coordinate, before magnification
+  kernel_edge: 1
+  nkernel: 25
+  frac_maxflux: 0.03
+  circularize: False
+  show_fig: True
+
+starhalo:
+  bright_lim: 16.5 # only stack stars brighter than bright_lim
+  fwhm_lim: 200 # only stack stars whose FWHM < fwhm_lim
+  n_stack: 10
+  halosize: 24 # radial size, in pixel, original size. Star cutout size will be 2 * halosize + 1
+  padsize: 50
+  edgesize: 5
+  norm: 'flux_ann' # or 'flux' or 'flux_auto'
+  b: 32
+  f: 3
+  sigma: 3.5
+  minarea: 3
+  deblend_cont: 0.003
+  deblend_nthresh: 32
+  sky_subtract: True
+  flux_aper: [3, 6]
+  mask_contam: True
+  interp: 'iraf'
+  cval: nan
+
+
+clean:
+  clean_img: True
+  clean_file: False
+  replace_with_noise: False
+  gaussian_radius: 1.5
+  gaussian_threshold: 0.001
+  bright_lim: 16.5
+  r: 8.0

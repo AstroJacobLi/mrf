@@ -307,6 +307,7 @@ def cal_sbcontrast(image, mask, pixel_scale, zeropoint, scale_arcsec=60,
             If ``scale_arcsec=60``, this function prints out SB limit on the scale of 60 arcsec * 60 arcsec square.  
             If ``scale_arcsec=None`` is given, the code loops over spatial scales ranging from 5 arcsec to 5 arcmin 
             and provides the surface brightness limit as a numpy array rather than a single number.
+            If ``scale_arcsec=[10, 20, 30]``, this function prints out SB limit on 10, 20, 30 arcsec scale.
         minfrac (float): Must be less than 1.0. We discard super-pixels in which less than ``minfrac`` fraction of pixels are available. 
             Hence super-pixels with too many pixels masked out are discarded.
         minback (int): Given a super-pixel, we discard it (set to zero) if there are less than ``minback`` non-zero super-pixels surrounding it.
@@ -314,10 +315,14 @@ def cal_sbcontrast(image, mask, pixel_scale, zeropoint, scale_arcsec=60,
         logger (``logging.logger`` object): logger for this function. Default is ``None``.
 
     """
-    if scale_arcsec is None:
+    if isinstance(scale_arcsec, list) or scale_arcsec is None:
         sb_lim_set = []
         dsb_lim_set = []
-        aperture_set = [5, 10, 20, 60, 120, 240, 300]
+        if scale_arcsec is None:
+            aperture_set = [5, 10, 20, 60, 120, 240, 300]
+        else:
+            aperture_set = scale_arcsec
+    
         for scale in aperture_set:
             sb_lim, _, _ = _cal_contrast(image, mask, pixel_scale, zeropoint, scale_arcsec=scale, 
                                          minfrac=minfrac, minback=minback, verbose=False, logger=logger)
@@ -330,7 +335,6 @@ def cal_sbcontrast(image, mask, pixel_scale, zeropoint, scale_arcsec=60,
             for k, scale in enumerate(aperture_set):
                 print('    - Surface brightness limit on {0} arcsec scale is {1:.4f} +- {2:.04f}'.format(scale, sb_lim_set[k], dsb_lim_set[k]))
         return np.array([aperture_set, sb_lim_set])
-    
     else:
         return _cal_contrast(image, mask, pixel_scale, zeropoint, scale_arcsec=scale_arcsec, 
                              minfrac=minfrac, minback=minback, verbose=verbose, logger=logger)
