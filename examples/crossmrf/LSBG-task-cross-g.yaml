@@ -10,7 +10,7 @@ lowres:
   sub_bkgval: False  # highly recommend True for Dragonfly
   magnify_factor: 3.0 
   zeropoint: 27.0
-  color_term: 0.03  # -0.03 for g, -0.10 for r (cross-MRF between HSC and DECaLS)
+  color_term: -0.03  # -0.03 for g, -0.10 for r (cross-MRF between HSC and DECaLS)
 
 sex:
   sigma: 3
@@ -34,17 +34,17 @@ fluxmodel:
   interp: 'iraf'
 
 kernel:
-  kernel_size: 6     # Measured on low-res image, before magnification
+  kernel_size: 8     # Measured on low-res image, before magnification
   kernel_edge: 1
   nkernel: 30
-  frac_maxflux: 0.15
+  frac_maxflux: 0.10
   circularize: False
   show_fig: True
 
 starhalo:
   bright_lim: 17.5   # only stack stars brighter than bright_lim
   fwhm_lim: 300      # only stack stars whose FWHM < fwhm_lim
-  n_stack: 30
+  n_stack: 10
   halosize: 20       # radial size, in pixel, original size. Star cutout size will be 2 * halosize + 1
   padsize: 50
   edgesize: 3

@@ -146,6 +146,24 @@ After having ``results``, you can show the flux model, kernels and stacked PSF a
     :figclass: align-center
 
 
+Self-MRF and Cross-MRF
+^^^^^^^^^^^^^^^^^^^^^^^
+In many cases, high-resolution images (such as DECaLS, HSC, CFHT) are easier to find than intrinsically low-resolution images such as Dragonfly. However the philosophy of MRF still stands even if no Dragonfly data is available. An artificial low-resolution image can be made by binning high-resolution image and then convolve with a kernel. The kernel can be tuned to the particular structures that the user intends to isolate. Based on our tests, a kernel with Sersic index = 1 (exponential) works well for isolating extended dwarf galaxies. 
+
+We refer **"self-MRF"** to be the case where the high-resolution image is the same one as what the low-resolution image is made from. However, artifacts in high-resolution image pass to low-resolution image and cause spurious discoveries. Therefore two overlapped high-resolution datasets can be used in this situation, and we call this **"cross-MRF"**. The dataset with the best low surface brightness sensitivity can be used for making low-resolution image. An important advantage over self-MRF is that artifacts (such as diffraction spikes) are usually not present at the same location in two independent datasets. Check out demonstration of `self-MRF <https://github.com/AstroJacobLi/mrf/tree/master/examples/selfmrf>`_ and `cross-MRF  <https://github.com/AstroJacobLi/mrf/tree/master/examples/crossmrf>`_!
+
+.. figure:: https://github.com/AstroJacobLi/mrf/raw/master/examples/selfmrf/LSBG-750-selfmrf.png
+    :width: 1000px
+    :align: center
+    :alt: alternate text
+    :figclass: align-center
+
+.. figure:: https://github.com/AstroJacobLi/mrf/raw/master/examples/crossmrf/LSBG-750-crossmrf.png
+    :width: 1000px
+    :align: center
+    :alt: alternate text
+    :figclass: align-center
+
 
 Run with script
 ^^^^^^^^^^^^^^^
