@@ -5,7 +5,6 @@ Multi-Resolution Filtering: a method for isolating faint, extended emission in [
 ![](https://img.shields.io/badge/license-MIT-blue)
 ![](https://img.shields.io/github/repo-size/astrojacobli/mrf)
 [![](https://img.shields.io/badge/arXiv-1910.12867-blue)](https://arxiv.org/abs/1910.12867)
-![](https://img.shields.io/badge/arXiv-1910.12867-yellow)
 
 <p align="center">
   <img src="https://github.com/AstroJacobLi/mrf/blob/master/df-logo.png" width="40%">
