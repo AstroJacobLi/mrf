@@ -4,7 +4,7 @@ Multi-Resolution Filtering: a method for isolating faint, extended emission in [
 ![](https://readthedocs.org/projects/mrfiltering/badge/?version=latest)
 ![](https://img.shields.io/badge/license-MIT-blue)
 ![](https://img.shields.io/github/repo-size/astrojacobli/mrf)
-<!--![](https://img.shields.io/badge/arXiv-88.8888-yellow)-->
+![](https://img.shields.io/badge/arXiv-1910.12867-yellow){:target="https://arxiv.org/abs/1910.12867"}
 
 <p align="center">
   <img src="https://github.com/AstroJacobLi/mrf/blob/master/df-logo.png" width="40%">
@@ -26,7 +26,7 @@ This example shows the tidal feature of NGC 5907, described in [van Dokkum et al
 
 ![MRF on NGC 5907](https://github.com/AstroJacobLi/mrf/raw/master/examples/NGC5907/n5907-demo.png)
 
-This example shows how powerful MRF is in revealing low surface brightness features. The ultra-diffuse galaxy M101-DF3 is revealed by MRF after subtracting compact objects and bright star halos according to [van Dokkum et al. (in prep)](https://www.pietervandokkum.com). Check [this notebook](https://github.com/AstroJacobLi/mrf/blob/master/examples/M101-DF3/mrfTask-m101df3.ipynb) for more details.
+This example shows how powerful MRF is in revealing low surface brightness features. The ultra-diffuse galaxy M101-DF3 is revealed by MRF after subtracting compact objects and bright star halos according to [van Dokkum et al. (2019)](https://arxiv.org/abs/1910.12867). Check [this notebook](https://github.com/AstroJacobLi/mrf/blob/master/examples/M101-DF3/mrfTask-m101df3.ipynb) for more details.
 
 ![MRF on M101-DF3](https://github.com/AstroJacobLi/mrf/raw/master/examples/M101-DF3/m101-df3-demo.png)
 
@@ -61,7 +61,7 @@ If you need to use ``lanczos`` or ``cubic`` interpolation, you must have [``gals
 
 Citation
 ---------
-``mrf`` is a free software made available under the MIT License by [Pieter van Dokkum](http://pietervandokkum.com) (initial development) and [Jiaxuan Li](https://astrojacobli.github.io) (implementation, maintenance, and documentation). If you use this package in your work, please cite van Dokkum et al. (in prep).
+``mrf`` is a free software made available under the MIT License by [Pieter van Dokkum](http://pietervandokkum.com) (initial development) and [Jiaxuan Li](https://astrojacobli.github.io) (implementation, maintenance, and documentation). If you use this package in your work, please cite [van Dokkum et al. (2019)](https://arxiv.org/abs/1910.12867).
 
 Acknowledgement
 ---------------
