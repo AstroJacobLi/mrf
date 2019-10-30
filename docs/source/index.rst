@@ -13,6 +13,10 @@ Multi-Resolution Filtering is a method for isolating faint, extended emission in
 .. image:: https://img.shields.io/badge/version-1.0.4-green
     :alt: Version
 
+.. image:: https://img.shields.io/badge/arXiv-1910.12867-blue
+    :target: https://arxiv.org/abs/1910.12867
+    :alt: arXiv
+
 .. image:: https://img.shields.io/badge/GitHub-astrojacobli%2Fmrf-blue
     :target: https://github.com/AstroJacobLi/mrf
     :alt: GitHub Repo
@@ -72,7 +76,7 @@ Index
 
 Citation
 --------
-``mrf`` is a free software made available under the MIT License by `Pieter van Dokkum <http://pietervandokkum.com>`_ (initial development) and `Jiaxuan Li <https://astrojacobli.github.io>`_ (implementation, maintenance, and documentation). If you use this package in your work, please cite van Dokkum et al. (in prep).
+``mrf`` is a free software made available under the MIT License by `Pieter van Dokkum <http://pietervandokkum.com>`_ (initial development) and `Jiaxuan Li <https://astrojacobli.github.io>`_ (implementation, maintenance, and documentation). If you use this package in your work, please cite `van Dokkum et al. (2019) <https://arxiv.org/abs/1910.12867>`_.
 
 You are welcome to report bugs in ``mrf`` via creating issues at https://github.com/AstroJacobLi/mrf/issues.
 
