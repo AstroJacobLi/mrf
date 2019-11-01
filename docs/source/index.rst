@@ -1,6 +1,6 @@
 MRF: Multi-Resolution Filtering
 ===============================
-Multi-Resolution Filtering is a method for isolating faint, extended emission in `Dragonfly <http://dragonflytelescope.org>`_ data and other low resolution images. It is implemented in an open-source MIT licensed Python package ``mrf``. Please read van Dokkum et al. (in prep) for the methodology and description of implementation.
+Multi-Resolution Filtering is a method for isolating faint, extended emission in `Dragonfly <http://dragonflytelescope.org>`_ data and other low resolution images. It is implemented in an open-source MIT licensed Python package ``mrf``. Please read `van Dokkum et al. (2019) <https://arxiv.org/abs/1910.12867>`_ for the methodology and description of implementation.
 
 .. image:: https://img.shields.io/badge/license-MIT-blue
     :target: https://opensource.org/licenses/mit-license.php

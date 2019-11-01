@@ -102,7 +102,7 @@ M101-DF3
 ^^^^^^^^^
 M101-DF3 is a satellite galaxy of the famous spiral galaxy M101, presented in `Merritt, van Dokkum, & Abraham 2014 <https://iopscience.iop.org/article/10.1088/2041-8205/787/2/L37/meta>`_. It has an effective surface brightness :math:`\mu_g=27.4\pm0.2` and effective radius :math:`r_e=30\pm 3` arcsec. 
 
-The Dragonfly ``r`` band image of M101-DF3 and CFHT counterpart can be found `here (google drive link) <https://drive.google.com/open?id=1XKRY6-WAftOnfIIuAVWbiGVcbWCNfi6j>`_. In this example, the dwarf galaxy M101-DF3 is revealed clearly by MRF after subtracting compact objects and bright star halos according to `van Dokkum et al. (in prep) <https://www.pietervandokkum.com>`_ . The basic procedures are the same as NGC 5907 example. Check `this notebook <https://github.com/AstroJacobLi/mrf/blob/master/examples/M101-DF3/mrfTask-m101df3.ipynb>`_ for more details. 
+The Dragonfly ``r`` band image of M101-DF3 and CFHT counterpart can be found `here (google drive link) <https://drive.google.com/open?id=1XKRY6-WAftOnfIIuAVWbiGVcbWCNfi6j>`_. In this example, the dwarf galaxy M101-DF3 is revealed clearly by MRF after subtracting compact objects and bright star halos according to `van Dokkum et al. (2019) <https://arxiv.org/abs/1910.12867>`_ . The basic procedures are the same as NGC 5907 example. Check `this notebook <https://github.com/AstroJacobLi/mrf/blob/master/examples/M101-DF3/mrfTask-m101df3.ipynb>`_ for more details. 
 
 .. figure:: https://github.com/AstroJacobLi/mrf/raw/master/examples/M101-DF3/m101-df3-demo.png
     :width: 1000px
