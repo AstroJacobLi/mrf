@@ -54,9 +54,9 @@ def img_cutout(img, wcs, coord_1, coord_2, size=60.0, pixel_scale=2.5,
         wcs (``astropy.wcs.WCS`` object): WCS of input image array.
         coord_1 (float): ``ra`` or ``x`` of the cutout center.
         coord_2 (float): ``dec`` or ``y`` of the cutout center.
-        size (float): image size, in arcsec unit by default.
+        size (array): image size, such as (800, 1000), in arcsec unit by default.
         pixel_scale (float): pixel size, in the unit of "arcsec/pixel".
-        pixel_unit (bool):  When True, ``coord_1``, ``cooord_2`` becomes ``X``, ``Y`` pixel coordinates. 
+        pixel_unit (bool):  When True, ``coord_1``, ``coord_2`` becomes ``X``, ``Y`` pixel coordinates. 
             ``size`` will also be treated as in pixels.
         img_header: The header of input image, typically ``astropy.io.fits.header`` object.
             Provide the haeder in case you can save the infomation in this header to the new header.
@@ -92,6 +92,7 @@ def img_cutout(img, wcs, coord_1, coord_2, size=60.0, pixel_scale=2.5,
     # Update the header
     cutout_header = cutout.wcs.to_header()
     if img_header is not None:
+        del img_header['COMMENT']
         intersect = [k for k in img_header if k not in cutout_header]
         for keyword in intersect:
             cutout_header.set(keyword, img_header[keyword], img_header.comments[keyword])
@@ -1500,3 +1501,10 @@ class Config(object):
             else:
                 setattr(self, a, Config(b) if isinstance(b, dict) else b)
         Config.config = d
+
+
+#########################################################################
+##################### PSF modeling related ##############################
+################### From Qing Liu (UToronto) ############################
+#########################################################################
+

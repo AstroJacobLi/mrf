@@ -298,7 +298,7 @@ class MrfTask():
                             fill_value=0, nan_treatment='fill', normalize_kernel=False, allow_huge=True)
         save_to_fits(conv_model, '_lowres_model_{}.fits'.format(int(f_magnify)), header=hires_3.header)
         
-        # Optinally remove low surface brightness objects from model: 
+        # Optionally remove low surface brightness objects from model: 
         if config.fluxmodel.unmask_lowsb:
             logger.info('    - Removing low-SB objects (SB > {}) from flux model.'.format(config.fluxmodel.sb_lim))
             from .utils import remove_lowsb
@@ -393,7 +393,9 @@ class MrfTask():
         halosize = config.starhalo.halosize
         padsize = config.starhalo.padsize
 
-        psf_cat = bright_star_cat[bright_star_cat['fwhm_custom'] < config.starhalo.fwhm_lim] # FWHM selection
+        # FWHM selection
+        psf_cat = bright_star_cat[bright_star_cat['fwhm_custom'] < config.starhalo.fwhm_lim]
+        # Mag selection
         psf_cat = psf_cat[psf_cat['mag'] < config.starhalo.bright_lim]
 
         ny, nx = res.image.shape
