@@ -863,8 +863,8 @@ class Star(Celestial):
         from astropy.convolution import convolve, Box2DKernel
         from .utils import extract_obj, seg_remove_cen_obj
         img_blur = convolve(abs(self.image), Box2DKernel(2))
-        img_objects, img_segmap = extract_obj(abs(img_blur), b=5, f=3, sigma=sigma, minarea=1, pixel_scale=self.pixel_scale,
-                                                deblend_nthresh=72, deblend_cont=deblend_cont, flux_aper=[3, 5],
+        img_objects, img_segmap = extract_obj(abs(img_blur), b=10, f=3, sigma=sigma, minarea=1, pixel_scale=self.pixel_scale,
+                                                deblend_nthresh=72, deblend_cont=deblend_cont, flux_aper=None,
                                                 sky_subtract=True, show_fig=show_fig, verbose=verbose)
         # remove central object from segmap
         cen_obj = img_objects[img_segmap[img_segmap.shape[1]//2, img_segmap.shape[0]//2] - 1]
@@ -872,8 +872,8 @@ class Star(Celestial):
         detect_mask = (img_segmap != 0).astype(float)
         if blowup is True:
             from astropy.convolution import convolve, Gaussian2DKernel
-            cv = convolve(detect_mask, Gaussian2DKernel(1.5))
-            detect_mask = (cv > 0.2).astype(float)
+            cv = convolve(1e3 * detect_mask / np.nansum(detect_mask), Gaussian2DKernel(1.5))
+            detect_mask = (cv > 0.5).astype(float)
         
         self.mask = detect_mask
         #imgcp = copy.copy(self.image)
@@ -882,4 +882,4 @@ class Star(Celestial):
         # Shift mask will be very horrible!!! Hence we still don't use self.mask. 
         # Instead we directly mask out on the image.
 
-        return 
+        return

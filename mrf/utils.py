@@ -1507,4 +1507,37 @@ class Config(object):
 ##################### PSF modeling related ##############################
 ################### From Qing Liu (UToronto) ############################
 #########################################################################
-
+def compute_Rnorm(image, mask_field, cen, R=10, wid=0.5, mask_cross=True, display=False):
+    """ Return 3 sigma-clipped mean, med and std of ring r=R (half-width=wid) for image.
+        Note intensity is not background subtracted. """
+    from photutils import CircularAperture, CircularAnnulus, EllipticalAperture
+    from astropy.stats import sigma_clip
+    annulus_ma = CircularAnnulus(cen, R - wid, R + wid).to_mask()[0]    
+    mask_ring = annulus_ma.to_image(image.shape) > 0.5    # sky ring (R-wid, R+wid)
+    if mask_field is not None:
+        mask_clean = mask_ring & (~mask_field)                # sky ring with other sources masked
+    else:
+        mask_clean = mask_ring
+    
+    # Whether to mask the cross regions, important if R is small
+    if mask_cross:
+        yy, xx = np.indices(image.shape)
+        rr = np.sqrt((xx-cen[0])**2+(yy-cen[1])**2)
+        cross = ((abs(xx-cen[0])<4)|(abs(yy-cen[1])<4))
+        mask_clean = mask_clean * (~cross)
+    
+    if len(image[mask_clean]) < 5:
+        return [np.nan] * 3 + [1]
+    
+    z = 10**sigma_clip(np.log10(image[mask_clean]), sigma=3, maxiters=10)
+    I_mean, I_med, I_std = np.mean(z), np.median(z.compressed()), np.std(z)
+    #z = image[mask_clean]
+    #I_mean, I_med, I_std = np.mean(z), np.median(z), np.std(z)
+    
+    if display:
+        fig, (ax1,ax2) = plt.subplots(nrows=1, ncols=2, figsize=(9,4))
+        display_single(mask_clean * image, cmap="gray", scale='linear', scale_bar=False, ax=ax1)
+        ax2 = plt.hist(sigma_clip(z))
+        plt.axvline(I_mean, color='k')
+    
+    return I_mean, I_med, I_std, 0
