@@ -425,7 +425,7 @@ class MrfTask():
                 sstar.centralize(method=config.starhalo.interp)
                 
                 if config.starhalo.mask_contam is True:
-                    sstar.mask_out_contam(sigma=5.0, deblend_cont=0.0001, show_fig=False, verbose=False)
+                    sstar.mask_out_contam(sigma=4.0, deblend_cont=0.0001, show_fig=False, verbose=False)
                     #sstar.image = sstar.get_masked_image(cval=cval)
                     #sstar.mask_out_contam(sigma=3, deblend_cont=0.0001, show_fig=False, verbose=False)
                 
@@ -444,24 +444,88 @@ class MrfTask():
         stack_set = np.delete(stack_set, bad_indices, axis=0)
         median_psf = np.nanmedian(stack_set, axis=0)
         median_psf = psf_bkgsub(median_psf, int(config.starhalo.edgesize))
-        median_psf = convolve(median_psf, Box2DKernel(2))
+        median_psf = convolve(median_psf, Box2DKernel(1))
         save_to_fits(median_psf, '_median_psf.fits');
         setattr(results, 'PSF', median_psf)
         
         logger.info('    - Stars are stacked successfully!')
         save_to_fits(stack_set, '_stack_bright_stars.fits')
         
+        # 10.5: Build hybrid PSF with Qing's modelling.
+        from .utils import save_to_fits
+        from .utils import compute_Rnorm
+        from .modeling import PSF_Model
+        from photutils import CircularAperture
+        
+        ### PSF Parameters
+        psf_size = 401                 # in pixel
+        pixel_scale = 2.5                   # in arcsec/pixel
+        frac = 0.3                          # fraction of power law component (from fitting stacked PSF)
+        beta = 10                           # moffat beta, in arcsec
+        fwhm = 2.28 * pixel_scale           # moffat fwhm, in arcsec
+        n0 = 3.24                           # first power-law index
+        theta_0 = 5.                        # flattening radius (arbitrary), in arcsec. Inside which the power law is truncated.
+        n_s = np.array([n0, 2.53, 1.22, 4])                          # power-law index
+        theta_s = np.array([theta_0, 10**1.85, 10**2.18, 1200])      # transition radius in arcsec
+        ### Construct model PSF
+        params = {"fwhm": fwhm, "beta": beta, "frac": frac, "n_s": n_s, 'theta_s': theta_s}
+        psf = PSF_Model(params, aureole_model='multi-power')
+        ### Build grid of image for drawing
+        psf.make_grid(psf_size, pixel_scale)
+        ### Generate the aureole of PSF
+        psf_e, psf_size = psf.generate_aureole(psf_range=psf_size)
+        ### Hybrid radius (in pixel)
+        hybrid_r = 12
+
+        ### Inner PSF: from stacking stars
+        inner_psf = fits.open('./_median_psf.fits')[0].data
+        inner_psf /= np.sum(inner_psf) # Normalize
+        inner_size = inner_psf.shape   
+        inner_cen = [int(x / 2) for x in inner_size]
+        ##### flux_inn is the flux inside an annulus, we use this to scale inner and outer parts
+        flux_inn = compute_Rnorm(inner_psf, None, inner_cen, R=hybrid_r, display=False, mask_cross=False)[1]
+        ##### We only remain the stacked PSF inside hybrid radius. 
+        aper = CircularAperture(inner_cen, hybrid_r).to_mask()
+        mask = aper[0].to_image(inner_size) == 0
+        inner_psf[mask] = np.nan
+
+        ### Make new empty PSF
+        outer_cen = [int(psf_size / 2), int(psf_size / 2)]
+        new_psf = np.zeros((int(psf_size), int(psf_size)))
+        new_psf[outer_cen[0] - inner_cen[0]:outer_cen[0] + inner_cen[0] + 1, 
+                outer_cen[1] - inner_cen[1]:outer_cen[1] + inner_cen[1] + 1] = inner_psf
+
+        ### Outer PSF: from model
+        outer_psf = psf_e.drawImage(nx=psf_size, ny=psf_size, scale=2.5, method="no_pixel").array
+        outer_psf /= np.sum(outer_psf) # Normalize
+        ##### flux_out is the flux inside an annulus, we use this to scale inner and outer parts
+        flux_out = compute_Rnorm(outer_psf, None, (outer_cen, outer_cen), 
+                                 R=hybrid_r, display=False, mask_cross=False)[1]
+
+        ##### Scale factor: the flux ratio near hybrid radius 
+        scale_factor = flux_out / flux_inn
+        temp = copy.deepcopy(outer_psf)
+        new_psf[np.isnan(new_psf)] = temp[np.isnan(new_psf)] / scale_factor # fill `nan`s with the outer PSF
+        temp[outer_cen[0] - inner_cen[0]:outer_cen[0] + inner_cen[0] + 1, 
+             outer_cen[1] - inner_cen[1]:outer_cen[1] + inner_cen[1] + 1] = 0
+        new_psf += temp / scale_factor
+        new_psf /= np.sum(new_psf) # Normalize
+        factor = np.sum(median_psf) / np.sum(new_psf[outer_cen[0] - inner_cen[0]:outer_cen[0] + inner_cen[0] + 1, 
+                                                    outer_cen[1] - inner_cen[1]:outer_cen[1] + inner_cen[1] + 1])
+        new_psf *= factor
+        save_to_fits(new_psf, './wide_psf.fits')
+
         # 11. Build starhalo models and then subtract from "res" image
         logger.info('Draw star halo models onto the image, and subtract them!')
         # Make an extra edge, move stars right
         ny, nx = res.image.shape
-        im_padded = np.zeros((ny + 2 * halosize, nx + 2 * halosize))
+        im_padded = np.zeros((int(ny + psf_size), int(nx + psf_size)))
         # Making the left edge empty
-        im_padded[halosize: ny + halosize, halosize: nx + halosize] = res.image
+        im_padded[int(psf_size/2): ny + int(psf_size/2), int(psf_size/2): nx + int(psf_size/2)] = res.image
         im_halos_padded = np.zeros_like(im_padded)
 
         for i, obj in enumerate(bright_star_cat):
-            spsf = Celestial(median_psf, header=lowres_model.header)
+            spsf = Celestial(new_psf, header=lowres_model.header)
             x = obj['x']
             y = obj['y']
             x_int = x.astype(np.int)
@@ -469,15 +533,15 @@ class MrfTask():
             dx = -1.0 * (x - x_int)
             dy = -1.0 * (y - y_int)
             spsf.shift_image(-dx, -dy, method=config.starhalo.interp)
-            x_int, y_int = x_int + halosize, y_int + halosize
+            x_int, y_int = x_int + int(psf_size/2), y_int + int(psf_size/2)
             if config.starhalo.norm == 'flux_ann':
-                im_halos_padded[y_int - halosize:y_int + halosize + 1, 
-                                x_int - halosize:x_int + halosize + 1] += spsf.image * obj['flux_ann']
+                im_halos_padded[y_int - int(psf_size/2):y_int + int(psf_size/2) + 1, 
+                                x_int - int(psf_size/2):x_int + int(psf_size/2) + 1] += spsf.image * obj['flux_ann']
             else:
-                im_halos_padded[y_int - halosize:y_int + halosize + 1, 
-                                x_int - halosize:x_int + halosize + 1] += spsf.image * obj['flux']
+                im_halos_padded[y_int - int(psf_size/2):y_int + int(psf_size/2) + 1, 
+                                x_int - int(psf_size/2):x_int + int(psf_size/2) + 1] += spsf.image * obj['flux']
 
-        im_halos = im_halos_padded[halosize: ny + halosize, halosize: nx + halosize]
+        im_halos = im_halos_padded[int(psf_size/2): ny + int(psf_size/2), int(psf_size/2): nx + int(psf_size/2)]
         setattr(results, 'lowres_model_star', Celestial(im_halos, header=lowres_model.header))
         img_sub = res.image - im_halos
         setattr(results, 'lowres_final_unmask', Celestial(img_sub, header=res.header))

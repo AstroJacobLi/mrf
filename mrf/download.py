@@ -96,8 +96,8 @@ def overlap_fraction(img, header, frame, verbose=True):
     # Frame is one row of mega_cat.
     from shapely.geometry import Polygon
     w = wcs.WCS(header)
-    ra_bound = list(map(float, frame['position_bounds'].split(' ')))[0::2]
-    dec_bound = list(map(float, frame['position_bounds'].split(' ')))[1::2]
+    ra_bound = list(map(float, frame['position_bounds'].split(' ')[1:]))[0::2]
+    dec_bound = list(map(float, frame['position_bounds'].split(' ')[1:]))[1::2]
     x_bound, y_bound = w.wcs_world2pix(ra_bound, dec_bound, 0)
     img_bound = Polygon(list(zip([0, img.shape[1], img.shape[1], 0], 
                                     [0, 0, img.shape[0], img.shape[0]])))
@@ -577,8 +577,6 @@ def download_highres(lowres_dir, high_res='hsc', band='g', overwrite=False):
     print('# The center of input image is: ', c_cen.ra, c_cen.dec)
     radius = c1.separation(c2).to(u.degree)
     print('# The diagnal size of input low-resolution image is ' + str(radius))
-    
-    return
 
     if high_res.lower() == 'hsc': 
         print(radius)
