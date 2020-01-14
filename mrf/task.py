@@ -397,6 +397,7 @@ class MrfTask():
         psf_cat = bright_star_cat[bright_star_cat['fwhm_custom'] < config.starhalo.fwhm_lim]
         # Mag selection
         psf_cat = psf_cat[psf_cat['mag'] < config.starhalo.bright_lim]
+        psf_cat = psf_cat[psf_cat['mag'] > 12.0]
 
         ny, nx = res.image.shape
         non_edge_flag = np.logical_and.reduce([(psf_cat['x'] > padsize), (psf_cat['x'] < nx - padsize), 
@@ -443,11 +444,15 @@ class MrfTask():
 
         stack_set = np.delete(stack_set, bad_indices, axis=0)
         median_psf = np.nanmedian(stack_set, axis=0)
+        error_psf = np.nanstd(stack_set, ddof=2, axis=0) / np.sqrt(len(stack_set))
         median_psf = psf_bkgsub(median_psf, int(config.starhalo.edgesize))
         median_psf = convolve(median_psf, Box2DKernel(2))
         save_to_fits(median_psf, '_median_psf.fits');
-        setattr(results, 'PSF', median_psf)
+        save_to_fits(error_psf, '_error_psf.fits');
         
+        setattr(results, 'PSF', median_psf)
+        setattr(results, 'PSF_err', error_psf)
+
         logger.info('    - Stars are stacked successfully!')
         save_to_fits(stack_set, '_stack_bright_stars.fits')
         
