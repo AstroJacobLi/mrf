@@ -65,6 +65,9 @@ class Celestial(object):
             self.ra_bounds, self.dec_bounds = self.wcs.wcs_pix2world([0, img.shape[1], img.shape[1], 0], 
                                                 [0, 0, img.shape[0], img.shape[0]], 1)
             self.sky_bounds = np.append(self.ra_bounds[2:], self.dec_bounds[1:3])
+            c1 = SkyCoord(ra=self.sky_bounds[0], dec=self.sky_bounds[2], unit='deg')
+            c2 = SkyCoord(ra=self.sky_bounds[1], dec=self.sky_bounds[3], unit='deg')
+            self.diag_radius = c1.separation(c2) / 2
         else:
             self.pixel_scale = 1
 

@@ -1607,7 +1607,6 @@ def checklegal(table,release):
     if table not in tablelist:
         raise ValueError("Bad value for table (for {} must be one of {})".format(release, ", ".join(tablelist)))
 
-
 def ps1metadata(table="mean",release="dr1",
            baseurl="https://catalogs.mast.stsci.edu/api/v0.1/panstarrs"):
     """Return metadata for the specified catalog and table

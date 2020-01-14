@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 from astropy import wcs
 from astropy.io import fits
-from astropy.table import Table, Column, hstack
+from astropy.table import Table, Column, hstack, vstack
 
 class Config(object):
     """
@@ -74,7 +74,7 @@ class MrfTask():
         return self.logger
 
     def run(self, dir_lowres, dir_hires_b, dir_hires_r, certain_gal_cat, 
-            output_name='mrf', verbose=True):
+            output_name='mrf', verbose=True, wide_psf=True):
         """
         Run MRF task.
 
@@ -122,7 +122,6 @@ class MrfTask():
             logger.info('Subtract BACKVAL=%.1f of Dragonfly image', float(lowres.header['BACKVAL']))
             lowres.image -= float(lowres.header['BACKVAL'])
         hdu.close()
-
         setattr(results, 'lowres_input', copy.deepcopy(lowres))
         
         # 2. Create magnified low-res image, and register high-res images with subsampled low-res ones
@@ -389,10 +388,9 @@ class MrfTask():
         bright_star_cat.write('_bright_star_cat.fits', format='fits', overwrite=True)
         setattr(results, 'bright_star_cat', bright_star_cat)
 
-        # Select non-edge good stars to stack
+        #### Select non-edge good stars to stack ###
         halosize = config.starhalo.halosize
         padsize = config.starhalo.padsize
-
         # FWHM selection
         psf_cat = bright_star_cat[bright_star_cat['fwhm_custom'] < config.starhalo.fwhm_lim]
         # Mag selection
@@ -445,8 +443,12 @@ class MrfTask():
         median_psf = np.nanmedian(stack_set, axis=0)
         median_psf = psf_bkgsub(median_psf, int(config.starhalo.edgesize))
         median_psf = convolve(median_psf, Box2DKernel(1))
+        error_psf = np.nanstd(stack_set, ddof=2, axis=0) / np.sqrt(len(stack_set))
         save_to_fits(median_psf, '_median_psf.fits');
+        save_to_fits(error_psf, '_error_psf.fits');
+        
         setattr(results, 'PSF', median_psf)
+        setattr(results, 'PSF_err', error_psf)
         
         logger.info('    - Stars are stacked successfully!')
         save_to_fits(stack_set, '_stack_bright_stars.fits')
@@ -459,7 +461,7 @@ class MrfTask():
         
         ### PSF Parameters
         psf_size = 401                 # in pixel
-        pixel_scale = 2.5                   # in arcsec/pixel
+        pixel_scale = config.lowres.pixel_scale     # in arcsec/pixel
         frac = 0.3                          # fraction of power law component (from fitting stacked PSF)
         beta = 10                           # moffat beta, in arcsec
         fwhm = 2.28 * pixel_scale           # moffat fwhm, in arcsec
@@ -517,6 +519,46 @@ class MrfTask():
 
         # 11. Build starhalo models and then subtract from "res" image
         logger.info('Draw star halo models onto the image, and subtract them!')
+        
+        ### Use Pan-STARRS catalog to normalize these bright stars
+        from mrf.utils import ps1cone
+        # Query PANSTARRS starts
+        constraints = {'nDetections.gt':1, config.lowres.band + 'MeanPSFMag.lt':18}
+        # strip blanks and weed out blank and commented-out values
+        columns = """objID,raMean,decMean,raMeanErr,decMeanErr,nDetections,ng,nr,gMeanPSFMag,rMeanPSFMag""".split(',')
+        columns = [x.strip() for x in columns]
+        columns = [x for x in columns if x and not x.startswith('#')]
+        logger.info('Retrieving Pan-STARRS catalog from MAST! Please wait!')
+        ps1result = ps1cone(lowres.ra_cen, lowres.dec_cen, lowres.diag_radius.to(u.deg).value, 
+                            release='dr2', columns=columns, verbose=False, **constraints)
+        ps1_cat = Table.read(ps1result, format='csv')
+        ps1_cat.add_columns([Column(data = lowres_model.wcs.wcs_world2pix(ps1_cat['raMean'], ps1_cat['decMean'], 0)[0], 
+                                    name='x_ps1'),
+                            Column(data = lowres_model.wcs.wcs_world2pix(ps1_cat['raMean'], ps1_cat['decMean'], 0)[1], 
+                                    name='y_ps1')])
+        ps1_cat = ps1_cat[ps1_cat[config.lowres.band + 'MeanPSFMag'] != -999]
+        ps1_cat.write('./_ps1_cat.fits', overwrite=True)
+
+        ## Match PS1 catalog with SEP one
+        temp, dist, _ = match_coordinates_sky(SkyCoord(ra=bright_star_cat['ra'], dec=bright_star_cat['dec'], unit='deg'),
+                                              SkyCoord(ra=ps1_cat['raMean'], dec=ps1_cat['decMean'], unit='deg'))
+        flag = dist < 5 * u.arcsec
+        temp = temp[flag]
+        reorder_cat = vstack([bright_star_cat[flag], bright_star_cat[~flag]], join_type='outer')
+        bright_star_cat = hstack([reorder_cat, ps1_cat[temp]], join_type='outer')     
+
+        ### Fit an empirical relation between PS1 magnitude and SEP flux
+        flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16) & (~bright_star_cat[config.lowres.band + 'MeanPSFMag'].mask)
+        x = bright_star_cat[flag][config.lowres.band + 'MeanPSFMag']
+        y = -2.5 * np.log10(bright_star_cat[flag]['flux'])
+        pfit = np.polyfit(x, y, 2) # second-order polynomial
+        plt.scatter(x, y, s=9)
+        plt.plot(np.linspace(10, 16, 20), np.poly1d(pfit)(np.linspace(10, 16, 20)), color='red')
+        plt.xlabel('MeanPSFMag')
+        plt.ylabel('-2.5 Log(flux)')
+        plt.savefig('./PS1-normalization.png')
+        plt.close()
+
         # Make an extra edge, move stars right
         ny, nx = res.image.shape
         im_padded = np.zeros((int(ny + psf_size), int(nx + psf_size)))
@@ -524,6 +566,8 @@ class MrfTask():
         im_padded[int(psf_size/2): ny + int(psf_size/2), int(psf_size/2): nx + int(psf_size/2)] = res.image
         im_halos_padded = np.zeros_like(im_padded)
 
+
+        # Stack stars onto the canvas
         for i, obj in enumerate(bright_star_cat):
             spsf = Celestial(new_psf, header=lowres_model.header)
             x = obj['x']
@@ -534,12 +578,17 @@ class MrfTask():
             dy = -1.0 * (y - y_int)
             spsf.shift_image(-dx, -dy, method=config.starhalo.interp)
             x_int, y_int = x_int + int(psf_size/2), y_int + int(psf_size/2)
-            if config.starhalo.norm == 'flux_ann':
-                im_halos_padded[y_int - int(psf_size/2):y_int + int(psf_size/2) + 1, 
-                                x_int - int(psf_size/2):x_int + int(psf_size/2) + 1] += spsf.image * obj['flux_ann']
+
+            if obj['mag'] < 14.5:
+                if obj[config.lowres.band + 'MeanPSFMag']:
+                    norm = 10**((-np.poly1d(pfit)(obj[config.lowres.band + 'MeanPSFMag'])) / 2.5)
+                else:
+                    norm = obj['flux']
             else:
-                im_halos_padded[y_int - int(psf_size/2):y_int + int(psf_size/2) + 1, 
-                                x_int - int(psf_size/2):x_int + int(psf_size/2) + 1] += spsf.image * obj['flux']
+                norm = obj['flux']
+
+            im_halos_padded[y_int - int(psf_size/2):y_int + int(psf_size/2) + 1, 
+                            x_int - int(psf_size/2):x_int + int(psf_size/2) + 1] += spsf.image * norm
 
         im_halos = im_halos_padded[int(psf_size/2): ny + int(psf_size/2), int(psf_size/2): nx + int(psf_size/2)]
         setattr(results, 'lowres_model_star', Celestial(im_halos, header=lowres_model.header))
@@ -557,7 +606,7 @@ class MrfTask():
         logger.info('Bright star halos are subtracted!')
 
 
-        # 11. Mask out dirty things!
+        # 12. Mask out dirty things!
         if config.clean.clean_img:
             logger.info('Clean the image!')
             model_mask = convolve(1e3 * lowres_model.image / np.nansum(lowres_model.image),
