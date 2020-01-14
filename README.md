@@ -65,7 +65,7 @@ Citation
 
 Acknowledgement
 ---------------
-Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io)). [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
+Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io)). [Qing Liu (U Toronto)](http://astro.utoronto.ca/~qliu) provided very useful functions for constructing wide-angle PSF, [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
 
 
 
