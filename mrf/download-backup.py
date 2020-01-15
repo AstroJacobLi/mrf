@@ -6,11 +6,10 @@ from astropy.io import fits
 import astropy.units as u
 from astropy.table import Table, Column
 from tqdm import tqdm
-from . import DECaLS_pixel_scale, HSC_pixel_scale
+from . import DECaLS_pixel_scale
 
 __all__ = ["TqdmUpTo", "megapipe_query_sql", "get_megapipe_catalog", "overlap_fraction",
-           "wget_cfht", "download_cfht_megapipe", "download_decals_large", "download_hsc_large", 
-           "download_sdss_large", "download_highres"]
+    "wget_cfht", "download_cfht_megapipe", "download_highres"]
 
 class TqdmUpTo(tqdm):
     """
@@ -28,7 +27,6 @@ class TqdmUpTo(tqdm):
             self.total = tsize
         self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
-################# CFHT download related #################
 def megapipe_query_sql(ra, dec, size):
     """ 
     Return SQL query command of CFHT megapipe
@@ -142,8 +140,8 @@ def wget_cfht(frame, band, output_dir, output_name, overwrite=True):
         print('!!!The image "' + output_dir + filename + '" already exists!!!')
     return
 
-def download_cfht_megapipe(img, header, band, mega_cat_dir='_megapipe_cat.csv', 
-                           output_dir='./', output_name='CFHT_megapipe', overwrite=True, verbose=True):
+def download_cfht_megapipe(img, header, band='g', mega_cat_dir='_megapipe_cat.csv', 
+                           output_dir='./', output_name='CFHT_megapipe_img', overwrite=True):
     """ 
     Download CFHT MegaPipe frame catalog of given (ra, dec) and image size. 
     This could be really **TIME CONSUMING**!!! Typically one frame could be 500M to 2G.
@@ -155,7 +153,7 @@ def download_cfht_megapipe(img, header, band, mega_cat_dir='_megapipe_cat.csv',
         mega_cat_dir (string): the directory of MegaPipe catalog, 
             which is downloaded by `get_megapipe_catalog`.
         output_dir (string): the CFHT images will be downloaded here.
-        output_name (string): name of CFHT images, as you can change.
+        output_name (string): name of CFHT images, as you can change
         overwrite (bool): It will overwrite the image if `overwrite=True`.
 
     Returns:
@@ -209,11 +207,9 @@ def download_cfht_megapipe(img, header, band, mega_cat_dir='_megapipe_cat.csv',
         wget_cfht(frame, band=band, output_dir=output_dir, 
                   output_name=output_name, overwrite=overwrite)
 
-################# DECaLS download related ##################
 def download_decals_cutout(ra, dec, size, band, layer='dr8-south', pixel_unit=False, 
                     output_dir='./', output_name='DECaLS_img', overwrite=True):
-    '''
-    Download DECaLS small image cutout of a given image. Maximum size is 3000 * 3000 pix.
+    '''Download DECaLS small image cutout of a given image. Maximum size is 3000 * 3000 pix.
     
     Parameters:
         ra (float): RA (degrees)
@@ -224,7 +220,7 @@ def download_decals_cutout(ra, dec, size, band, layer='dr8-south', pixel_unit=Fa
             For details, please check http://legacysurvey.org/dr8/description/.
         pixel_unit (bool): If true, size will be in pixel unit.
         output_dir (str): directory of output files.
-        output_name (str): prefix of output images. The suffix `.fits` will be appended automatically. 
+        output_name (str): prefix of output images.
         overwrite (bool): overwrite files or not.
 
     Return:
@@ -257,8 +253,7 @@ def download_decals_cutout(ra, dec, size, band, layer='dr8-south', pixel_unit=Fa
     
 def download_decals_brick(brickname, band, layer='dr8-south', output_dir='./', 
                           output_name='DECaLS', overwrite=True, verbose=True):
-    '''
-    Generate URL of the DECaLS coadd of a single brick. Note that a brick is smaller than 3000 * 3000 pix.
+    '''Generate URL of the DECaLS coadd of a single brick.
     
     Parameters:
         brickname (string): the name of the brick, such as "0283m005".
@@ -266,7 +261,7 @@ def download_decals_brick(brickname, band, layer='dr8-south', output_dir='./',
         layer (string): data release of DECaLS. If your object is too north, try 'dr8-north'. 
             For details, please check http://legacysurvey.org/dr8/description/.
         output_dir (str): directory of output files.
-        output_name (str): prefix of output images. The suffix `.fits` will be appended automatically. 
+        output_name (str): prefix of output images.
         overwrite (bool): overwrite files or not.
 
     Return:
@@ -307,22 +302,20 @@ def download_decals_brick(brickname, band, layer='dr8-south', output_dir='./',
 
 def download_decals_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, layer='dr8-south', verbose=True,
                           output_dir='./', output_name='DECaLS', overwrite=True):
-    '''
-    Download bricks and stitch them together using ``swarp``. Hence ``swarp`` must be installed!
+    '''Download bricks and stitch them together using ``swarp``. Hence ``swarp`` must be installed!
     ``swarp`` resamples the image, but doesn't correct background.
-    Note: ``size`` should be comparable to ``radius``.
 
     Parameters:
         ra (float): RA of the object.
         dec (float): DEC of the object.
-        band (string): such as 'r' or 'g'.
+        band: string, such as 'r' or 'g'.
         size (``astropy.units`` object): size of cutout, it should be comparable to ``radius``.
         radius (``astropy.units`` object): bricks whose distances to the object are 
             nearer than this radius will be download.  
         layer (str): data release of DECaLS. If your object is too north, try 'dr8-north'. 
             For details, please check http://legacysurvey.org/dr8/description/.
         output_dir (str): directory of output files.
-        output_name (str): prefix of output images. The suffix `.fits` will be appended automatically. 
+        output_name (str): prefix of output images.
         overwrite (bool): overwrite files or not.
     
     Return:
@@ -365,7 +358,6 @@ def download_decals_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, layer
     # Calculating image size in pixels
     imgsize = int(size.to(u.arcsec).value / DECaLS_pixel_scale)
     # Configure ``swarp``
-    
     with open("config_swarp.sh","w+") as f:
         # check if swarp is installed
         f.write('for cmd in swarp; do\n')
@@ -396,37 +388,24 @@ def download_decals_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, layer
         f.write('swarp ' + ' '.join(filenameset) + '\n\n')
         f.write('rm ' + os.path.join(output_dir, '_*'))
         f.close()
+    
+    os.system('/bin/bash config_swarp.sh')
+    print('# The image is save as {}'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
 
-    filename = '{}.fits'.format(os.path.join(output_dir, '_'.join([output_name, band])))
-    if os.path.isfile(filename):
-        if not overwrite:
-            raise FileExistsError('# ' + filename + ' already exists!')
-        else:
-            os.system('/bin/bash config_swarp.sh')
-    else:
-        os.system('/bin/bash config_swarp.sh')
-    print('# The image is save as ' + filename)
-    ## Delete temporary catalog
-    if os.path.isfile('_survey_brick.fits'):
-        os.remove('_survey_brick.fits')
-        os.remove('config_swarp.sh')
-
-
-################# HSC download related ##################
 def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=True,
-                       output_dir='./', output_name='HSC', overwrite=True):
+                       output_dir='./', output_name='HSC_large', overwrite=True):
     '''Download HSC patches and stitch them together using ``swarp``. Hence ``swarp`` must be installed!
     ``swarp`` resamples the image, but doesn't correct background.
 
     Parameters:
         ra (float): RA of the object.
         dec (float): DEC of the object.
-        band (string): such as 'r' or 'g'.
+        band: string, such as 'r' or 'g'.
         size (``astropy.units`` object): size of cutout, it should be comparable to ``radius``.
         radius (``astropy.units`` object): bricks whose distances to the object are 
             nearer than this radius will be download.  
         output_dir (str): directory of output files.
-        output_name (str): prefix of output images. The suffix `.fits` will be appended automatically. 
+        output_name (str): prefix of output images.
         overwrite (bool): overwrite files or not.
     
     Return:
@@ -448,12 +427,12 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=
     ## Download survey-summary
     URL = 'https://github.com/AstroJacobLi/slug/raw/master/demo/HSC_tracts_patches_pdr2_wide.fits'
 
-    if os.path.isfile('_survey_summary_hsc.fits'):
-        os.remove('_survey_summary_hsc.fits')
-    urllib.request.urlretrieve(URL, filename='_survey_summary_hsc.fits', data=None)
+    if os.path.isfile('_survey_summary.fits'):
+        os.remove('_survey_summary.fits')
+    urllib.request.urlretrieve(URL, filename='_survey_summary.fits', data=None)
 
     # Find nearby bricks 
-    patch_cat = Table.read('_survey_summary_hsc.fits', format='fits')
+    patch_cat = Table.read('_survey_summary.fits', format='fits')
     patch_sky = SkyCoord(ra=np.array(patch_cat['ra_cen']), 
                         dec=np.array(patch_cat['dec_cen']), unit='deg')
     object_coord = SkyCoord(ra, dec, unit='deg')
@@ -462,6 +441,7 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=
     distance = patch_sky.separation(object_coord)[flag]
     to_download.add_column(Column(data=distance.value, name='distance'))
     to_download.sort('distance')
+    #to_download = to_download[:]
     print('# You have {} patches to be downloaded.'.format(len(to_download)))
 
     filenameset = []
@@ -469,7 +449,7 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=
         file = 'calexp_{0}_{1}_{2}.fits'.format(obj['tract'], obj['patch'].replace(',', '_'), band)
         filenameset.append(os.path.join(output_dir, file))
         if not os.path.isfile(file):
-            pdr2.download_patch(obj['tract'], obj['patch'], filt='HSC-{}'.format(band.upper()), output_file=file);
+            pdr2.download_patch(obj['tract'], obj['patch'], filt='HSC-R', output_file=file);
             hdu = fits.open(os.path.join(output_dir, file))
             img = hdu[1].data
             hdr = hdu[1].header
@@ -478,9 +458,8 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=
             save_to_fits(img, os.path.join(output_dir, file), header=hdr);
 
     # Calculating image size in pixels
-    imgsize = int(size.to(u.arcsec).value / HSC_pixel_scale)
+    imgsize = int(size.to(u.arcsec).value / DECaLS_pixel_scale)
     # Configure ``swarp``
-
     with open("config_swarp.sh","w+") as f:
         # check if swarp is installed
         f.write('for cmd in swarp; do\n')
@@ -501,7 +480,7 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=
         f.write('#-------------------------------- Astrometry ----------------------------------\n\nCELESTIAL_TYPE         NATIVE          # NATIVE, PIXEL, EQUATORIAL,\n                                       # GALACTIC,ECLIPTIC, or SUPERGALACTIC\nPROJECTION_TYPE        TAN             # Any WCS projection code or NONE\nPROJECTION_ERR         0.001           # Maximum projection error (in output\n                                       # pixels), or 0 for no approximation\nCENTER_TYPE            MANUAL          # MANUAL, ALL or MOST\n')
         f.write('CENTER   {0}, {1} # Image Center\n'.format(ra, dec))
         f.write('PIXELSCALE_TYPE        MANUAL          # MANUAL,FIT,MIN,MAX or MEDIAN\n')
-        f.write('PIXEL_SCALE            {}  # Pixel scale\n'.format(HSC_pixel_scale))
+        f.write('PIXEL_SCALE            {}  # Pixel scale\n'.format(DECaLS_pixel_scale))
         f.write('IMAGE_SIZE             {0},{1} # scale = 0.262 arcsec/pixel\n\n'.format(imgsize, imgsize))
         f.write('#-------------------------------- Resampling ----------------------------------\n\nRESAMPLE               Y               # Resample input images (Y/N)?\nRESAMPLE_DIR           .               # Directory path for resampled images\nRESAMPLE_SUFFIX        .resamp.fits    # filename extension for resampled images\n\nRESAMPLING_TYPE        LANCZOS3        # NEAREST,BILINEAR,LANCZOS2,LANCZOS3\n                                       # or LANCZOS4 (1 per axis)\nOVERSAMPLING           0               # Oversampling in each dimension\n                                       # (0 = automatic)\nINTERPOLATE            N               # Interpolate bad input pixels (Y/N)?\n                                       # (all or for each image)\n\nFSCALASTRO_TYPE        FIXED           # NONE,FIXED, or VARIABLE\nFSCALE_KEYWORD         FLXSCALE        # FITS keyword for the multiplicative\n                                       # factor applied to each input image\nFSCALE_DEFAULT         1.0             # Default FSCALE value if not in header\n\nGAIN_KEYWORD           GAIN            # FITS keyword for effect. gain (e-/ADU)\nGAIN_DEFAULT           0.0             # Default gain if no FITS keyword found\n\n')
         f.write('#--------------------------- Background subtraction ---------------------------\n\nSUBTRACT_BACK          N               # Subtraction sky background (Y/N)?\n                                       # (all or for each image)\n\nBACK_TYPE              AUTO            # AUTO or MANUAL\n                                       # (all or for each image)\nBACK_DEFAULT           0.0             # Default background value in MANUAL\n                                       # (all or for each image)\nBACK_SIZE              128             # Background mesh size (pixels)\n                                       # (all or for each image)\nBACK_FILTERSIZE        3               # Background map filter range (meshes)\n                                       # (all or for each image)\n\n')
@@ -512,38 +491,23 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=
         f.write('rm ' + os.path.join(output_dir, '_*'))
         f.close()
     
-    filename = '{}.fits'.format(os.path.join(output_dir, '_'.join([output_name, band])))
-    if os.path.isfile(filename):
-        if not overwrite:
-            raise FileExistsError('# ' + filename + ' already exists!')
-        else:
-            os.system('/bin/bash config_swarp.sh')
-    else:
-        os.system('/bin/bash config_swarp.sh')
-    print('# The image is save as ' + filename)
-    ## Delete temporary catalog
-    if os.path.isfile('_survey_summary_hsc.fits'):
-        os.remove('_survey_summary_hsc.fits')
-        os.remove('config_swarp.sh')
+    os.system('/bin/bash config_swarp.sh')
+    print('# The image is save as {}'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
 
-
-################# SDSS download related ##################
 def download_sdss_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=True,
                         output_dir='./', output_name='SDSS_large', overwrite=True):
-    '''
-    Download SDSS frames and stitch them together using ``swarp``. Hence ``swarp`` must be installed!
+    '''Download SDSS frames and stitch them together using ``swarp``. Hence ``swarp`` must be installed!
     ``swarp`` resamples the image, but doesn't correct background.
-    Note: ``size`` should be comparable to ``radius``.
 
     Parameters:
         ra (float): RA of the object.
         dec (float): DEC of the object.
-        band (string): such as 'r' or 'g'.
+        band: string, such as 'r' or 'g'.
         size (``astropy.units`` object): size of cutout, it should be comparable to ``radius``.
         radius (``astropy.units`` object): bricks whose distances to the object are 
             nearer than this radius will be download.  
         output_dir (str): directory of output files.
-        output_name (str): prefix of output images. The suffix `.fits` will be appended automatically. 
+        output_name (str): prefix of output images.
         overwrite (bool): overwrite files or not.
     
     Return:
@@ -560,12 +524,12 @@ def download_sdss_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose
     with open('sdss_task.sh', 'r') as f:
         text = f.read()
         f.close()
-    os.remove('sdss_task.sh')
 
+    os.remove('sdss_task.sh')
     imgname = re.compile('IMAGEOUT_NAME\s*(\S*)').search(text).groups()[0]
     weightname = re.compile('WEIGHTOUT_NAME\s*(\S*)').search(text).groups()[0]
-    text = text.replace(imgname, '{}.fits'.format(os.path.join(output_dir, '_'.join([output_name, band]))))
-    text = text.replace(weightname, '{}.fits'.format(os.path.join(output_dir, '_'.join([output_name, band, 'weights']))))
+    text = text.replace(imgname, '_'.join([output_name, band]) + '.fits')
+    text = text.replace(weightname, '_'.join([output_name, band, 'weight']) + '.fits')
 
     with open('sdss_task.sh', 'w+') as f:
         f.write(text)
@@ -573,43 +537,19 @@ def download_sdss_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose
         f.write('rm frame*')
         f.close()
 
-    filename = '{}.fits'.format(os.path.join(output_dir, '_'.join([output_name, band])))
-    if os.path.isfile(filename):
-        if not overwrite:
-            a = 1
-            raise FileExistsError('# ' + filename + ' already exists!')
-        else:
-            a = os.system('/bin/bash sdss_task.sh')
-    else:
-        a = os.system('/bin/bash sdss_task.sh')
-    
+    a = os.system('/bin/bash sdss_task.sh')
     if a == 0:
-        print('# The image is saved as ' + filename)
+        print('# The image is saved as {}.fits!'.format('_'.join([output_name, band])))
 
-    ## Delete temporary catalog
-    if os.path.isfile('sdss_task.sh'):
-        os.remove('sdss_task.sh')
-
-################# All-in-One function #################
-def download_highres(lowres_dir, high_res='hsc', band='g', output_name='hires', 
-                     output_dir='./', overwrite=False, verbose=True):
+def download_highres(lowres_dir, high_res='hsc', band='g', overwrite=False):
     """ Download high resolution image which overlaps with the given low resolution image.
-        This could be **TIME CONSUMING**! Typically one frame could be 500M to 2G. 
-        Typically you need to install `swarp` in advance. 
+        This could be **TIME CONSUMING**! Typically one frame could be 500M to 2G.
         You also need to install ``unagi`` (https://github.com/dr-guangtou/unagi) to download HSC images. 
-
-        HSC: highest resolution, but the maximum size is 0.6 * 0.6 deg, and the footprint is very small.
-        CFHT: high resolution, but the file will be very large. 
-            This function fails if the object is not in the CFHT MegaPipe footprint.
-        DECaLS: good resolution, good choice for MRF. Stitched using `swarp`.
-        SDSS: worse seeing.
         
     Parameters:
         lowres_dir (string): the directory of input low-resolution image.
         high_res (string): name of high-resolution survey, now support 'HSC' and 'CFHT'.
         band (string): name of filter, typically 'g' or 'r'.
-        output_dir (str): directory of output files.
-        output_name (str): prefix of output images. The suffix `.fits` will be appended automatically. 
         overwrite (bool): it will overwrite the image if `overwrite=True`.
 
     Returns:
@@ -638,27 +578,7 @@ def download_highres(lowres_dir, high_res='hsc', band='g', output_name='hires',
     radius = c1.separation(c2).to(u.degree)
     print('# The diagnal size of input low-resolution image is ' + str(radius))
 
-    ### Download high resolution image
     if high_res.lower() == 'hsc': 
-        download_hsc_large(c_cen.ra.value, c_cen.dec.value, band.lower(), size=radius*u.deg, 
-            radius=radius*u.deg, output_name=output_name, output_dir=output_dir, overwrite=overwrite, verbose=verbose)
-
-    elif high_res.lower() == 'cfht':
-        get_megapipe_catalog(c_cen.ra.value, c_cen.dec.value, radius / 2)
-        download_cfht_megapipe(img, header, band.lower(), output_name=output_name, output_dir=output_dir, overwrite=overwrite)
-
-    elif high_res.lower() == 'decals':
-        download_decals_large(c_cen.ra.value, c_cen.dec.value, band.lower(), size=radius*u.deg, 
-            radius=radius*u.deg, output_name=output_name, output_dir=output_dir, overwrite=overwrite, verbose=verbose)
-
-    elif high_res.lower() == 'sdss':
-        download_sdss_large(c_cen.ra.value, c_cen.dec.value, band.lower(), size=radius*u.deg, 
-            radius=radius*u.deg, output_name=output_name, output_dir=output_dir, overwrite=overwrite, verbose=verbose)
-    else:
-        raise ValueError('# This dataset is not supported yet. Please use "HSC", "CFHT", "DECaLS", or "SDSS" for now!')
-    return
-
-    '''
         print(radius)
         if radius / 1.414 > 2116 * u.arcsec:
             raise ValueError('# Input image size is too large for HSC! Try other methods!')
@@ -666,9 +586,10 @@ def download_highres(lowres_dir, high_res='hsc', band='g', output_name='hires',
             from unagi import hsc
             from unagi.task import hsc_cutout, hsc_tricolor, hsc_check_coverage
         except:
-            raise ImportError('The package `unagi` (https://github.com/dr-guangtou/unagi) is needed to download HSC images! ')
+            raise ImportError('You should install `unagi` https://github.com/dr-guangtou/unagi to download HSC images! ')
         # Setup HSC server
         pdr2 = hsc.Hsc(dr='pdr2', rerun='pdr2_wide')
+        #pdr2 = hsc.Hsc(dr='dr2', rerun='s18a_wide')
         # Check if it is within the footprint
         cover = hsc_check_coverage(c_cen, archive=pdr2, verbose=False, return_filter=True)
         if len(cover) == 0:
@@ -691,4 +612,10 @@ def download_highres(lowres_dir, high_res='hsc', band='g', output_name='hires',
                                     verbose=True,
                                     save_output=True)
                 cutout.close()
-    '''
+    elif high_res.lower() == 'cfht':
+        get_megapipe_catalog(c_cen.ra.value, c_cen.dec.value, radius / 2)
+        download_cfht_megapipe(img, header, band=band.upper(), output_dir='./', overwrite=overwrite)
+    else:
+        raise ValueError('# This survey is not supported yet. Please use "HSC" or "CFHT"!')
+    return
+
