@@ -12,6 +12,9 @@ from astropy import wcs
 from astropy.io import fits
 from astropy.table import Table, Column, hstack, vstack
 
+import warnings
+warnings.filterwarnings("ignore")
+
 class Config(object):
     """
     Configuration class.
@@ -310,6 +313,7 @@ class MrfTask():
                                         minarea=config.fluxmodel.minarea * f_magnify**2,
                                         gaussian_radius=config.fluxmodel.gaussian_radius, 
                                         gaussian_threshold=config.fluxmodel.gaussian_threshold, 
+                                        header=hires_fluxmod.header, 
                                         logger=logger)
 
             logger.info('    - Convolving image, this could be a bit slow @_@')
@@ -395,7 +399,7 @@ class MrfTask():
         psf_cat = bright_star_cat[bright_star_cat['fwhm_custom'] < config.starhalo.fwhm_lim]
         # Mag selection
         psf_cat = psf_cat[psf_cat['mag'] < config.starhalo.bright_lim]
-        psf_cat = psf_cat[psf_cat['mag'] > 10.0] # Discard heavily saturated stars
+        psf_cat = psf_cat[psf_cat['mag'] > 12.0] # Discard heavily saturated stars
 
         ny, nx = res.image.shape
         non_edge_flag = np.logical_and.reduce([(psf_cat['x'] > padsize), (psf_cat['x'] < nx - padsize), 
@@ -505,7 +509,7 @@ class MrfTask():
                 outer_cen[1] - inner_cen[1]:outer_cen[1] + inner_cen[1] + 1] = inner_psf
 
         ### Outer PSF: from model
-        outer_psf = psf_e.drawImage(nx=psf_size, ny=psf_size, scale=2.5, method="no_pixel").array
+        outer_psf = psf_e.drawImage(nx=psf_size, ny=psf_size, scale=config.lowres.pixel_scale, method="no_pixel").array
         outer_psf /= np.sum(outer_psf) # Normalize
         ##### flux_out is the flux inside an annulus, we use this to scale inner and outer parts
         flux_out = compute_Rnorm(outer_psf, None, (outer_cen, outer_cen), 
@@ -523,6 +527,7 @@ class MrfTask():
                                                     outer_cen[1] - inner_cen[1]:outer_cen[1] + inner_cen[1] + 1])
         new_psf *= factor
         save_to_fits(new_psf, './wide_psf.fits')
+        setattr(results, 'wide_PSF', new_psf)
 
         # 11. Build starhalo models and then subtract from "res" image
         logger.info('Draw star halo models onto the image, and subtract them!')
@@ -555,9 +560,14 @@ class MrfTask():
         bright_star_cat = hstack([reorder_cat, ps1_cat[temp]], join_type='outer')     
 
         ### Fit an empirical relation between PS1 magnitude and SEP flux
-        flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16) & (~bright_star_cat[config.lowres.band + 'MeanPSFMag'].mask)
+        from astropy.table import MaskedColumn
+        if isinstance(bright_star_cat['rMeanPSFMag'], MaskedColumn):
+            mask = (~bright_star_cat.mask[config.lowres.band + 'MeanPSFMag'])
+            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16) & mask
+        else:
+            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16)
         x = bright_star_cat[flag][config.lowres.band + 'MeanPSFMag']
-        y = -2.5 * np.log10(bright_star_cat[flag]['flux'])
+        y = -2.5 * np.log10(bright_star_cat[flag]['flux']) # or flux_ann
         pfit = np.polyfit(x, y, 2) # second-order polynomial
         plt.scatter(x, y, s=13)
         plt.plot(np.linspace(10, 16, 20), np.poly1d(pfit)(np.linspace(10, 16, 20)), color='red')
@@ -597,13 +607,17 @@ class MrfTask():
                             x_int - int(psf_size/2):x_int + int(psf_size/2) + 1] += spsf.image * norm
 
         im_halos = im_halos_padded[int(psf_size/2): ny + int(psf_size/2), int(psf_size/2): nx + int(psf_size/2)]
-        setattr(results, 'lowres_model_star', Celestial(im_halos, header=lowres_model.header))
-        img_sub = res.image - im_halos
+
+        model_star = Celestial(im_halos, header=lowres_model.header)
+        model_star.shift_image(-0.5, -0.5, method=config.starhalo.interp)
+
+        setattr(results, 'lowres_model_star', model_star)
+        img_sub = res.image - model_star.image
         setattr(results, 'lowres_final_unmask', Celestial(img_sub, header=res.header))
-        lowres_model.image += im_halos
+        lowres_model.image += model_star.image
         setattr(results, 'lowres_model', lowres_model)
 
-        save_to_fits(im_halos, '_lowres_halos.fits', header=lowres_model.header)
+        save_to_fits(model_star.image, '_lowres_halos.fits', header=lowres_model.header)
         save_to_fits(img_sub, output_name + '_halosub.fits', 
                      header=lowres_model.header)
         save_to_fits(lowres_model.image, output_name + '_model_halos.fits', 
