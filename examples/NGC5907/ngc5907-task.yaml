@@ -5,12 +5,12 @@ hires:
 
 lowres:
   dataset: 'df'
-  band: 'r'
+  band: 'g'
   pixel_scale: 2.5
   sub_bkgval: True # highly recommend True
   magnify_factor: 3.0
-  zeropoint: 26.97189937757109  # don't need to be very accurate
-  color_term: 0.00
+  zeropoint: 27.29606286460203  # don't need to be very accurate
+  color_term: 0.05
 
 sex:
   sigma: 2.5
@@ -46,15 +46,15 @@ starhalo:
   halosize: 24 # radial size, in pixel, original size. Star cutout size will be 2 * halosize + 1
   padsize: 50
   edgesize: 5
-  norm: 'flux_ann' # or 'flux' or 'flux_auto'
+  norm: 'flux' # or 'flux' or 'flux_auto'
   b: 32
   f: 3
   sigma: 3.5
   minarea: 3
   deblend_cont: 0.003
   deblend_nthresh: 32
-  sky_subtract: True
-  flux_aper: [3, 6]
+  sky_subtract: True ## Does this matter?
+  flux_aper: [10, 12]
   mask_contam: True
   interp: 'iraf'
   cval: nan
@@ -65,6 +65,6 @@ clean:
   clean_file: False
   replace_with_noise: False
   gaussian_radius: 1.5
-  gaussian_threshold: 0.001
+  gaussian_threshold: 0.003
   bright_lim: 16.5
   r: 8.0
