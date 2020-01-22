@@ -57,7 +57,7 @@ print(os.path.isfile(os.path.join(mrf.__path__[0], 'iraf/macosx/x_images.e')))
 ```
 `True` means you have installed `mrf` successfully! Bravo!
 
-If you need to use ``lanczos`` or ``cubic`` interpolation, you must have [``galsim``](https://github.com/GalSim-developers/GalSim) installed. You will also need [``unagi``](https://github.com/dr-guangtou/unagi) to download HSC images. `Python>=3` is needed, but you can try whether `mrf` still works under `python2`. Check out the dependence of `mrf` depends from `requirements.txt`.
+You must have [``galsim``](https://github.com/GalSim-developers/GalSim) installed in advance. You will also need [``unagi``](https://github.com/dr-guangtou/unagi) to download HSC images. `Python>=3` is needed, but you can try whether `mrf` still works under `python2`. Check out the dependence of `mrf` depends from `requirements.txt`.
 
 Citation
 ---------
