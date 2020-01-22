@@ -1057,7 +1057,7 @@ def psf_bkgsub(psf, edge):
 # Remove low surface brightness features from Flux Model
 def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir, 
                  SB_lim=25.0, zeropoint=30.0, pixel_size=0.83, unmask_ratio=2, minarea=40,
-                 gaussian_radius=1.5, gaussian_threshold=0.01, logger=None):
+                 gaussian_radius=1.5, gaussian_threshold=0.01, header=None, logger=None):
     """
     Remove low surface brightness features from Flux Model. 
     For more details please read the corresponding sections in van Dokkum et al. 2019 PASP.
@@ -1129,7 +1129,7 @@ def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir,
     else:
         print('Totally removed {} objects'.format(num))
 
-    save_to_fits(im_highres_new, '_hires_fluxmode_clean_mask.fits')
+    save_to_fits(im_highres_new, '_hires_fluxmod_clean_mask.fits', header=header)
     # BLow up the mask
     smooth_radius = gaussian_radius
     mask_conv = copy.deepcopy(im_highres_new)
@@ -1137,6 +1137,7 @@ def remove_lowsb(flux_model, conv_model, kernel, segmap, objcat_dir,
     mask_conv = convolve(mask_conv.astype(float), Gaussian2DKernel(smooth_radius))
     seg_mask = (mask_conv >= gaussian_threshold)
     im_highres[seg_mask] = 0
+    save_to_fits(im_highres, '_hires_fluxmod_clean.fits', header=header)
 
     return im_highres
 
