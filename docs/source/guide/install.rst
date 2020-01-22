@@ -1,6 +1,6 @@
 Installation
 ============
-``mrf`` is a Python package which also incorperates some ``iraf`` functions. You can download and install the package as follows. If you need to use ``lanczos`` or ``cubic`` interpolation, you must have `galsim <https://github.com/GalSim-developers/GalSim>`_ installed. You will also need `unagi <https://github.com/dr-guangtou/unagi>`_ to download HSC images.
+``mrf`` is a Python package which also incorperates some ``iraf`` functions. You can download and install the package as follows. You must have `galsim <https://github.com/GalSim-developers/GalSim>`_ installed in advance. You will also need `unagi <https://github.com/dr-guangtou/unagi>`_ to download HSC images.
 
 Install from ``pip``
 ----------------------
