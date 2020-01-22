@@ -1,5 +1,8 @@
 Changelog
 ----------
+* 2020-01-20: New features:
+    Incorporate Qing Liu's wide-angle PSF of Dragonfly into MRF. Now the scattered lights from bright stars are better subtracted. 
+
 * 2019-10-27: New features:
     1. Add ``sbcontrast.py`` to calculate surface brightness limit of a given spatial scale.
     2. Add examples including self-MRF and cross-MRF.
