@@ -337,7 +337,6 @@ class MrfTask():
 
         logger.info('Compact objects has been subtracted from low-resolution image! Saved as "{}".'.format(output_name + '_res.fits'))
 
-
         # 10. Subtract bright star halos! Only for those left out in flux model!
         star_cat = Table.read('_bright_stars_3.fits', format='fits')
         star_cat['x'] /= f_magnify
