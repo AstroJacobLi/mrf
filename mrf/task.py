@@ -530,7 +530,6 @@ class MrfTask():
 
         # 11. Build starhalo models and then subtract from "res" image
         logger.info('Draw star halo models onto the image, and subtract them!')
-        
         ### Use Pan-STARRS catalog to normalize these bright stars
         from mrf.utils import ps1cone
         # Query PANSTARRS starts
@@ -549,6 +548,7 @@ class MrfTask():
                                     name='y_ps1')])
         ps1_cat = ps1_cat[ps1_cat[config.lowres.band + 'MeanPSFMag'] != -999]
         ps1_cat.write('./_ps1_cat.fits', overwrite=True)
+        #ps1_cat = Table.read('./_ps1_cat.fits')
 
         ## Match PS1 catalog with SEP one
         temp, dist, _ = match_coordinates_sky(SkyCoord(ra=bright_star_cat['ra'], dec=bright_star_cat['dec'], unit='deg'),
@@ -608,7 +608,8 @@ class MrfTask():
         im_halos = im_halos_padded[int(psf_size/2): ny + int(psf_size/2), int(psf_size/2): nx + int(psf_size/2)]
 
         model_star = Celestial(im_halos, header=lowres_model.header)
-        model_star.shift_image(-0.5, -0.5, method=config.starhalo.interp)
+
+        model_star.shift_image(-1/config.lowres.magnify_factor, -1/config.lowres.magnify_factor, method=config.starhalo.interp)
 
         setattr(results, 'lowres_model_star', model_star)
         img_sub = res.image - model_star.image
