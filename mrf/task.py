@@ -498,7 +498,7 @@ class MrfTask():
         flux_inn = compute_Rnorm(inner_psf, None, inner_cen, R=hybrid_r, display=False, mask_cross=False)[1]
         ##### We only remain the stacked PSF inside hybrid radius. 
         aper = CircularAperture(inner_cen, hybrid_r).to_mask()
-        mask = aper[0].to_image(inner_size) == 0
+        mask = aper.to_image(inner_size) == 0
         inner_psf[mask] = np.nan
 
         ### Make new empty PSF
@@ -511,7 +511,7 @@ class MrfTask():
         outer_psf = psf_e.drawImage(nx=psf_size, ny=psf_size, scale=config.lowres.pixel_scale, method="no_pixel").array
         outer_psf /= np.sum(outer_psf) # Normalize
         ##### flux_out is the flux inside an annulus, we use this to scale inner and outer parts
-        flux_out = compute_Rnorm(outer_psf, None, (outer_cen, outer_cen), 
+        flux_out = compute_Rnorm(outer_psf, None, outer_cen, 
                                  R=hybrid_r, display=False, mask_cross=False)[1]
 
         ##### Scale factor: the flux ratio near hybrid radius 
