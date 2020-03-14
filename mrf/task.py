@@ -58,7 +58,8 @@ class Config(object):
                 'unmask_lowsb': False,
                 'sb_lim': 26.0,
                 'unmask_ratio': 3,
-                'interp': 'iraf'
+                'interp': 'iraf',
+                'minarea': 25
                 }
         for name in default.keys():
             if not name in self.fluxmodel.__dict__.keys():
@@ -289,7 +290,7 @@ class MrfTask():
         flux_aper = config.sex.flux_aper
         show_fig = config.sex.show_fig
             
-        if skip_sex:
+        if skip_SE:
             hdu = fits.open('_hires_{}.fits'.format(int(f_magnify)))
             hires_3 = Celestial(hdu[0].data, header=hdu[0].header)
             hdu.close()

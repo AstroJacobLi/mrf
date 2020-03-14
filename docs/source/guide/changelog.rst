@@ -1,5 +1,9 @@
 Changelog
 ----------
+* 2020-03-14: New feature:
+    Reconstruct ``task.py`` structure, add options to skip resizing images and downloading catalogs to save time when tweaking parameters. Also add auto-completion of configuration parameters if not written in the ``YAML`` file by the user. 
+    Now users could indicate whether use ``wide_psf`` mode or not. 
+
 * 2020-01-20: New features:
     Incorporate Qing Liu's wide-angle PSF of Dragonfly into MRF. Now the scattered lights from bright stars are better subtracted. Notice: one of the bottleneck of MRF now is the query of Pan-STARRS catalog from MAST server, which is typically quite slow. 
 
