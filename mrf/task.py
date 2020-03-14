@@ -26,6 +26,91 @@ class Config(object):
             else:
                 setattr(self, a, Config(b) if isinstance(b, dict) else b)
         Config.config = d
+    
+    def complete_config(self):
+        """
+        This function fill vacant parameters in the config file with default values. 
+
+        Parameters:
+            config (Config class): configuration of the MRF task.
+        Returns:
+            config (Config class)
+        """
+        # sex
+        default_sex = {
+            'b': 64,
+            'f': 3,
+            'sigma': 3.0,
+            'minarea': 2,
+            'deblend_cont': 0.005,
+            'deblend_nthresh': 32,
+            'sky_subtract': True,
+            'flux_aper': [3, 6],
+            'show_fig': False
+        }
+        for name in default_sex.keys():
+            if not name in self.sex.__dict__.keys():
+                setattr(self.sex, name, default_sex[name])
+        
+        # fluxmodel
+        default = {'gaussian_radius': 1.5,
+                'gaussian_threshold': 0.05,
+                'unmask_lowsb': False,
+                'sb_lim': 26.0,
+                'unmask_ratio': 3,
+                'interp': 'iraf',
+                'minarea': 25
+                }
+        for name in default.keys():
+            if not name in self.fluxmodel.__dict__.keys():
+                setattr(self.fluxmodel, name, default[name])
+
+        # kernel
+        default = {
+            'kernel_size': 8,
+            'kernel_edge': 1,
+            'nkernel': 25,
+            'circularize': False,
+            'show_fig': True
+        }
+        for name in default.keys():
+            if not name in self.kernel.__dict__.keys():
+                setattr(self.kernel, name, default[name])
+        
+        # starhalo
+        default = {
+            'fwhm_lim': 200,
+            'padsize': 50,
+            'edgesize': 5,
+            'b': 32,
+            'f': 3,
+            'sigma': 3.5,
+            'minarea': 3,
+            'deblend_cont': 0.003,
+            'deblend_nthresh': 32,
+            'sky_subtract': True,
+            'flux_aper': [3, 6],
+            'mask_contam': True,
+            'interp': 'iraf',
+            'cval': 'nan'
+        }
+        for name in default.keys():
+            if not name in self.starhalo.__dict__.keys():
+                setattr(self.starhalo, name, default[name])
+
+        # Clean
+        default = {
+            'clean_img': True,
+            'clean_file': False,
+            'replace_with_noise': False,
+            'gaussian_radius': 1.5,
+            'gaussian_threshold': 0.003,
+            'bright_lim': 16.5,
+            'r': 8.0
+        }
+        for name in default.keys():
+            if not name in self.clean.__dict__.keys():
+                setattr(self.clean, name, default[name])
 
 class Results():
     """
@@ -51,6 +136,7 @@ class MrfTask():
         with open(config_file, 'r') as ymlfile:
             cfg = yaml.safe_load(ymlfile)
             config = Config(cfg)
+            config.complete_config()
         self.config_file = config_file
         self.config = config
 
@@ -77,7 +163,8 @@ class MrfTask():
         return self.logger
 
     def run(self, dir_lowres, dir_hires_b, dir_hires_r, certain_gal_cat, 
-            output_name='mrf', verbose=True):
+            wide_psf=True, output_name='mrf', verbose=True, skip_resize=False, 
+            skip_SE=False, skip_mast=False):
         """
         Run MRF task.
 
@@ -89,8 +176,20 @@ class MrfTask():
                 red-band image (typically r-band).
             certain_gal_cat (string): directory of a catalog (in ascii format) which contains 
                 RA and DEC of galaxies which you want to retain during MRF.
+            wide_psf (bool): whether subtract bright stars using the wide-PSF of **Dragonfly**. 
+                See Q. Liu et al. (in prep.) for details. 
             output_name (string): which will be the prefix of output files.
             verbose (bool): If True, it will make a log file recording the process. 
+            skip_resize (bool): If True, the code will not `zoom` the images again but 
+                use the resized images under the current directory. 
+                This is designed for the case when you need to tweak parameters.
+            skip_SE (bool): If True, the code will not repeat running SExtractor on two-bands high-res images, 
+                but use the existing flux model under the current directory. 
+                This is designed for the case when you need to tweak parameters.
+            skip_mast (bool): Just for ``wide_psf=True`` mode. If True, the code will not 
+                repeat retrieving Pan-STARRS catalog from MAST server, 
+                but use the existing catalog under the current directory. 
+                This is designed for the case when you need to tweak parameters.
 
         Returns:
             results (`Results` class): containing key results of this task.
@@ -111,6 +210,10 @@ class MrfTask():
         config = self.config
         logger = self.set_logger(output_name=output_name, verbose=verbose)
         results = Results(config)
+        
+        assert (
+            ((config.lowres.dataset.lower() != 'df' or config.lowres.dataset.lower() != 'dragonfly') and wide_psf == True) or wide_psf == False
+            ), "Wide PSF subtraction is only available for Dragonfly data. Check your low-resolution images!"
 
         logger.info('Running Multi-Resolution Filtering (MRF) on "{0}" and "{1}" images!'.format(config.hires.dataset, config.lowres.dataset))
         setattr(results, 'lowres_name', config.lowres.dataset)
@@ -130,99 +233,117 @@ class MrfTask():
         # 2. Create magnified low-res image, and register high-res images with subsampled low-res ones
         f_magnify = config.lowres.magnify_factor
         logger.info('Magnify Dragonfly image with a factor of %.1f:', f_magnify)
-        lowres.resize_image(f_magnify, method=config.fluxmodel.interp)
-        lowres.save_to_fits('_lowres_{}.fits'.format(int(f_magnify)))
+        if skip_resize:
+            hdu = fits.open('_lowres_{}.fits'.format(int(f_magnify)))
+            lowres = Celestial(hdu[0].data, header=hdu[0].header)
+        else:
+            lowres.resize_image(f_magnify, method=config.fluxmodel.interp)
+            lowres.save_to_fits('_lowres_{}.fits'.format(int(f_magnify)))
 
         logger.info('Register high resolution image "{0}" with "{1}"'.format(dir_hires_b, dir_lowres))
-        hdu = fits.open(dir_hires_b)
-        if 'hsc' in dir_hires_b:
-            array, _ = reproject_interp(hdu[1], lowres.header)
-            # Note that reproject_interp don't conserve total flux
-            # A factor is needed for correction.
-            factor = (lowres.pixel_scale / (hdu[1].header['CD2_2'] * 3600))**2
-            array *= factor
+        if skip_resize:
+            hdu = fits.open('_hires_b_reproj.fits')
+            hires_b = Celestial(hdu[0].data, header=hdu[0].header)
+            hdu.close()
+            hdu = fits.open('_hires_r_reproj.fits')
+            hires_r = Celestial(hdu[0].data, header=hdu[0].header)
+            hdu.close()
         else:
-            array, _ = reproject_interp(hdu[0], lowres.header)
-            factor = (lowres.pixel_scale / (hdu[0].header['CD2_2'] * 3600))**2
-            array *= factor
-        
-        hires_b = Celestial(array, header=lowres.header)
-        hdu.close()
-        
-        logger.info('Register high resolution image "{0}" with "{1}"'.format(dir_hires_r, dir_lowres))
-        hdu = fits.open(dir_hires_r)
-        if 'hsc' in dir_hires_r:
-            array, _ = reproject_interp(hdu[1], lowres.header)
-            factor = (lowres.pixel_scale / (hdu[1].header['CD2_2'] * 3600))**2
-            array *= factor
-        else:
-            array, _ = reproject_interp(hdu[0], lowres.header)
-            factor = (lowres.pixel_scale / (hdu[0].header['CD2_2'] * 3600))**2
-            array *= factor
-        hires_r = Celestial(array, header=lowres.header)
-        hdu.close()
+            hdu = fits.open(dir_hires_b)
+            if 'hsc' in dir_hires_b:
+                array, _ = reproject_interp(hdu[1], lowres.header)
+                # Note that reproject_interp does not conserve total flux
+                # A factor is needed for correction.
+                factor = (lowres.pixel_scale / (hdu[1].header['CD2_2'] * 3600))**2
+                array *= factor
+            else:
+                array, _ = reproject_interp(hdu[0], lowres.header)
+                factor = (lowres.pixel_scale / (hdu[0].header['CD2_2'] * 3600))**2
+                array *= factor
+            
+            hires_b = Celestial(array, header=lowres.header)
+            hires_b.save_to_fits('_hires_b_reproj.fits')
+            hdu.close()
+            
+            logger.info('Register high resolution image "{0}" with "{1}"'.format(dir_hires_r, dir_lowres))
+            hdu = fits.open(dir_hires_r)
+            if 'hsc' in dir_hires_r:
+                array, _ = reproject_interp(hdu[1], lowres.header)
+                factor = (lowres.pixel_scale / (hdu[1].header['CD2_2'] * 3600))**2
+                array *= factor
+            else:
+                array, _ = reproject_interp(hdu[0], lowres.header)
+                factor = (lowres.pixel_scale / (hdu[0].header['CD2_2'] * 3600))**2
+                array *= factor
+            hires_r = Celestial(array, header=lowres.header)
+            hires_r.save_to_fits('_hires_r_reproj.fits')
+            hdu.close()
 
         # 3. Extract sources on hires images using SEP
         sigma = config.sex.sigma
         minarea = config.sex.minarea
-        try:
-            b = config.sex.b
-            f = config.sex.f
-        except:
-            b = 64
-            f = 5
+        b = config.sex.b
+        f = config.sex.f
         deblend_cont = config.sex.deblend_cont
         deblend_nthresh = config.sex.deblend_nthresh
         sky_subtract = config.sex.sky_subtract
         flux_aper = config.sex.flux_aper
         show_fig = config.sex.show_fig
-        
-        logger.info('Build flux models on high-resolution images: Blue band')
-        logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
-        logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
-        _, _, b_imflux = Flux_Model(hires_b.image, hires_b.header, sigma=sigma, minarea=minarea, 
-                                    deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, 
-                                    sky_subtract=sky_subtract, save=True, logger=logger)
-        
-        logger.info('Build flux models on high-resolution images: Red band')
-        logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
-        logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
-        _, _, r_imflux = Flux_Model(hires_r.image, hires_b.header, sigma=sigma, minarea=minarea, 
-                                    deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, 
-                                    sky_subtract=sky_subtract, save=True, logger=logger)
-        
-
-        # 4. Make color correction, remove artifacts as well
-        logger.info('Make color correction to blue band, remove artifacts as well')
-        col_ratio = (b_imflux / r_imflux)
-        col_ratio[np.isnan(col_ratio) | np.isinf(col_ratio)] = 0 # remove artifacts
-        save_to_fits(col_ratio, '_colratio.fits', header=hires_b.header)
-        
-        color_term = config.lowres.color_term
-        logger.info('    - color_term = {}'.format(color_term))
-        median_col = np.nanmedian(col_ratio[col_ratio != 0])
-        logger.info('    - median_color (blue/red) = {:.5f}'.format(median_col))
-
-        fluxratio = col_ratio / median_col
-        fluxratio[(fluxratio < 0.1) | (fluxratio > 10)] = 1 # remove extreme values
-        col_correct = np.power(fluxratio, color_term)
-        save_to_fits(col_correct, '_colcorrect.fits', header=hires_b.header)
-
-        if config.lowres.band == 'r':
-            hires_3 = Celestial(hires_r.image * col_correct, header=hires_r.header)
-        elif config.lowres.band == 'g':
-            hires_3 = Celestial(hires_b.image * col_correct, header=hires_b.header)
+            
+        if skip_SE:
+            hdu = fits.open('_hires_{}.fits'.format(int(f_magnify)))
+            hires_3 = Celestial(hdu[0].data, header=hdu[0].header)
+            hdu.close()
+            hdu = fits.open('_colratio.fits')
+            col_ratio = hdu[0].data
+            hdu.close()
         else:
-            raise ValueError('config.lowres.band must be "g" or "r"!')
-        
-        _ = hires_3.save_to_fits('_hires_{}.fits'.format(int(f_magnify)))
-        
-        setattr(results, 'hires_img', copy.deepcopy(hires_3))
+            logger.info('Build flux models on high-resolution images: Blue band')
+            logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
+            logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
+            _, _, b_imflux = Flux_Model(hires_b.image, hires_b.header, sigma=sigma, minarea=minarea, 
+                                        deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, 
+                                        sky_subtract=sky_subtract, save=True, logger=logger)
+            
+            logger.info('Build flux models on high-resolution images: Red band')
+            logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
+            logger.info('    - deblend_cont = %.5f, deblend_nthres = %.1f', deblend_cont, deblend_nthresh)
+            _, _, r_imflux = Flux_Model(hires_r.image, hires_b.header, sigma=sigma, minarea=minarea, 
+                                        deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, 
+                                        sky_subtract=sky_subtract, save=True, logger=logger)
+            
 
-        # Clear memory
-        del r_imflux, b_imflux, hires_b, hires_r
-        gc.collect()
-        
+            # 4. Make color correction, remove artifacts as well
+            logger.info('Make color correction to blue band, remove artifacts as well')
+            col_ratio = (b_imflux / r_imflux)
+            col_ratio[np.isnan(col_ratio) | np.isinf(col_ratio)] = 0 # remove artifacts
+            save_to_fits(col_ratio, '_colratio.fits', header=hires_b.header)
+            
+            color_term = config.lowres.color_term
+            logger.info('    - color_term = {}'.format(color_term))
+            median_col = np.nanmedian(col_ratio[col_ratio != 0])
+            logger.info('    - median_color (blue/red) = {:.5f}'.format(median_col))
+
+            fluxratio = col_ratio / median_col
+            fluxratio[(fluxratio < 0.1) | (fluxratio > 10)] = 1 # remove extreme values
+            col_correct = np.power(fluxratio, color_term)
+            save_to_fits(col_correct, '_colcorrect.fits', header=hires_b.header)
+
+            if config.lowres.band == 'r':
+                hires_3 = Celestial(hires_r.image * col_correct, header=hires_r.header)
+            elif config.lowres.band == 'g':
+                hires_3 = Celestial(hires_b.image * col_correct, header=hires_b.header)
+            else:
+                raise ValueError('config.lowres.band must be "g" or "r"!')
+            
+            _ = hires_3.save_to_fits('_hires_{}.fits'.format(int(f_magnify)))
+            
+            setattr(results, 'hires_img', copy.deepcopy(hires_3))
+
+            # Clear memory
+            del r_imflux, b_imflux, hires_b, hires_r
+            gc.collect()
+
         # 5. Extract sources on hi-res corrected image
         logger.info('Extract objects from color-corrected high resolution image with:')
         logger.info('    - sigma = %.1f, minarea = %d', sigma, minarea)
@@ -333,8 +454,6 @@ class MrfTask():
         res.resize_image(1 / f_magnify, method=config.fluxmodel.interp)
         res.save_to_fits(output_name + '_res.fits')
         setattr(results, 'res', res)
-
-
         logger.info('Compact objects has been subtracted from low-resolution image! Saved as "{}".'.format(output_name + '_res.fits'))
 
         # 10. Subtract bright star halos! Only for those left out in flux model!
@@ -430,7 +549,6 @@ class MrfTask():
                     sstar.mask_out_contam(sigma=4.0, deblend_cont=0.0001, show_fig=False, verbose=False)
                     #sstar.image = sstar.get_masked_image(cval=cval)
                     #sstar.mask_out_contam(sigma=3, deblend_cont=0.0001, show_fig=False, verbose=False)
-                
                 #sstar.sub_bkg(verbose=False)
                 if config.starhalo.norm == 'flux_ann':
                     stack_set[i, :, :] = sstar.get_masked_image(cval=cval) / sstar.fluxann
@@ -460,7 +578,133 @@ class MrfTask():
         logger.info('    - Stars are stacked successfully!')
         save_to_fits(stack_set, '_stack_bright_stars.fits')
         
-        # 10.5: Build hybrid PSF with Qing's modelling.
+        # 11. Build starhalo models and then subtract from "res" image
+        if wide_psf:
+            results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, skip_mast=skip_mast)
+        else:
+            results = self._subtract_stackedPSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name)
+        
+        img_sub = results.lowres_final_unmask.image
+
+        # 12. Mask out dirty things!
+        if config.clean.clean_img:
+            logger.info('Clean the image!')
+            model_mask = convolve(1e3 * results.lowres_model.image / np.nansum(results.lowres_model.image),
+                                  Gaussian2DKernel(config.clean.gaussian_radius))
+            model_mask[model_mask < config.clean.gaussian_threshold] = 0
+            model_mask[model_mask != 0] = 1
+            # Mask out very bright stars, according to their radius
+            totmask = bright_star_mask(model_mask.astype(bool), bright_star_cat, 
+                                       bright_lim=config.clean.bright_lim, 
+                                       r=config.clean.r)
+            totmask = convolve(totmask.astype(float), Box2DKernel(2))
+            totmask[totmask > 0] = 1
+            if config.clean.replace_with_noise:
+                logger.info('    - Replace artifacts with noise.')
+                from mrf.utils import img_replace_with_noise
+                final_image = img_replace_with_noise(img_sub.byteswap().newbyteorder(), totmask)
+            else:
+                logger.info('    - Replace artifacts with void.')
+                final_image = img_sub * (~totmask.astype(bool))
+            
+            save_to_fits(final_image, output_name + '_final.fits', header=res.header)
+            save_to_fits(totmask.astype(float), output_name + '_mask.fits', header=res.header)
+            setattr(results, 'lowres_final', Celestial(final_image, header=res.header))
+            setattr(results, 'lowres_mask', Celestial(totmask.astype(float), header=res.header))
+            logger.info('The final result is saved as "{}"!'.format(output_name + '_final.fits'))
+            logger.info('The mask is saved as "{}"!'.format(output_name + '_mask.fits'))
+        # Delete temp files
+        if config.clean.clean_file:
+            logger.info('Delete all temporary files!')
+            os.system('rm -rf _*.fits')
+
+        # 13. determine detection depth
+        from .sbcontrast import cal_sbcontrast
+        _  = cal_sbcontrast(final_image, totmask.astype(int), 
+                             config.lowres.pixel_scale, config.lowres.zeropoint, 
+                             scale_arcsec=60, minfrac=0.8, minback=6, verbose=True, logger=logger);
+        
+        # Plot out the result
+        plt.rcParams['text.usetex'] = False
+        fig, [ax1, ax2, ax3] = plt.subplots(1, 3, figsize=(15, 8))
+        hdu = fits.open(dir_lowres)
+        lowres_image = hdu[0].data
+        ax1 = display_single(lowres_image, ax=ax1, scale_bar_length=300, 
+                            scale_bar_y_offset=0.3, pixel_scale=config.lowres.pixel_scale, 
+                            add_text='Lowres', text_y_offset=0.7)
+        ax2 = display_single(lowres_model.image, ax=ax2, scale_bar=False, 
+                            add_text='Model', text_y_offset=0.7)
+        ax3 = display_single(final_image, ax=ax3, scale_bar=False, 
+                            add_text='Residual', text_y_offset=0.7)
+        for ax in [ax1, ax2, ax3]:
+            ax.axis('off')
+        plt.subplots_adjust(wspace=0.02)
+        plt.savefig(output_name + '_result.png', bbox_inches='tight', facecolor='silver')
+        plt.close()
+        logger.info('Task finished! (⁎⁍̴̛ᴗ⁍̴̛⁎)')
+
+        return results
+
+    def _subtract_stackedPSF(self, results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name):
+        from astropy.coordinates import SkyCoord, match_coordinates_sky
+        import astropy.units as u
+        from mrf.celestial import Celestial, Star
+        from mrf.utils import save_to_fits
+
+        config = self.config
+        logger = self.logger
+
+        # 11. Build starhalo models and then subtract from "res" image
+        logger.info('Draw star halo models onto the image, and subtract them!')
+        # Make an extra edge, move stars right
+        ny, nx = res.image.shape
+        im_padded = np.zeros((ny + 2 * halosize, nx + 2 * halosize))
+        # Making the left edge empty
+        im_padded[halosize: ny + halosize, halosize: nx + halosize] = res.image
+        im_halos_padded = np.zeros_like(im_padded)
+
+        for i, obj in enumerate(bright_star_cat):
+            spsf = Celestial(median_psf, header=lowres_model.header)
+            x = obj['x']
+            y = obj['y']
+            x_int = x.astype(np.int)
+            y_int = y.astype(np.int)
+            dx = -1.0 * (x - x_int)
+            dy = -1.0 * (y - y_int)
+            spsf.shift_image(-dx, -dy, method=config.starhalo.interp)
+            x_int, y_int = x_int + halosize, y_int + halosize
+            if config.starhalo.norm == 'flux_ann':
+                im_halos_padded[y_int - halosize:y_int + halosize + 1, 
+                                x_int - halosize:x_int + halosize + 1] += spsf.image * obj['flux_ann']
+            else:
+                im_halos_padded[y_int - halosize:y_int + halosize + 1, 
+                                x_int - halosize:x_int + halosize + 1] += spsf.image * obj['flux']
+
+        im_halos = im_halos_padded[halosize: ny + halosize, halosize: nx + halosize]
+        setattr(results, 'lowres_model_star', Celestial(im_halos, header=lowres_model.header))
+        img_sub = res.image - im_halos
+        setattr(results, 'lowres_final_unmask', Celestial(img_sub, header=res.header))
+        lowres_model.image += im_halos
+        setattr(results, 'lowres_model', lowres_model)
+
+        save_to_fits(im_halos, '_lowres_halos.fits', header=lowres_model.header)
+        save_to_fits(img_sub, output_name + '_halosub.fits', 
+                        header=lowres_model.header)
+        save_to_fits(lowres_model.image, output_name + '_model_halos.fits', 
+                        header=lowres_model.header)
+        logger.info('Bright star halos are subtracted!')
+        return results
+
+    def _subtract_widePSF(self, results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, skip_mast=False):
+        from astropy.coordinates import SkyCoord, match_coordinates_sky
+        import astropy.units as u
+        from mrf.celestial import Celestial, Star
+        from mrf.utils import save_to_fits
+
+        config = self.config
+        logger = self.logger
+
+        #### 10.5: Build hybrid PSF with Qing's modelling.
         from .utils import save_to_fits
         from .utils import compute_Rnorm
         from .modeling import PSF_Model
@@ -490,7 +734,7 @@ class MrfTask():
             hybrid_r = 12
 
         ### Inner PSF: from stacking stars
-        inner_psf = fits.open('./_median_psf.fits')[0].data
+        inner_psf = copy.deepcopy(median_psf)
         inner_psf /= np.sum(inner_psf) # Normalize
         inner_size = inner_psf.shape   
         inner_cen = [int(x / 2) for x in inner_size]
@@ -512,14 +756,14 @@ class MrfTask():
         outer_psf /= np.sum(outer_psf) # Normalize
         ##### flux_out is the flux inside an annulus, we use this to scale inner and outer parts
         flux_out = compute_Rnorm(outer_psf, None, outer_cen, 
-                                 R=hybrid_r, display=False, mask_cross=False)[1]
+                                R=hybrid_r, display=False, mask_cross=False)[1]
 
         ##### Scale factor: the flux ratio near hybrid radius 
         scale_factor = flux_out / flux_inn
         temp = copy.deepcopy(outer_psf)
         new_psf[np.isnan(new_psf)] = temp[np.isnan(new_psf)] / scale_factor # fill `nan`s with the outer PSF
         temp[outer_cen[0] - inner_cen[0]:outer_cen[0] + inner_cen[0] + 1, 
-             outer_cen[1] - inner_cen[1]:outer_cen[1] + inner_cen[1] + 1] = 0
+                outer_cen[1] - inner_cen[1]:outer_cen[1] + inner_cen[1] + 1] = 0
         new_psf += temp / scale_factor
         new_psf /= np.sum(new_psf) # Normalize
         factor = np.sum(median_psf) / np.sum(new_psf[outer_cen[0] - inner_cen[0]:outer_cen[0] + inner_cen[0] + 1, 
@@ -528,31 +772,35 @@ class MrfTask():
         save_to_fits(new_psf, './wide_psf.fits')
         setattr(results, 'wide_PSF', new_psf)
 
-        # 11. Build starhalo models and then subtract from "res" image
+
+        ### 11. Build starhalo models and then subtract from "res" image
         logger.info('Draw star halo models onto the image, and subtract them!')
-        ### Use Pan-STARRS catalog to normalize these bright stars
-        from mrf.utils import ps1cone
-        # Query PANSTARRS starts
-        constraints = {'nDetections.gt':1, config.lowres.band + 'MeanPSFMag.lt':18}
-        # strip blanks and weed out blank and commented-out values
-        columns = """objID,raMean,decMean,raMeanErr,decMeanErr,nDetections,ng,nr,gMeanPSFMag,rMeanPSFMag""".split(',')
-        columns = [x.strip() for x in columns]
-        columns = [x for x in columns if x and not x.startswith('#')]
-        logger.info('Retrieving Pan-STARRS catalog from MAST! Please wait!')
-        ps1result = ps1cone(lowres.ra_cen, lowres.dec_cen, lowres.diag_radius.to(u.deg).value, 
-                            release='dr2', columns=columns, verbose=False, **constraints)
-        ps1_cat = Table.read(ps1result, format='csv')
-        ps1_cat.add_columns([Column(data = lowres_model.wcs.wcs_world2pix(ps1_cat['raMean'], ps1_cat['decMean'], 0)[0], 
-                                    name='x_ps1'),
-                            Column(data = lowres_model.wcs.wcs_world2pix(ps1_cat['raMean'], ps1_cat['decMean'], 0)[1], 
-                                    name='y_ps1')])
-        ps1_cat = ps1_cat[ps1_cat[config.lowres.band + 'MeanPSFMag'] != -999]
-        ps1_cat.write('./_ps1_cat.fits', overwrite=True)
-        #ps1_cat = Table.read('./_ps1_cat.fits')
+        if skip_mast:
+            ps1_cat = Table.read('./_ps1_cat.fits')
+        else:
+            ### Use Pan-STARRS catalog to normalize these bright stars
+            from mrf.utils import ps1cone
+            # Query PANSTARRS starts
+            constraints = {'nDetections.gt':1, config.lowres.band + 'MeanPSFMag.lt':18}
+            # strip blanks and weed out blank and commented-out values
+            columns = """objID,raMean,decMean,raMeanErr,decMeanErr,nDetections,ng,nr,gMeanPSFMag,rMeanPSFMag""".split(',')
+            columns = [x.strip() for x in columns]
+            columns = [x for x in columns if x and not x.startswith('#')]
+            logger.info('Retrieving Pan-STARRS catalog from MAST! Please wait!')
+            ps1result = ps1cone(results.lowres_input.ra_cen, results.lowres_input.dec_cen, results.lowres_input.diag_radius.to(u.deg).value, 
+                                release='dr2', columns=columns, verbose=False, **constraints)
+            ps1_cat = Table.read(ps1result, format='csv')
+            ps1_cat.add_columns([Column(data = lowres_model.wcs.wcs_world2pix(ps1_cat['raMean'], ps1_cat['decMean'], 0)[0], 
+                                        name='x_ps1'),
+                                Column(data = lowres_model.wcs.wcs_world2pix(ps1_cat['raMean'], ps1_cat['decMean'], 0)[1], 
+                                        name='y_ps1')])
+            ps1_cat = ps1_cat[ps1_cat[config.lowres.band + 'MeanPSFMag'] != -999]
+            ps1_cat.write('./_ps1_cat.fits', overwrite=True)
+            #ps1_cat = Table.read('./_ps1_cat.fits')
 
         ## Match PS1 catalog with SEP one
         temp, dist, _ = match_coordinates_sky(SkyCoord(ra=bright_star_cat['ra'], dec=bright_star_cat['dec'], unit='deg'),
-                                              SkyCoord(ra=ps1_cat['raMean'], dec=ps1_cat['decMean'], unit='deg'))
+                                            SkyCoord(ra=ps1_cat['raMean'], dec=ps1_cat['decMean'], unit='deg'))
         flag = dist < 5 * u.arcsec
         temp = temp[flag]
         reorder_cat = vstack([bright_star_cat[flag], bright_star_cat[~flag]], join_type='outer')
@@ -621,68 +869,8 @@ class MrfTask():
 
         save_to_fits(model_star.image, '_lowres_halos.fits', header=lowres_model.header)
         save_to_fits(img_sub, output_name + '_halosub.fits', 
-                     header=lowres_model.header)
+                        header=lowres_model.header)
         save_to_fits(lowres_model.image, output_name + '_model_halos.fits', 
-                     header=lowres_model.header)
-        
+                        header=lowres_model.header)
         logger.info('Bright star halos are subtracted!')
-
-
-        # 12. Mask out dirty things!
-        if config.clean.clean_img:
-            logger.info('Clean the image!')
-            model_mask = convolve(1e3 * lowres_model.image / np.nansum(lowres_model.image),
-                                  Gaussian2DKernel(config.clean.gaussian_radius))
-            model_mask[model_mask < config.clean.gaussian_threshold] = 0
-            model_mask[model_mask != 0] = 1
-            # Mask out very bright stars, according to their radius
-            totmask = bright_star_mask(model_mask.astype(bool), bright_star_cat, 
-                                       bright_lim=config.clean.bright_lim, 
-                                       r=config.clean.r)
-            totmask = convolve(totmask.astype(float), Box2DKernel(2))
-            totmask[totmask > 0] = 1
-            if config.clean.replace_with_noise:
-                logger.info('    - Replace artifacts with noise.')
-                from mrf.utils import img_replace_with_noise
-                final_image = img_replace_with_noise(img_sub.byteswap().newbyteorder(), totmask)
-            else:
-                logger.info('    - Replace artifacts with void.')
-                final_image = img_sub * (~totmask.astype(bool))
-            
-            save_to_fits(final_image, output_name + '_final.fits', header=res.header)
-            save_to_fits(totmask.astype(float), output_name + '_mask.fits', header=res.header)
-            setattr(results, 'lowres_final', Celestial(final_image, header=res.header))
-            setattr(results, 'lowres_mask', Celestial(totmask.astype(float), header=res.header))
-            logger.info('The final result is saved as "{}"!'.format(output_name + '_final.fits'))
-            logger.info('The mask is saved as "{}"!'.format(output_name + '_mask.fits'))
-        # Delete temp files
-        if config.clean.clean_file:
-            logger.info('Delete all temporary files!')
-            os.system('rm -rf _*.fits')
-
-        # 12. determine detection depth
-        from .sbcontrast import cal_sbcontrast
-        _  = cal_sbcontrast(final_image, totmask.astype(int), 
-                             config.lowres.pixel_scale, config.lowres.zeropoint, 
-                             scale_arcsec=60, minfrac=0.8, minback=6, verbose=True, logger=logger);
-        
-        # 13. Plot out the result
-        plt.rcParams['text.usetex'] = False
-        fig, [ax1, ax2, ax3] = plt.subplots(1, 3, figsize=(15, 8))
-        hdu = fits.open(dir_lowres)
-        lowres_image = hdu[0].data
-        ax1 = display_single(lowres_image, ax=ax1, scale_bar_length=300, 
-                            scale_bar_y_offset=0.3, pixel_scale=config.lowres.pixel_scale, 
-                            add_text='Lowres', text_y_offset=0.7)
-        ax2 = display_single(lowres_model.image, ax=ax2, scale_bar=False, 
-                            add_text='Model', text_y_offset=0.7)
-        ax3 = display_single(final_image, ax=ax3, scale_bar=False, 
-                            add_text='Residual', text_y_offset=0.7)
-        for ax in [ax1, ax2, ax3]:
-            ax.axis('off')
-        plt.subplots_adjust(wspace=0.02)
-        plt.savefig(output_name + '_result.png', bbox_inches='tight', facecolor='silver')
-        plt.close()
-        logger.info('Task finished! (⁎⁍̴̛ᴗ⁍̴̛⁎)')
-
         return results

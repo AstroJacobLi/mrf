@@ -1,8 +1,9 @@
 Configuration file
 -------------------
-A configuration file is needed to run MRF properly. In this page we guide you through the configuration file and explain some important parameters.
+A configuration file is needed to run MRF properly. In this page we guide you through the configuration file and explain some important parameters. 
 
-The configuration file has several sections. Under each section several important parameters are listed after a colon. Please see `here <https://github.com/AstroJacobLi/mrf/blob/master/examples/NGC5907/ngc5907-task.yaml>`_ as an example. 
+The configuration file has several sections. Under each section several important parameters are listed after a colon. Please see `here <https://github.com/AstroJacobLi/mrf/blob/master/examples/NGC5907/ngc5907-task.yaml>`_ as an example. If some of the parameters are not explicitly written in the file, it will be auto-completed by default value. 
+
 
 TL;DR
 ^^^^^^
@@ -10,7 +11,8 @@ TL;DR
 * ``frac_maxflux`` is very important, you need to adjust this parameter several times to make the residual image cleanest.
 * ``fluxmodel.unmask_lowsb``, ``fluxmodel.sb_lim`` and ``fluxmodel.unmask_ratio`` are important for discovering low-SB objects! Please follow the instructions in the corresponding section below.
 * If the stars are dirty, try to adjust ``starhalo.n_stack`` to a smaller number, or make your field larger to contain more bright stars. 
-* You can iterate mask size using ``mrf.utils.adjust_mask``.
+* You can iterate with mask size using ``mrf.utils.adjust_mask``.
+
 
 ``hires`` and ``lowres``
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -25,9 +27,11 @@ TL;DR
         dataset: 'df'
         band: 'r'
         pixel_scale: 2.5
-        sub_bkgval: True # highly recommend True for Dragonfly
+        sub_bkgval: True
+        # `sub_bkgval` is highly recommend True if lowres is Dragonfly. This will subtract the BACKVAL from low-res image.
         magnify_factor: 3.0
         zeropoint: 27.0 
+        # Zeropoint of lowres image. If Dragonfly, use MEDIANZP.
         color_term: 0.0
 
 These two sections are related to basic information of low-resolution and high-resolution datasets you use. You need to fill in the photometry zeropoint, pixel scale (in the unit of arcsec/pixel) of each dataset. The original pixel scales of several widely-used high-resolution surveys are listed below (in the unit of arcsec/pixel). 
@@ -70,22 +74,22 @@ If you use Dragonfly as low-resolution image, we recommend to subtract a global 
         deblend_cont: 0.005
         deblend_nthresh: 32
         sky_subtract: True
-        flux_aper: [3, 6] # pixel
+        flux_aper: [3, 6]
         show_fig: False
 
     fluxmodel:
-        gaussian_radius: 1.5     # conv = convolve(mask, Gaussian2DKernel(1.5))
-        gaussian_threshold: 0.05 # mask = conv > 0.05
-        unmask_lowsb: False
-        sb_lim: 26.0
-        unmask_ratio: 2.0
-        interp: 'cubic'
+        gaussian_radius: 1.5     
+        gaussian_threshold: 0.05 
+        unmask_lowsb: False 
+        sb_lim: 26.0       # unmask objects with SB < sb_lim
+        unmask_ratio: 2.0    # smaller number yields less faint blobs
+        interp: 'iraf'
 
     kernel:
-        kernel_size: 8 # In original coordinate, before magnification
+        kernel_size: 8
         kernel_edge: 1
         nkernel: 25
-        frac_maxflux: 0.1
+        frac_maxflux: 0.03
         circularize: False
         show_fig: True
         minarea: 25
@@ -102,7 +106,7 @@ Section ``fluxmodel`` and ``kernel`` controls the key process in MRF, please see
 
    E =  \frac{F^{\text{H}(3)}}{F^{\text{H}(3)} * K},
 
-where :math:`F^{\text{H}(3)}` is the flux model, and :math:`K` is the kernel. If :math:`\langle E \rangle \ll 1`, it is a compact object that should be retained in the flux model and subtracted from the Dragonfly data. Hence we retain (compact) objects in flux model by :math:`E > \texttt{unmask_ratio}`. Small ``unmask_ratio`` leaves very extended objects in the final product. The value of ``unmask_ratio`` and ``sb_lim`` depends on your science goals. We don't want to retain some small and compact objects. ``minarea`` is the minimum area (in Dragonfly pixels) of objects that are retained.
+where :math:`F^{\text{H}(3)}` is the flux model, and :math:`K` is the kernel. If :math:`\langle E \rangle \ll 1`, it is a compact object that should be retained in the flux model and subtracted from the Dragonfly data. Hence we retain (compact) objects in flux model by :math:`E > \texttt{unmask_ratio}`. Small ``unmask_ratio`` leaves very extended objects in the final product. The value of ``unmask_ratio`` and ``sb_lim`` depends on your science goals. We don't want to retain some small and compact objects. ``minarea`` is the minimum area (in terms of Dragonfly pixels) of objects that are retained.
 
 Interpolation of images is important in MRF. We provide several interpolation methods including ``'iraf', 'cubic', 'lanczos', 'quintic'``. IRAF method uses 3rd order polynomial interpolation, which might not work under Windows system. However we recommend using IRAF interpolation under most circumstances. When using the other three, you may see crosses around very bright stars. 
 
@@ -114,28 +118,30 @@ Parameters in ``kernel`` section are very important. ``kernel_size`` is the size
 .. code-block:: yaml
 
     starhalo:
-        bright_lim: 17.5 # only stack stars brighter than bright_lim
-        fwhm_lim: 50 # only stack stars whose FWHM < fwhm_lim
-        n_stack: 10
-        halosize: 30 # radial size, in pixel, on low-res image. Star cutout size will be 2 * halosize + 1
+        bright_lim: 16.5 # only stack stars brighter than bright_lim
+        fwhm_lim: 200    # only stack stars whose FWHM < fwhm_lim
+        n_stack: 10      # number of stars to be stacked
+        halosize: 30     # radial size, in pixel, original size. Star cutout size will be 2 * halosize + 1
         padsize: 50
-        edgesize: 3
-        norm: 'flux_ann' # or 'flux' or 'flux_auto'
+        edgesize: 5
+        norm: 'flux'     # Options are 'flux', 'flux_ann', and 'flux_auto'
         b: 32
         f: 3
-        sigma: 4
-        minarea: 5
-        deblend_cont: 0.005
+        sigma: 3.5
+        minarea: 3
+        deblend_cont: 0.003
         deblend_nthresh: 32
         sky_subtract: True
-        flux_aper: [3, 6] # pixels
+        flux_aper: [3, 6] # This only works when ``wide_PSF=False``.
         mask_contam: True
-        cval: 'nan'
         interp: 'iraf'
+        cval: nan
 
 Parameters in this section are used to stack PSF using bright stars. The PSF will further be used to subtract bright stars from the image. We already identified bright stars on low-resolution image using ``sep``, and here we only select stars brighter than ``bright_lim`` and FWHM less than ``fwhm_lim``, avoiding too saturated stars. The maximum number of stars selected is ``n_stack`` (typically 10-20, it's not good to use very large number of stars). We make a cutout of each star with a ``2 * halosize + 1`` pixel width square. Since stars have different brightness, we normalize each cutout using either the total flux measured by ``sep`` (i.e. ``norm: 'flux'``) or the flux within a certain annulus (i.e. ``norm: 'flux_ann'``). The default annulus is between 3 pix and 6 pix, since the saturation peak (if exists) drops quickly before 3 pixels. You can adjust the annulus size in ``flux_aper``. 
 
 After making a cutout of a star, you may need to mask out contaminations around it by indicating ``mask_contam: True``. If so, the masked region will be filled with ``cval``, which could be any float number or `nan`. The ``interp`` parameter means the same as in ``fluxmodel`` section.
+
+If you run MRF with ``wide_psf`` mode, some of the above parameters need to be modified. We recommend using smaller ``halosize`` (such as 24) to generate stacked PSF. In this mode, ``norm`` must be ``flux``, and ``flux_aper`` will no longer be useful.
 
 
 ``clean``
@@ -148,10 +154,10 @@ After making a cutout of a star, you may need to mask out contaminations around 
         clean_file: False
         replace_with_noise: False
         gaussian_radius: 1.5
-        gaussian_threshold: 0.001
-        bright_lim: 17.5
-        r: 5.0
+        gaussian_threshold: 0.003
+        bright_lim: 16.5
+        r: 8.0
 
-Now we have already subtracted both compact objects and bright stars in the field. To make things neat, we apply masks on the residual image by indicating ``clean_img: True``. We generate mask by convolving the segmentation map with a ``gaussian_radius: 1.5`` Gaussian kernel and filtering it with a threshold ``gaussian_threshold: 0.001``. This threshold is typically around 0.001. Larger radius and smaller threshold give you more aggressive mask. We additionally mask out bright stars (brighter than ``bright_lim: 17.5``) by drawing an ellipse on the image with a blow-up factor ``r: 5.0``. You can adjust the mask afterward using `mrf.utils.adjust_mask <https://mrfiltering.readthedocs.io/en/latest/api.html#mrf.utils.adjust_mask>`_ function.
+Now we have already subtracted both compact objects and bright stars in the field. To make things neat, we apply masks on the residual image by indicating ``clean_img: True``. We generate mask by convolving the segmentation map with a ``gaussian_radius: 1.5`` Gaussian kernel and filtering it with a threshold ``gaussian_threshold: 0.003``. This threshold is typically around 0.001. Larger radius and smaller threshold give you more aggressive mask. We additionally mask out bright stars (brighter than ``bright_lim: 16.5``) by drawing an ellipse on the image with a blow-up factor ``r: 8.0``. You can adjust the mask afterward using `mrf.utils.adjust_mask <https://mrfiltering.readthedocs.io/en/latest/api.html#mrf.utils.adjust_mask>`_ function.
 
 Since MRF creates many temporary files whose names star with an underline (such as ``_median_psf.fits``), we remove these files by indicating ``clean_file: True``. 
