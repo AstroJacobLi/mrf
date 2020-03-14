@@ -36,7 +36,7 @@ class Results():
     
 class MrfTask():
     '''
-    MRF task class. This class implements `mrf`.
+    MRF task class. This class implements `mrf`, with wide-angle PSF incorporated.
     '''
     def __init__(self, config_file):
         """
@@ -498,11 +498,11 @@ class MrfTask():
         flux_inn = compute_Rnorm(inner_psf, None, inner_cen, R=hybrid_r, display=False, mask_cross=False)[1]
         ##### We only remain the stacked PSF inside hybrid radius. 
         aper = CircularAperture(inner_cen, hybrid_r).to_mask()
-        mask = aper[0].to_image(inner_size) == 0
+        mask = aper.to_image(inner_size) == 0
         inner_psf[mask] = np.nan
 
         ### Make new empty PSF
-        outer_cen = [int(psf_size / 2), int(psf_size / 2)]
+        outer_cen = (int(psf_size / 2), int(psf_size / 2))
         new_psf = np.zeros((int(psf_size), int(psf_size)))
         new_psf[outer_cen[0] - inner_cen[0]:outer_cen[0] + inner_cen[0] + 1, 
                 outer_cen[1] - inner_cen[1]:outer_cen[1] + inner_cen[1] + 1] = inner_psf
@@ -511,7 +511,7 @@ class MrfTask():
         outer_psf = psf_e.drawImage(nx=psf_size, ny=psf_size, scale=config.lowres.pixel_scale, method="no_pixel").array
         outer_psf /= np.sum(outer_psf) # Normalize
         ##### flux_out is the flux inside an annulus, we use this to scale inner and outer parts
-        flux_out = compute_Rnorm(outer_psf, None, (outer_cen, outer_cen), 
+        flux_out = compute_Rnorm(outer_psf, None, outer_cen, 
                                  R=hybrid_r, display=False, mask_cross=False)[1]
 
         ##### Scale factor: the flux ratio near hybrid radius 
@@ -557,6 +557,8 @@ class MrfTask():
         temp = temp[flag]
         reorder_cat = vstack([bright_star_cat[flag], bright_star_cat[~flag]], join_type='outer')
         bright_star_cat = hstack([reorder_cat, ps1_cat[temp]], join_type='outer')     
+        bright_star_cat.write('_bright_star_cat.fits', format='fits', overwrite=True)
+        setattr(results, 'bright_star_cat', bright_star_cat)
 
         ### Fit an empirical relation between PS1 magnitude and SEP flux
         from astropy.table import MaskedColumn
@@ -594,7 +596,7 @@ class MrfTask():
             spsf.shift_image(-dx, -dy, method=config.starhalo.interp)
             x_int, y_int = x_int + int(psf_size/2), y_int + int(psf_size/2)
 
-            if obj['mag'] < 14.5:
+            if obj['mag'] < 15.5:
                 if obj[config.lowres.band + 'MeanPSFMag']:
                     norm = 10**((-np.poly1d(pfit)(obj[config.lowres.band + 'MeanPSFMag'])) / 2.5)
                 else:
