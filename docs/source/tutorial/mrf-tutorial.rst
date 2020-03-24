@@ -34,7 +34,7 @@ After downloading high-resolution images, you need to bin it by a :math:`2\times
     cfht.save_to_fits('ngc5907_cfht_g.fits')
     # Then do the same thing for R-band image
 
-The main part of MRF can be simply done by the following code. A configuration YAML file is needed to provide parameters for relevant functions such as SExtractor (``sep``). Check `here <https://github.com/AstroJacobLi/mrf/blob/master/examples/NGC5907/ngc5907-task.yaml>`_ for more explanation on the configuration file. If you want to retain certain galaxies during MRF, make an ASCII file which contains the ``RA`` and ``DEC`` of galaxies (see `gal_cat_n5907.txt <https://github.com/AstroJacobLi/mrf/blob/master/examples/NGC5907/gal_cat_n5907.txt>`_ for an example). If you don't want to preserve any galaxy, just leave ``certain_gal_cat = None``.
+The main part of MRF can be simply done by the following code. A configuration YAML file is needed to provide parameters for relevant functions such as SExtractor (``sep``). Check `here <https://github.com/AstroJacobLi/mrf/blob/master/examples/NGC5907/ngc5907-task.yaml>`_ for more explanation on the configuration file. If you want to retain certain galaxies during MRF, make an ASCII file which contains the ``RA`` and ``DEC`` of galaxies (see `gal_cat_n5907.txt <https://github.com/AstroJacobLi/mrf/blob/master/examples/NGC5907/gal_cat_n5907.txt>`_ for an example). If you don't want to preserve any galaxy, just leave ``certain_gal_cat = None``. We have options to skip those time-consuming steps if you want to have a quick iteration over one parameter in the configuration file. Use ``wide_psf=True`` to have a better subtraction of scattered lights from bright stars. 
 
 .. code-block:: python
 
@@ -44,9 +44,9 @@ The main part of MRF can be simply done by the following code. A configuration Y
     img_hires_b = 'ngc5907_cfht_g.fits'
     img_hires_r = 'ngc5907_cfht_r.fits'
     certain_gal_cat = 'gal_cat_n5907.txt'
-    results = task.run(
-        img_lowres, img_hires_b, img_hires_r, certain_gal_cat, 
-        output_name='n5907', verbose=True)
+    results = task.run(img_lowres, img_hires_b, img_hires_r, certain_gal_cat, wide_psf=True,
+                       output_name='n5907_g', verbose=True, skip_resize=False, 
+                       skip_SE=False, skip_mast=False)
 
 The surface brightness limit calculated by ``mrf.sbcontrast.cal_sbcontrast`` will be printed out as a part of MRF results, as follows:
 

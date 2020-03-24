@@ -1027,7 +1027,7 @@ def bright_star_mask(mask, catalog, bright_lim=17.5, r=2.0):
     import sep
     # Make stars to be zero on segmap
     for obj in catalog:
-        if obj['mag'] < bright_lim and obj['mag'] > 10 and obj['b'] / obj['a'] > 0.8:
+        if obj['mag'] < bright_lim and obj['mag'] > 10 and obj['b'] / obj['a'] > 0.65:
             sep.mask_ellipse(mask, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], r=r)
     return mask
 
@@ -1506,7 +1506,7 @@ def compute_Rnorm(image, mask_field, cen, R=10, wid=0.5, mask_cross=True, displa
         Note intensity is not background subtracted. """
     from photutils import CircularAperture, CircularAnnulus, EllipticalAperture
     from astropy.stats import sigma_clip
-    annulus_ma = CircularAnnulus([cen], R - wid, R + wid).to_mask()[0]    
+    annulus_ma = CircularAnnulus(cen, R - wid, R + wid).to_mask()
     mask_ring = annulus_ma.to_image(image.shape) > 0.5    # sky ring (R-wid, R+wid)
     if mask_field is not None:
         mask_clean = mask_ring & (~mask_field)                # sky ring with other sources masked
