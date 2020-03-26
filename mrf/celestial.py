@@ -159,32 +159,25 @@ class Celestial(object):
         ny, nx = self.image.shape
         if abs(dx) > nx or abs(ny) > ny:
             raise ValueError('# Shift distance is beyond the image size.')
-        if method == 'lanczos' or method == 'cubic' or method == 'quintic':
-            try: # try to import galsim
-                from galsim import degrees, Angle
-                from galsim.interpolant import Lanczos
-                from galsim import Image, InterpolatedImage
-                from galsim.fitswcs import AstropyWCS
-            except:
-                raise ImportError('# Import ``galsim`` failed! Please check if ``galsim`` is installed!')
-            # Begin shift
-            assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
-            if method == 'lanczos':
-                galimg = InterpolatedImage(Image(self.image, dtype=float), 
-                                       scale=self.pixel_scale, x_interpolant=Lanczos(order))
-            else:
-                galimg = InterpolatedImage(Image(self.image, dtype=float), 
-                                        scale=self.pixel_scale, x_interpolant=method)
-            galimg = galimg.shift(dx=dx * self.pixel_scale, dy=dy * self.pixel_scale)
-            result = galimg.drawImage(scale=self.pixel_scale, nx=nx, ny=ny)#, wcs=AstropyWCS(self.wcs))
-            self._image = result.array
+
+        if method == 'lanczos' or method == 'cubic' or method == 'quintic': #!#
+            #try: # try to import galsim
+                ##from galsim import degrees, Angle
+                ##from galsim.fitswcs import AstropyWCS
+            from scipy.ndimage.interpolation import shift
+
+            assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
+
+            shifted = shift(self.image, [dy, dx], order=order, cval=0) #!#
+            self._image = shifted
+
             # Change the WCS of image
             hdr = copy.deepcopy(self.header)
             hdr['CRPIX1'] += dx
             hdr['CRPIX2'] += dy
             self.header = hdr
             self.wcs = wcs.WCS(self.header)
-            return result.array
+            return shifted
 
         elif method == 'iraf':
             self.save_to_fits('./_temp.fits', 'image')
@@ -241,31 +234,21 @@ class Celestial(object):
         if abs(dx) > nx or abs(ny) > ny:
             raise ValueError('# Shift distance is beyond the image size.')
         if method == 'lanczos' or method == 'cubic' or method == 'quintic':
-            try: # try to import galsim
-                from galsim import degrees, Angle
-                from galsim.interpolant import Lanczos
-                from galsim import Image, InterpolatedImage
-                from galsim.fitswcs import AstropyWCS
-            except:
-                raise ImportError('# Import ``galsim`` failed! Please check if ``galsim`` is installed!')
-            # Begin shift
-            assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
-            if method == 'lanczos':
-                galimg = InterpolatedImage(Image(self.image, dtype=float), 
-                                       scale=self.pixel_scale, x_interpolant=Lanczos(order))
-            else:
-                galimg = InterpolatedImage(Image(self.image, dtype=float), 
-                                        scale=self.pixel_scale, x_interpolant=method)
-            galimg = galimg.shift(dx=dx * self.pixel_scale, dy=dy * self.pixel_scale)
-            result = galimg.drawImage(scale=self.pixel_scale, nx=nx, ny=ny)#, wcs=AstropyWCS(self.wcs))
-            self._mask = result.array
+
+            from scipy.ndimage.interpolation import shift
+
+            assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
+
+            shifted = shift(self.mask, [dy, dx], order=order, cval=0) #!#            
+            self._mask = shifted
+
             # Change the WCS of image
             hdr = copy.deepcopy(self.header)
             hdr['CRPIX1'] += dx
             hdr['CRPIX2'] += dy
             self.header = hdr
             self.wcs = wcs.WCS(self.header)
-            return result.array
+            return shifted
 
         elif method == 'iraf':
             self.save_to_fits('./_temp.fits', 'mask')
@@ -390,33 +373,25 @@ class Celestial(object):
         '''
 
         if method == 'lanczos' or method == 'cubic' or method == 'quintic':
-            try: # try to import galsim
-                from galsim import degrees, Angle
-                from galsim.interpolant import Lanczos
-                from galsim import Image, InterpolatedImage
-                from galsim.fitswcs import AstropyWCS
-            except:
-                raise ImportError('# Import `galsim` failed! Please check if `galsim` is installed!')
-
-            assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
-            if method == 'lanczos':
-                galimg = InterpolatedImage(Image(self.image, dtype=float), 
-                                           scale=self.pixel_scale, x_interpolant=Lanczos(order))
-            else:
-                galimg = InterpolatedImage(Image(self.image, dtype=float), 
-                                           scale=self.pixel_scale, x_interpolant=method)
 
             ny, nx = self.image.shape
+
             if f > 1:
-                result = galimg.drawImage(scale=self.pixel_scale / f, 
-                                nx=int((nx -1) * f + 1), ny=int((ny - 1)* f + 1))
+
+                from scipy import ndimage
+
+                assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
+
+                result = ndimage.zoom(self.image, f, order=order)
+                result *= 1/(f**2)  # Multiplying by this factor to conserve flux
+
                 self.header = self._resize_header_wcs(self.image, f)
                 self.header['CRPIX1'] += (1 - f * 1)
                 self.header['CRPIX2'] += (1 - f * 1)
-                self._image = result.array
+                self._image = result
                 self.shape = self.image.shape
-                self.header['NAXIS1'] = result.array.shape[1]
-                self.header['NAXIS2'] = result.array.shape[0]
+                self.header['NAXIS1'] = result.shape[1]
+                self.header['NAXIS2'] = result.shape[0]
                 self.pixel_scale /= f
                 self.wcs = wcs.WCS(self.header)
                 #### Cautious! The following block could be wrong! ####
@@ -430,19 +405,26 @@ class Celestial(object):
                 #### Cautious! The above block could be wrong! ####
 
             else:
-                from math import ceil
+
                 b = round(1 / f)
-                nxout = ceil(nx / b)
-                nyout = ceil(ny / b)
-                result = galimg.drawImage(scale=self.pixel_scale * b, 
-                                          nx=nxout, ny=nyout)
+
+                ny_bin = int( ny / b )  # Effectively floor
+                nx_bin = int( nx / b )
+
+                shape = (ny_bin, b, nx_bin, b)
+
+                x_crop = int( nx_bin * b )
+                y_crop = int( ny_bin * b )
+
+                result = self.image[0:y_crop, 0:x_crop].reshape(shape).sum(3).sum(1)
+
                 self.header = self._resize_header_wcs(self.image, f)
                 self.header['CRPIX1'] += 0.5 - 1 / b / 2
                 self.header['CRPIX2'] += 0.5 - 1 / b / 2
-                self._image = result.array
+                self._image = result
                 self.shape = self.image.shape
-                self.header['NAXIS1'] = result.array.shape[1]
-                self.header['NAXIS2'] = result.array.shape[0]
+                self.header['NAXIS1'] = result.shape[1]
+                self.header['NAXIS2'] = result.shape[0]
                 self.pixel_scale *= b
                 self.wcs = wcs.WCS(self.header)
                 #### Cautious! The following block could be wrong! ####
@@ -500,32 +482,26 @@ class Celestial(object):
             raise ValueError("This object doesn't have mask yet!")
 
         if method == 'lanczos' or method == 'cubic' or method == 'quintic':
-            try: # try to import galsim
-                from galsim import degrees, Angle
-                from galsim.interpolant import Lanczos
-                from galsim import Image, InterpolatedImage
-                from galsim.fitswcs import AstropyWCS
-            except:
-                raise ImportError('# Import `galsim` failed! Please check if `galsim` is installed!')
 
-            assert (order > 0) and isinstance(order, int), 'order of ' + method + ' must be positive interger.'
-            if method == 'lanczos':
-                galimg = InterpolatedImage(Image(self.mask, dtype=float), 
-                                       scale=self.pixel_scale, x_interpolant=Lanczos(order))
-            else:
-                galimg = InterpolatedImage(Image(self.mask, dtype=float), 
-                                        scale=self.pixel_scale, x_interpolant=method)
             ny, nx = self.mask.shape
+
             if f > 1:
-                result = galimg.drawImage(scale=self.pixel_scale / f, 
-                                nx=int((nx -1) * f + 1), ny=int((ny - 1)* f + 1))
+
+                from scipy import ndimage
+
+                assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
+
+                result = ndimage.zoom(self.mask, f, order=order)
+                result *= 1/(f**2)  # Multiplying by this factor to conserve flux
+                                    # Not sure if this is needed for a mask versus image
+
                 self.header = self._resize_header_wcs(self.mask, f)
                 self.header['CRPIX1'] += (1 - f * 1)
                 self.header['CRPIX2'] += (1 - f * 1)
-                self._mask = result.array
+                self._mask = result
                 self.shape = self.mask.shape
-                self.header['NAXIS1'] = result.array.shape[1]
-                self.header['NAXIS2'] = result.array.shape[0]
+                self.header['NAXIS1'] = result.shape[1]
+                self.header['NAXIS2'] = result.shape[0]
                 self.pixel_scale /= f
                 self.wcs = wcs.WCS(self.header)
                 #### Cautious! The following block could be wrong! ####
@@ -538,12 +514,19 @@ class Celestial(object):
                 self.wcs = wcs.WCS(self.header)
                 #### Cautious! The above block could be wrong! ####
             else:
-                from math import ceil
+
                 b = round(1 / f)
-                nxout = ceil(nx / b)
-                nyout = ceil(ny / b)
-                result = galimg.drawImage(scale=self.pixel_scale * b, 
-                                          nx=nxout, ny=nyout)
+
+                ny_bin = int( ny / b )  # Effectively floor
+                nx_bin = int( nx / b )
+
+                shape = (ny_bin, b, nx_bin, b)
+
+                x_crop = int( nx_bin * b )
+                y_crop = int( ny_bin * b )
+
+                result = self.mask[0:y_crop, 0:x_crop].reshape(shape).sum(3).sum(1)
+
                 self.header = self._resize_header_wcs(self.mask, f)
                 self.header['CRPIX1'] += 0.5 - 1 / b / 2
                 self.header['CRPIX2'] += 0.5 - 1 / b / 2

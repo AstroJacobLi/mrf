@@ -580,7 +580,7 @@ class MrfTask():
         
         # 11. Build starhalo models and then subtract from "res" image
         if wide_psf:
-            results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, skip_mast=skip_mast)
+            results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, dir_lowres, skip_mast=skip_mast)
         else:
             results = self._subtract_stackedPSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name)
         
@@ -695,11 +695,13 @@ class MrfTask():
         logger.info('Bright star halos are subtracted!')
         return results
 
-    def _subtract_widePSF(self, results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, skip_mast=False):
+    def _subtract_widePSF(self, results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, dir_lowres, skip_mast=False):
         from astropy.coordinates import SkyCoord, match_coordinates_sky
         import astropy.units as u
         from mrf.celestial import Celestial, Star
-        from mrf.utils import save_to_fits
+        from mrf.utils import save_to_fits, bright_star_mask
+        from mrf.display import display_single
+        from astropy.convolution import convolve, Box2DKernel, Gaussian2DKernel
 
         config = self.config
         logger = self.logger
