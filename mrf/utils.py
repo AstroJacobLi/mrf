@@ -93,7 +93,8 @@ def img_cutout(img, wcs, coord_1, coord_2, size=60.0, pixel_scale=2.5,
     # Update the header
     cutout_header = cutout.wcs.to_header()
     if img_header is not None:
-        del img_header['COMMENT']
+        if 'COMMENT' in img_header:
+            del img_header['COMMENT']
         intersect = [k for k in img_header if k not in cutout_header]
         for keyword in intersect:
             cutout_header.set(keyword, img_header[keyword], img_header.comments[keyword])
