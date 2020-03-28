@@ -180,8 +180,9 @@ class Celestial(object):
             self._image = result.array
             # Change the WCS of image
             hdr = copy.deepcopy(self.header)
-            hdr['CRPIX1'] += dx
-            hdr['CRPIX2'] += dy
+            if 'CRPIX1' in hdr:
+                hdr['CRPIX1'] += dx
+                hdr['CRPIX2'] += dy
             self.header = hdr
             self.wcs = wcs.WCS(self.header)
             return result.array
@@ -209,8 +210,9 @@ class Celestial(object):
             self._image = result
             # Change the WCS of image
             hdr = copy.deepcopy(self.header)
-            hdr['CRPIX1'] += dx
-            hdr['CRPIX2'] += dy
+            if 'CRPIX1' in hdr:
+                hdr['CRPIX1'] += dx
+                hdr['CRPIX2'] += dy
             self.header = hdr
             self.wcs = wcs.WCS(self.header)
             return result
@@ -261,8 +263,9 @@ class Celestial(object):
             self._mask = result.array
             # Change the WCS of image
             hdr = copy.deepcopy(self.header)
-            hdr['CRPIX1'] += dx
-            hdr['CRPIX2'] += dy
+            if 'CRPIX1' in hdr:
+                hdr['CRPIX1'] += dx
+                hdr['CRPIX2'] += dy
             self.header = hdr
             self.wcs = wcs.WCS(self.header)
             return result.array
@@ -290,8 +293,9 @@ class Celestial(object):
             self._mask = result
             # Change the WCS of image
             hdr = copy.deepcopy(self.header)
-            hdr['CRPIX1'] += dx
-            hdr['CRPIX2'] += dy
+            if 'CRPIX1' in hdr:
+                hdr['CRPIX1'] += dx
+                hdr['CRPIX2'] += dy
             self.header = hdr
             self.wcs = wcs.WCS(self.header)
             return result
@@ -379,8 +383,8 @@ class Celestial(object):
 
         Parameters:
             f (float): the positive factor of zoom. If 0 < f < 1, the image will be resized to smaller one.
-            method (str): interpolation method. Use 'lanczos', 'cubic', 'quintic' or 'iraf'. 
-                First three methods require ``GalSim`` installed. 
+            method (str): interpolation method. Use 'spline', 'iraf', or 'lanczos', 'cubic', 'quintic'. 
+                We recommend using 'spline' or 'iraf. The last three methods require ``GalSim`` installed. 
                 Other methods are now consistent with "iraf" results.
             order (int): the order Lanczos interpolation (>0).
             cval (float): value to fill the edges. Default is 0.
@@ -475,6 +479,49 @@ class Celestial(object):
             hdu.close()
             imdelete('./*temp.fits')
             return self.image
+        
+        elif method == 'spline':
+            ny, nx = self.image.shape
+            if f > 1:
+                from scipy import ndimage
+                assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
+                result = ndimage.zoom(self.image, f, order=order)
+                result *= 1/(f**2)  # Multiplying by this factor to conserve flux
+                self.header = self._resize_header_wcs(self.image, f)
+                self.header['CRPIX1'] += (1 - f * 1)
+                self.header['CRPIX2'] += (1 - f * 1)
+                self._image = result
+                self.shape = self.image.shape
+                self.header['NAXIS1'] = result.shape[1]
+                self.header['NAXIS2'] = result.shape[0]
+                self.pixel_scale /= f
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The following block could be wrong! ####
+                ## Probably you'll need extra shift of image
+                dshift = 2 * (1 - f * 1) % 0.5
+                self.shift_image(dshift, dshift, method='spline')
+                # We don't want to shift wcs.
+                self.header['CRPIX1'] -= dshift
+                self.header['CRPIX2'] -= dshift 
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The above block could be wrong! ####
+            else:
+                b = round(1 / f)
+                ny_bin = int( ny / b )
+                nx_bin = int( nx / b )
+                shape = (ny_bin, b, nx_bin, b)
+                x_crop = int( nx_bin * b )
+                y_crop = int( ny_bin * b )
+                result = self.image[0:y_crop, 0:x_crop].reshape(shape).sum(3).sum(1)
+                self.header = self._resize_header_wcs(self.image, f)
+                self.header['CRPIX1'] += 0.5 - 1 / b / 2
+                self.header['CRPIX2'] += 0.5 - 1 / b / 2
+                self._image = result
+                self.shape = self.image.shape
+                self.header['NAXIS1'] = result.shape[1]
+                self.header['NAXIS2'] = result.shape[0]
+                self.pixel_scale *= b
+                self.wcs = wcs.WCS(self.header)
 
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos', 'spline' or 'iraf'.")
@@ -486,8 +533,8 @@ class Celestial(object):
 
         Parameters:
             f (float): the positive factor of zoom. If 0 < f < 1, the mask will be resized to smaller one.
-            method (str): interpolation method. Use 'lanczos', 'cubic', 'quintic' or 'iraf'. 
-                First three methods require ``GalSim`` installed. 
+            method (str): interpolation method. Use 'spline', 'iraf', or 'lanczos', 'cubic', 'quintic'. 
+                We recommend using 'spline' or 'iraf. The last three methods require ``GalSim`` installed. 
                 Other methods are now consistent with "iraf" results.
             order (int): the order Lanczos interpolation (>0).
             cval (float): value to fill the edges. Default is 0.
@@ -585,6 +632,49 @@ class Celestial(object):
             hdu.close()
             imdelete('./*temp.fits')
             return self.mask
+
+        elif method == 'spline':
+            ny, nx = self.mask.shape
+            if f > 1:
+                from scipy import ndimage
+                assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
+                result = ndimage.zoom(self.mask, f, order=order)
+                result *= 1/(f**2)  # Multiplying by this factor to conserve flux
+                self.header = self._resize_header_wcs(self.mask, f)
+                self.header['CRPIX1'] += (1 - f * 1)
+                self.header['CRPIX2'] += (1 - f * 1)
+                self._mask = result
+                self.shape = self.mask.shape
+                self.header['NAXIS1'] = result.shape[1]
+                self.header['NAXIS2'] = result.shape[0]
+                self.pixel_scale /= f
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The following block could be wrong! ####
+                ## Probably you'll need extra shift of image
+                dshift = 2 * (1 - f * 1) % 0.5
+                self.shift_image(dshift, dshift, method='spline')
+                # We don't want to shift wcs.
+                self.header['CRPIX1'] -= dshift
+                self.header['CRPIX2'] -= dshift 
+                self.wcs = wcs.WCS(self.header)
+                #### Cautious! The above block could be wrong! ####
+            else:
+                b = round(1 / f)
+                ny_bin = int( ny / b )
+                nx_bin = int( nx / b )
+                shape = (ny_bin, b, nx_bin, b)
+                x_crop = int( nx_bin * b )
+                y_crop = int( ny_bin * b )
+                result = self.mask[0:y_crop, 0:x_crop].reshape(shape).sum(3).sum(1)
+                self.header = self._resize_header_wcs(self.image, f)
+                self.header['CRPIX1'] += 0.5 - 1 / b / 2
+                self.header['CRPIX2'] += 0.5 - 1 / b / 2
+                self._mask = result
+                self.shape = self.image.shape
+                self.header['NAXIS1'] = result.shape[1]
+                self.header['NAXIS2'] = result.shape[0]
+                self.pixel_scale *= b
+                self.wcs = wcs.WCS(self.header)
 
         else:
             raise ValueError("# Not supported interpolation method. Use 'lanczos', 'spline' or 'iraf'.")

@@ -699,7 +699,9 @@ class MrfTask():
         from astropy.coordinates import SkyCoord, match_coordinates_sky
         import astropy.units as u
         from mrf.celestial import Celestial, Star
-        from mrf.utils import save_to_fits
+        from mrf.utils import save_to_fits, bright_star_mask
+        from mrf.display import display_single
+        from astropy.convolution import convolve, Box2DKernel, Gaussian2DKernel
 
         config = self.config
         logger = self.logger
