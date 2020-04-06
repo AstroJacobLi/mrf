@@ -326,13 +326,13 @@ class Celestial(object):
             if abs(np.sum(self.mask)) > 1e-5:
                 self.shift_mask(dx, dy, method=method, order=order, cval=cval)
 
-    def _resize_header_wcs(self, img, f):
+    def _resize_header_wcs(self, f):
         hdr = copy.deepcopy(self.header)
         w = wcs.WCS(hdr)
         if f > 1:
-            hdr['CRPIX1'] = hdr['CRPIX1'] * f #+ (1 - f * 1)
+            hdr['CRPIX1'] = hdr['CRPIX1'] * f # + (1 - f * 1)
             # (1 - f * x1), where x1=1 is the starting index
-            hdr['CRPIX2'] = hdr['CRPIX2'] * f #+ (1 - f * 1)
+            hdr['CRPIX2'] = hdr['CRPIX2'] * f # + (1 - f * 1)
             # Delete "CDELT"
             if "CDELT1" in hdr or "CDELT2" in hdr:
                 for i in hdr['CDELT*'].keys():
@@ -414,7 +414,7 @@ class Celestial(object):
             if f > 1:
                 result = galimg.drawImage(scale=self.pixel_scale / f, 
                                 nx=int((nx -1) * f + 1), ny=int((ny - 1)* f + 1))
-                self.header = self._resize_header_wcs(self.image, f)
+                self.header = self._resize_header_wcs(f)
                 self.header['CRPIX1'] += (1 - f * 1)
                 self.header['CRPIX2'] += (1 - f * 1)
                 self._image = result.array
@@ -440,7 +440,7 @@ class Celestial(object):
                 nyout = ceil(ny / b)
                 result = galimg.drawImage(scale=self.pixel_scale * b, 
                                           nx=nxout, ny=nyout)
-                self.header = self._resize_header_wcs(self.image, f)
+                self.header = self._resize_header_wcs(f)
                 self.header['CRPIX1'] += 0.5 - 1 / b / 2
                 self.header['CRPIX2'] += 0.5 - 1 / b / 2
                 self._image = result.array
@@ -487,9 +487,9 @@ class Celestial(object):
                 assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
                 result = ndimage.zoom(self.image, f, order=order)
                 result *= 1/(f**2)  # Multiplying by this factor to conserve flux
-                self.header = self._resize_header_wcs(self.image, f)
-                self.header['CRPIX1'] += (1 - f * 1)
-                self.header['CRPIX2'] += (1 - f * 1)
+                self.header = self._resize_header_wcs(f)
+                #self.header['CRPIX1'] += (1 - f * 1)
+                #self.header['CRPIX2'] += (1 - f * 1)
                 self._image = result
                 self.shape = self.image.shape
                 self.header['NAXIS1'] = result.shape[1]
@@ -513,7 +513,7 @@ class Celestial(object):
                 x_crop = int( nx_bin * b )
                 y_crop = int( ny_bin * b )
                 result = self.image[0:y_crop, 0:x_crop].reshape(shape).sum(3).sum(1)
-                self.header = self._resize_header_wcs(self.image, f)
+                self.header = self._resize_header_wcs(f)
                 self.header['CRPIX1'] += 0.5 - 1 / b / 2
                 self.header['CRPIX2'] += 0.5 - 1 / b / 2
                 self._image = result
