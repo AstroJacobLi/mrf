@@ -153,13 +153,17 @@ def save_to_fits(img, fits_file, wcs=None, header=None, overwrite=True):
             for i in hdr:
                 if i in wcs_header:
                     hdr[i] = wcs_header[i]
-                if fnmatch.fnmatch(i, 'CD?_?'):
-                    hdr[i] = wcs_header['PC' + i.lstrip('CD')]
+                if 'PC*' in wcs_header:
+                    if fnmatch.fnmatch(i, 'CD?_?'):
+                        hdr[i] = wcs_header['PC' + i.lstrip('CD')]
             img_hdu.header = hdr
     elif wcs is not None:
         wcs_header = wcs.to_header()
+        wcs_header = fits.Header({'SIMPLE': True})
+        wcs_header.update(NAXIS1=img.shape[1], NAXIS2=img.shape[0])
+        for card in list(wcs.to_header().cards):
+            wcs_header.append(card)
         img_hdu.header = wcs_header
-
     else:
         img_hdu = fits.PrimaryHDU(img)
 
