@@ -368,7 +368,7 @@ def download_decals_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, layer
     
     with open("config_swarp.sh","w+") as f:
         # check if swarp is installed
-        f.write('for cmd in swarp; do\n')
+        f.write('for cmd in SWarp; do\n')
         f.write('\t hasCmd=$(which ${cmd} 2>/dev/null)\n')
         f.write('\t if [[ -z "${hasCmd}" ]]; then\n')
         f.write('\t\t echo "This script requires ${cmd}, which is not in your \$PATH." \n')
@@ -393,7 +393,7 @@ def download_decals_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, layer
         f.write('#------------------------------ Memory management -----------------------------\n\nVMEM_DIR               .               # Directory path for swap files\nVMEM_MAX               2047            # Maximum amount of virtual memory (MB)\nMEM_MAX                2048            # Maximum amount of usable RAM (MB)\nCOMBINE_BUFSIZE        1024            # Buffer size for combine (MB)\n\n')
         f.write('#------------------------------ Miscellaneous ---------------------------------\n\nDELETE_TMPFILES        Y               # Delete temporary resampled FITS files\n                                       # (Y/N)?\nCOPY_KEYWORDS          OBJECT          # List of FITS keywords to propagate\n                                       # from the input to the output headers\nWRITE_FILEINFO         Y               # Write information about each input\n                                       # file in the output image header?\nWRITE_XML              N               # Write XML file (Y/N)?\nXML_NAME               swarp.xml       # Filename for XML output\nVERBOSE_TYPE           QUIET           # QUIET,NORMAL or FULL\n\nNTHREADS               0               # Number of simultaneous threads for\n                                       # the SMP version of SWarp\n                                       # 0 = automatic \n')
         f.write('EOT\n')
-        f.write('swarp ' + ' '.join(filenameset) + '\n\n')
+        f.write('SWarp ' + ' '.join(filenameset) + '\n\n')
         f.write('rm ' + os.path.join(output_dir, '_*'))
         f.close()
 
@@ -640,20 +640,20 @@ def download_highres(lowres_dir, high_res='hsc', band='g', output_name='hires',
 
     ### Download high resolution image
     if high_res.lower() == 'hsc': 
-        download_hsc_large(c_cen.ra.value, c_cen.dec.value, band.lower(), size=radius*u.deg, 
-            radius=radius*u.deg, output_name=output_name, output_dir=output_dir, overwrite=overwrite, verbose=verbose)
+        download_hsc_large(c_cen.ra.value, c_cen.dec.value, band.lower(), size=radius, 
+            radius=radius, output_name=output_name, output_dir=output_dir, overwrite=overwrite, verbose=verbose)
 
     elif high_res.lower() == 'cfht':
         get_megapipe_catalog(c_cen.ra.value, c_cen.dec.value, radius / 2)
         download_cfht_megapipe(img, header, band.lower(), output_name=output_name, output_dir=output_dir, overwrite=overwrite)
 
     elif high_res.lower() == 'decals':
-        download_decals_large(c_cen.ra.value, c_cen.dec.value, band.lower(), size=radius*u.deg, 
-            radius=radius*u.deg, output_name=output_name, output_dir=output_dir, overwrite=overwrite, verbose=verbose)
+        download_decals_large(c_cen.ra.value, c_cen.dec.value, band.lower(), size=radius, 
+            radius=radius, output_name=output_name, output_dir=output_dir, overwrite=overwrite, verbose=verbose)
 
     elif high_res.lower() == 'sdss':
-        download_sdss_large(c_cen.ra.value, c_cen.dec.value, band.lower(), size=radius*u.deg, 
-            radius=radius*u.deg, output_name=output_name, output_dir=output_dir, overwrite=overwrite, verbose=verbose)
+        download_sdss_large(c_cen.ra.value, c_cen.dec.value, band.lower(), size=radius, 
+            radius=radius, output_name=output_name, output_dir=output_dir, overwrite=overwrite, verbose=verbose)
     else:
         raise ValueError('# This dataset is not supported yet. Please use "HSC", "CFHT", "DECaLS", or "SDSS" for now!')
     return

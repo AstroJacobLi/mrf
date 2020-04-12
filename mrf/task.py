@@ -580,7 +580,7 @@ class MrfTask():
         
         # 11. Build starhalo models and then subtract from "res" image
         if wide_psf:
-            results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, skip_mast=skip_mast)
+            results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, dir_lowres, skip_mast=skip_mast)
         else:
             results = self._subtract_stackedPSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name)
         
@@ -695,7 +695,7 @@ class MrfTask():
         logger.info('Bright star halos are subtracted!')
         return results
 
-    def _subtract_widePSF(self, results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, skip_mast=False):
+    def _subtract_widePSF(self, results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, dir_lowres, skip_mast=False):
         from astropy.coordinates import SkyCoord, match_coordinates_sky
         import astropy.units as u
         from mrf.celestial import Celestial, Star
@@ -758,7 +758,7 @@ class MrfTask():
         outer_psf /= np.sum(outer_psf) # Normalize
         ##### flux_out is the flux inside an annulus, we use this to scale inner and outer parts
         flux_out = compute_Rnorm(outer_psf, None, outer_cen, 
-                                R=hybrid_r, display=False, mask_cross=False)[1]
+                                 R=hybrid_r, display=False, mask_cross=False)[1]
 
         ##### Scale factor: the flux ratio near hybrid radius 
         scale_factor = flux_out / flux_inn
@@ -875,4 +875,62 @@ class MrfTask():
         save_to_fits(lowres_model.image, output_name + '_model_halos.fits', 
                         header=lowres_model.header)
         logger.info('Bright star halos are subtracted!')
+
+        # 12. Mask out dirty things!
+        if config.clean.clean_img:
+            logger.info('Clean the image!')
+            model_mask = convolve(1e3 * lowres_model.image / np.nansum(lowres_model.image),
+                                  Gaussian2DKernel(config.clean.gaussian_radius))
+            model_mask[model_mask < config.clean.gaussian_threshold] = 0
+            model_mask[model_mask != 0] = 1
+            # Mask out very bright stars, according to their radius
+            totmask = bright_star_mask(model_mask.astype(bool), bright_star_cat, 
+                                       bright_lim=config.clean.bright_lim, 
+                                       r=config.clean.r)
+            totmask = convolve(totmask.astype(float), Box2DKernel(2))
+            totmask[totmask > 0] = 1
+            if config.clean.replace_with_noise:
+                logger.info('    - Replace artifacts with noise.')
+                from mrf.utils import img_replace_with_noise
+                final_image = img_replace_with_noise(img_sub.byteswap().newbyteorder(), totmask)
+            else:
+                logger.info('    - Replace artifacts with void.')
+                final_image = img_sub * (~totmask.astype(bool))
+            
+            save_to_fits(final_image, output_name + '_final.fits', header=res.header)
+            save_to_fits(totmask.astype(float), output_name + '_mask.fits', header=res.header)
+            setattr(results, 'lowres_final', Celestial(final_image, header=res.header))
+            setattr(results, 'lowres_mask', Celestial(totmask.astype(float), header=res.header))
+            logger.info('The final result is saved as "{}"!'.format(output_name + '_final.fits'))
+            logger.info('The mask is saved as "{}"!'.format(output_name + '_mask.fits'))
+        # Delete temp files
+        if config.clean.clean_file:
+            logger.info('Delete all temporary files!')
+            os.system('rm -rf _*.fits')
+
+        # 12. determine detection depth
+        from .sbcontrast import cal_sbcontrast
+        _  = cal_sbcontrast(final_image, totmask.astype(int), 
+                             config.lowres.pixel_scale, config.lowres.zeropoint, 
+                             scale_arcsec=60, minfrac=0.8, minback=6, verbose=True, logger=logger);
+        
+        # 13. Plot out the result
+        plt.rcParams['text.usetex'] = False
+        fig, [ax1, ax2, ax3] = plt.subplots(1, 3, figsize=(15, 8))
+        hdu = fits.open(dir_lowres)
+        lowres_image = hdu[0].data
+        ax1 = display_single(lowres_image, ax=ax1, scale_bar_length=300, 
+                            scale_bar_y_offset=0.3, pixel_scale=config.lowres.pixel_scale, 
+                            add_text='Lowres', text_y_offset=0.7)
+        ax2 = display_single(lowres_model.image, ax=ax2, scale_bar=False, 
+                            add_text='Model', text_y_offset=0.7)
+        ax3 = display_single(final_image, ax=ax3, scale_bar=False, 
+                            add_text='Residual', text_y_offset=0.7)
+        for ax in [ax1, ax2, ax3]:
+            ax.axis('off')
+        plt.subplots_adjust(wspace=0.02)
+        plt.savefig(output_name + '_result.png', bbox_inches='tight', facecolor='silver')
+        plt.close()
+        logger.info('Task finished! (⁎⁍̴̛ᴗ⁍̴̛⁎)')
+
         return results
