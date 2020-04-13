@@ -136,7 +136,7 @@ class MrfTask():
         with open(config_file, 'r') as ymlfile:
             cfg = yaml.safe_load(ymlfile)
             config = Config(cfg)
-            config.complete_config()
+            config.complete_config() # auto-complete absent keywords
         self.config_file = config_file
         self.config = config
 
@@ -164,7 +164,7 @@ class MrfTask():
 
     def run(self, dir_lowres, dir_hires_b, dir_hires_r, certain_gal_cat, 
             wide_psf=True, output_name='mrf', verbose=True, skip_resize=False, 
-            skip_SE=False, skip_mast=False):
+            skip_SE=False, skip_mast=False, mast_catalog=None):
         """
         Run MRF task.
 
@@ -189,6 +189,9 @@ class MrfTask():
             skip_mast (bool): Just for ``wide_psf=True`` mode. If True, the code will not 
                 repeat retrieving Pan-STARRS catalog from MAST server, 
                 but use the existing catalog under the current directory. 
+                This is designed for the case when you need to tweak parameters.
+            mast_catalog (str): The directory of the Pan-STARRS catalog. Just for ``wide_psf=True`` mode. 
+                If "None", the code will use "./_ps1_cat.fits" as the filename.
                 This is designed for the case when you need to tweak parameters.
 
         Returns:
@@ -580,7 +583,8 @@ class MrfTask():
         
         # 11. Build starhalo models and then subtract from "res" image
         if wide_psf:
-            results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, skip_mast=skip_mast)
+            results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, 
+                                             skip_mast=skip_mast, mast_catalog=mast_catalog)
         else:
             results = self._subtract_stackedPSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name)
         
@@ -695,7 +699,8 @@ class MrfTask():
         logger.info('Bright star halos are subtracted!')
         return results
 
-    def _subtract_widePSF(self, results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, skip_mast=False):
+    def _subtract_widePSF(self, results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, 
+                          skip_mast=False, mast_catalog=None):
         from astropy.coordinates import SkyCoord, match_coordinates_sky
         import astropy.units as u
         from mrf.celestial import Celestial, Star
@@ -778,7 +783,10 @@ class MrfTask():
         ### 11. Build starhalo models and then subtract from "res" image
         logger.info('Draw star halo models onto the image, and subtract them!')
         if skip_mast:
-            ps1_cat = Table.read('./_ps1_cat.fits')
+            if mast_catalog is None:
+                ps1_cat = Table.read('./_ps1_cat.fits')
+            else:
+                ps1_cat = Table.read(mast_catalog)
         else:
             ### Use Pan-STARRS catalog to normalize these bright stars
             from mrf.utils import ps1cone
@@ -798,7 +806,6 @@ class MrfTask():
                                         name='y_ps1')])
             ps1_cat = ps1_cat[ps1_cat[config.lowres.band + 'MeanPSFMag'] != -999]
             ps1_cat.write('./_ps1_cat.fits', overwrite=True)
-            #ps1_cat = Table.read('./_ps1_cat.fits')
 
         ## Match PS1 catalog with SEP one
         temp, dist, _ = match_coordinates_sky(SkyCoord(ra=bright_star_cat['ra'], dec=bright_star_cat['dec'], unit='deg'),

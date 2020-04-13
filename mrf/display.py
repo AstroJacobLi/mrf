@@ -589,7 +589,7 @@ def draw_rectangles(img, catalog, colnames=['x', 'y'], header=None, ax=None, rec
     if ax is not None:
         return ax
 
-def df_color_image(img_r, img_g, b=1.0, vmin=0.0, Q=10, stretch=25, filename=None):
+def df_color_image(img_r, img_g, b=1.0, vmin=0.0, Q=10, stretch=25, filename=None, quiet=False):
     '''
     Display tri-color image of Dragonfly based on ``g`` and ``r`` band images.
     The red channel uses ``img_r``, blue channel uses ``b * img_g``, 
@@ -604,6 +604,7 @@ def df_color_image(img_r, img_g, b=1.0, vmin=0.0, Q=10, stretch=25, filename=Non
         stretch (float): The linear stretch of the image. Smaller value gives more low-SB details.
         save (bool): whether save the RGB image.
         filename (str): Write the resulting RGB image to a file (file type determined from extension).
+        quiet (bool): whether showing the RGB image.
 
     Returns:
         None
@@ -617,13 +618,15 @@ def df_color_image(img_r, img_g, b=1.0, vmin=0.0, Q=10, stretch=25, filename=Non
     blue *= b
     green = (red + blue) * 0.5
 
-    fig = plt.figure(figsize=(13, 13))
     rgb = make_lupton_rgb(red, green, blue, Q=Q, stretch=stretch, minimum=vmin, filename=filename)
-    plt.imshow(rgb, origin='lower')
-    plt.axis('off')
-    plt.show()
+    if not quiet:
+        fig = plt.figure(figsize=(13, 13))
+        plt.imshow(rgb, origin='lower')
+        plt.axis('off')
+        plt.show()
     if filename is not None:
         print('# RGB image has been save at {}'.format(filename))
+    return rgb
 
 ############ Surface brightness profiles related ############
 def display_isophote(img, ell, pixel_scale, scale_bar=True, scale_bar_length=50, 

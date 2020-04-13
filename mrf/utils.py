@@ -44,7 +44,7 @@ def phys_size(redshift, H0=70, Omegam=0.3, verbose=True):
     return physical_size
 
 # Cutout image
-def img_cutout(img, wcs, coord_1, coord_2, size=60.0, pixel_scale=2.5,
+def img_cutout(img, wcs, coord_1, coord_2, size=[60.0, 60.0], pixel_scale=2.5,
                pixel_unit=False, img_header=None, prefix='img_cutout', 
                out_dir=None, save=True):
     """
@@ -88,7 +88,7 @@ def img_cutout(img, wcs, coord_1, coord_2, size=60.0, pixel_scale=2.5,
     dy = -1.0 * (cen_y - int(cen_y))
 
     # Generate cutout
-    cutout = Cutout2D(img, cen_pos, cutout_size, wcs=wcs)
+    cutout = Cutout2D(img, cen_pos, cutout_size, wcs=wcs, mode='partial', fill_value=0)
 
     # Update the header
     cutout_header = cutout.wcs.to_header()
