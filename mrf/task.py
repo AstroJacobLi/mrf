@@ -792,8 +792,17 @@ class MrfTask():
             columns = [x.strip() for x in columns]
             columns = [x for x in columns if x and not x.startswith('#')]
             logger.info('Retrieving Pan-STARRS catalog from MAST! Please wait!')
-            ps1result = ps1cone(results.lowres_input.ra_cen, results.lowres_input.dec_cen, results.lowres_input.diag_radius.to(u.deg).value, 
+            # Try query MAST for a few times
+            for attempt in range(3):
+                try:
+                    ps1result = ps1cone(results.lowres_input.ra_cen, results.lowres_input.dec_cen, results.lowres_input.diag_radius.to(u.deg).value, 
                                 release='dr2', columns=columns, verbose=False, **constraints)
+                except HTTPError:
+                    logger.info('Gateway Time-out. Will try Again.')
+                else:
+                    break
+            else:
+                sys.exit('504 Server Error: Failed Attempts. Exit.')
             ps1_cat = Table.read(ps1result, format='csv')
             ps1_cat.add_columns([Column(data = lowres_model.wcs.wcs_world2pix(ps1_cat['raMean'], ps1_cat['decMean'], 0)[0], 
                                         name='x_ps1'),
