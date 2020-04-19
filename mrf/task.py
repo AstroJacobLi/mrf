@@ -225,8 +225,12 @@ class MrfTask():
         hdu = fits.open(dir_lowres)
         lowres = Celestial(hdu[0].data, header=hdu[0].header)
         if config.lowres.sub_bkgval:
-            logger.info('Subtract BACKVAL=%.1f of Dragonfly image', float(lowres.header['BACKVAL']))
-            lowres.image -= float(lowres.header['BACKVAL'])
+            if wide_psf == True:
+                bkgval = float(getattr(config.wide_psf, 'bkgval', lowres.header['BACKVAL']))
+            else:
+                bkgval = float(config.lowres.header['BACKVAL'])
+            logger.info('Subtract BACKVAL=%.1f of Dragonfly image', bkgval)
+            lowres.image -= bkgval
         hdu.close()
         setattr(results, 'lowres_input', copy.deepcopy(lowres))
         
@@ -713,17 +717,16 @@ class MrfTask():
         from photutils import CircularAperture
         
         ### PSF Parameters
-        psf_size = 401                 # in pixel
+        psf_size = 501                 # in pixel
         pixel_scale = config.lowres.pixel_scale  # in arcsec/pixel
-        frac = 0.3                          # fraction of power law component (from fitting stacked PSF)
-        beta = 3                            # moffat beta, in arcsec. This parameter is not used here. 
-        fwhm = 2.28 * pixel_scale           # moffat fwhm, in arcsec. This parameter is not used here. 
-        n0 = 3.24                           # first power-law index
-        theta_0 = 5.                        # flattening radius (arbitrary), in arcsec. Inside which the power law is truncated.
-        n_s = np.array([n0, 2.53, 1.22, 4])                          # power-law index
-        theta_s = np.array([theta_0, 10**1.85, 10**2.18, 2 * psf_size])      # transition radius in arcsec
+        frac = config.wide_psf.frac                          # fraction of power law component (from fitting stacked PSF)
+        beta = config.wide_psf.beta                            # moffat beta, in arcsec. This parameter is not used here. 
+        fwhm = config.wide_psf.fwhm * pixel_scale           # moffat fwhm, in arcsec. This parameter is not used here. 
+        n_s = np.array(config.wide_psf.n_s)                          # power-law index
+        theta_s = np.array(config.wide_psf.theta_s)      # transition radius in arcsec
         ### Construct model PSF
         params = {"fwhm": fwhm, "beta": beta, "frac": frac, "n_s": n_s, 'theta_s': theta_s}
+        print(params)
         psf = PSF_Model(params, aureole_model='multi-power')
         ### Build grid of image for drawing
         psf.make_grid(psf_size, pixel_scale)
