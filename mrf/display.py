@@ -994,12 +994,14 @@ def cal_profile_1d(img, cen=None, mask=None, back=None, bins=None,
 def plot_PSF_model_1D(frac, f_core, f_aureole, psf_range=400,
                       yunit='Intensity', label='combined', log_scale=True,
                       ZP=27.1, pixel_scale=2.5, decompose=True):
+    from .utils import Intensity2SB
     
     r = np.logspace(0, np.log10(psf_range), 100)
     
     I_core = (1-frac) * f_core(r)
     I_aureole = frac * f_aureole(r)
     I_tot = I_core + I_aureole
+    
     if log_scale:
         I_core, I_aureole, I_tot = np.log10(I_core), np.log10(I_aureole), np.log10(I_tot) 
     
@@ -1030,10 +1032,13 @@ def plot_PSF_model_1D(frac, f_core, f_aureole, psf_range=400,
 
     plt.legend(loc=1, fontsize=12)
     plt.xlabel('r [pix]', fontsize=14)
+    
 
-def plot_PSF_model_galsim(psf, contrast=None, figsize=(7,6), save=False, dir_name='.'):
+def plot_PSF_model_galsim(psf, image_size=800, contrast=None,
+                          figsize=(7,6), save=False, save_dir='.'):
     """ Plot and 1D PSF model and Galsim 2D model averaged in 1D """
-    image_size = psf.image_size
+    from .utils import Intensity2SB, cal_profile_1d
+    
     pixel_scale = psf.pixel_scale
     
     frac = psf.frac
@@ -1045,16 +1050,16 @@ def plot_PSF_model_galsim(psf, contrast=None, figsize=(7,6), save=False, dir_nam
     img_core = psf_core.drawImage(scale=pixel_scale, method="no_pixel")
     img_aureole = psf_aureole.drawImage(nx=201, ny=201, scale=pixel_scale, method="no_pixel")
     img_star = psf_star.drawImage(nx=image_size, ny=image_size, scale=pixel_scale, method="no_pixel")
-
+    
     if figsize is not None:
         fig, ax = plt.subplots(1,1, figsize=figsize)
-    
-    r_rbin, z_rbin, logzerr_rbin = cal_profile_1d(frac * img_aureole.array, color="g",
+        
+    r_rbin, z_rbin, logzerr_rbin = cal_profile_1d(frac*img_aureole.array, color="g",
                                                   pixel_scale=pixel_scale,
                                                   core_undersample=True, mock=True,
                                                   xunit="pix", yunit="Intensity",
                                                   label=psf.aureole_model)
-    r_rbin, z_rbin, logzerr_rbin = cal_profile_1d((1 - frac) * img_core.array, color="orange",
+    r_rbin, z_rbin, logzerr_rbin = cal_profile_1d((1-frac)*img_core.array, color="orange",
                                                   pixel_scale=pixel_scale, 
                                                   core_undersample=True, mock=True,
                                                   xunit="pix", yunit="Intensity",
@@ -1071,8 +1076,8 @@ def plot_PSF_model_galsim(psf, contrast=None, figsize=(7,6), save=False, dir_nam
     comp1 = psf.f_core1D(r)
     comp2 = psf.f_aureole1D(r)
     
-    plt.plot(r, np.log10((1 - frac) * comp1 + comp2 * frac), ls="-", lw=3, zorder=5)
-    plt.plot(r, np.log10((1 - frac) * comp1), ls="--", lw=3, zorder=1)
+    plt.plot(r, np.log10((1-frac) * comp1 + comp2 * frac), ls="-", lw=3, zorder=5)
+    plt.plot(r, np.log10((1-frac) * comp1), ls="--", lw=3, zorder=1)
     plt.plot(r, np.log10(comp2 * frac), ls="--", lw=3)
     
     if psf.aureole_model == "multi-power":
@@ -1080,16 +1085,16 @@ def plot_PSF_model_galsim(psf, contrast=None, figsize=(7,6), save=False, dir_nam
             plt.axvline(t, ls="--", color="k",alpha=0.3, zorder=1)
         
     if contrast is not None:
-        plt.axhline(np.log10(comp1.max() / contrast),color="k",ls="--")
+        plt.axhline(np.log10(comp1.max()/contrast),color="k",ls="--")
         
     plt.title("Model PSF",fontsize=14)
     plt.ylim(-8.5, -0.5)
-    plt.xlim(r_rbin.min() * 0.8, r_rbin.max() * 1.2)
+    plt.xlim(r_rbin.min()*0.8, r_rbin.max()*1.2)
     
     plt.tight_layout()
     if save:
-        plt.savefig(os.path.join(dir_name, "Model_PSF.png"), dpi=120)
+        plt.savefig(os.path.join(save_dir, "Model_PSF.png"), dpi=120)
         plt.close()
-    
+        
     return img_star
  
