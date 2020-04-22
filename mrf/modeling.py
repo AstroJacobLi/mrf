@@ -533,8 +533,11 @@ def compute_multi_pow_norm(n_s, theta_s, I_theta0):
     I_theta_i = a0 * float(theta_s[1])**(-n0)
     for i, (n_i, theta_i) in enumerate(zip(n_s[1:], theta_s[1:])):
         a_i = I_theta_i/(theta_s[i+1])**(-n_i)
-        a_s[i+1] = a_i
-        I_theta_i = a_i * float(theta_s[i+2])**(-n_i)
+        try:
+            a_s[i+1] = a_i
+            I_theta_i = a_i * float(theta_s[i+2])**(-n_i)
+        except IndexError:
+            pass 
     return a_s
 
 
