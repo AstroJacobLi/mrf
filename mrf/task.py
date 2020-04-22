@@ -726,8 +726,9 @@ class MrfTask():
         theta_s = np.array(config.wide_psf.theta_s)      # transition radius in arcsec
         ### Construct model PSF
         params = {"fwhm": fwhm, "beta": beta, "frac": frac, "n_s": n_s, 'theta_s': theta_s}
-        logger.info('Wide-PSF parameters:  n=%r, theta=%r'%(params['n_s'], params['theta_s']))
-        
+        logger.info('Wide-PSF parameters:')
+        logger.info('    - n=%r'%params['n_s'])            
+        logger.info('    - theta=%r'%params['theta_s'])            
         psf = PSF_Model(params, aureole_model='multi-power')
         ### Build grid of image for drawing
         psf.pixelize(pixel_scale)
