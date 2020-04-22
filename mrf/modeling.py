@@ -16,7 +16,7 @@ from astropy.io import fits
 from astropy.utils import lazyproperty
 
 from itertools import combinations
-from functools import partial
+from functools import partial, lru_cache
 
 from copy import deepcopy
 
@@ -453,6 +453,13 @@ def round_good_fft(x):
         return a
     else:
         return min(a,b)
+
+@lru_cache(maxsize=16)
+def generate_psf_grid(psf_size):
+    # Generate Grid of PSF and plot PSF model in real space onto it
+    cen_psf = ((psf_size-1)/2., (psf_size-1)/2.)
+    yy_psf, xx_psf = np.mgrid[:psf_size, :psf_size]
+    return xx_psf, yy_psf, cen_psf
 
 ### funcs on single element ###
 
