@@ -228,8 +228,12 @@ class MrfTask():
         hdu = fits.open(dir_lowres)
         lowres = Celestial(hdu[0].data, header=hdu[0].header)
         if config.lowres.sub_bkgval:
-            logger.info('Subtract BACKVAL=%.1f of Dragonfly image', float(lowres.header['BACKVAL']))
-            lowres.image -= float(lowres.header['BACKVAL'])
+            if wide_psf == True:
+                bkgval = float(getattr(config.wide_psf, 'bkgval', lowres.header['BACKVAL']))
+            else:
+                bkgval = float(config.lowres.header['BACKVAL'])
+            logger.info('Subtract BACKVAL=%.1f of Dragonfly image', bkgval)
+            lowres.image -= bkgval
         hdu.close()
         setattr(results, 'lowres_input', copy.deepcopy(lowres))
         
@@ -583,8 +587,8 @@ class MrfTask():
         
         # 11. Build starhalo models and then subtract from "res" image
         if wide_psf:
-            results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, 
-                                             skip_mast=skip_mast, mast_catalog=mast_catalog)
+            results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, 
+                            lowres_model, output_name, dir_lowres, skip_mast=skip_mast)
         else:
             results = self._subtract_stackedPSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name)
         
@@ -700,7 +704,7 @@ class MrfTask():
         return results
 
     def _subtract_widePSF(self, results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, 
-                          skip_mast=False, mast_catalog=None):
+                          dir_lowres, skip_mast=False, mast_catalog=None):
         from astropy.coordinates import SkyCoord, match_coordinates_sky
         import astropy.units as u
         from mrf.celestial import Celestial, Star
@@ -718,20 +722,21 @@ class MrfTask():
         from photutils import CircularAperture
         
         ### PSF Parameters
-        psf_size = 401                 # in pixel
+        psf_size = 501                 # in pixel
         pixel_scale = config.lowres.pixel_scale  # in arcsec/pixel
-        frac = 0.3                          # fraction of power law component (from fitting stacked PSF)
-        beta = 3                            # moffat beta, in arcsec. This parameter is not used here. 
-        fwhm = 2.28 * pixel_scale           # moffat fwhm, in arcsec. This parameter is not used here. 
-        n0 = 3.24                           # first power-law index
-        theta_0 = 5.                        # flattening radius (arbitrary), in arcsec. Inside which the power law is truncated.
-        n_s = np.array([n0, 2.53, 1.22, 4])                          # power-law index
-        theta_s = np.array([theta_0, 10**1.85, 10**2.18, 2 * psf_size])      # transition radius in arcsec
+        frac = config.wide_psf.frac                          # fraction of power law component (from fitting stacked PSF)
+        beta = config.wide_psf.beta                            # moffat beta, in arcsec. This parameter is not used here. 
+        fwhm = config.wide_psf.fwhm * pixel_scale           # moffat fwhm, in arcsec. This parameter is not used here. 
+        n_s = np.array(config.wide_psf.n_s)                          # power-law index
+        theta_s = np.array(config.wide_psf.theta_s)      # transition radius in arcsec
         ### Construct model PSF
         params = {"fwhm": fwhm, "beta": beta, "frac": frac, "n_s": n_s, 'theta_s': theta_s}
+        logger.info('Wide-PSF parameters:')
+        logger.info('    - n=%r'%params['n_s'])
+        logger.info('    - theta=%r'%params['theta_s'])
         psf = PSF_Model(params, aureole_model='multi-power')
         ### Build grid of image for drawing
-        psf.make_grid(psf_size, pixel_scale)
+        psf.pixelize(pixel_scale)
         ### Generate the aureole of PSF
         psf_e, _ = psf.generate_aureole(psf_range=2 * psf_size)
         ### Hybrid radius (in pixel)
@@ -797,8 +802,18 @@ class MrfTask():
             columns = [x.strip() for x in columns]
             columns = [x for x in columns if x and not x.startswith('#')]
             logger.info('Retrieving Pan-STARRS catalog from MAST! Please wait!')
-            ps1result = ps1cone(results.lowres_input.ra_cen, results.lowres_input.dec_cen, results.lowres_input.diag_radius.to(u.deg).value, 
-                                release='dr2', columns=columns, verbose=False, **constraints)
+            # Try query MAST for a few times
+            for attempt in range(3):
+                try:
+                    ps1result = ps1cone(results.lowres_input.ra_cen, results.lowres_input.dec_cen, results.lowres_input.diag_radius.to(u.deg).value, 
+                                        release='dr2', columns=columns, verbose=False, **constraints)
+                except HTTPError:
+                    logger.info('Gateway Time-out. Will try Again.')
+                else:
+                    break
+            else:
+                sys.exit('504 Server Error: Failed Attempts. Exit.')
+                
             ps1_cat = Table.read(ps1result, format='csv')
             ps1_cat.add_columns([Column(data = lowres_model.wcs.wcs_world2pix(ps1_cat['raMean'], ps1_cat['decMean'], 0)[0], 
                                         name='x_ps1'),
