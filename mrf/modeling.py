@@ -418,6 +418,157 @@ def multi_pow(x, n_s, theta_s, I_theta0, a_s=None):
             y = a_s[-1] * x**(-n_s[-1])
             return y
 
+def cal_profile_1d(img, cen=None, mask=None, back=None, bins=None,
+                   color="steelblue", xunit="pix", yunit="Intensity",
+                   seeing=2.5, pixel_scale=2.5, ZP=27.1, sky_mean=884, sky_std=3, dr=1.5, 
+                   lw=2, alpha=0.7, markersize=5, I_shift=0, figsize=None,
+                   core_undersample=False, label=None, plot_line=False, mock=False,
+                   plot=True, scatter=False, fill=False, errorbar=False, verbose=False):
+    """Calculate 1d radial profile of a given star postage"""
+    if mask is None:
+        mask =  np.zeros_like(img, dtype=bool)
+    if back is None:     
+        back = np.ones_like(img) * sky_mean
+    if cen is None:
+        cen = (img.shape[0]-1)/2., (img.shape[1]-1)/2.
+        
+    yy, xx = np.indices((img.shape))
+    rr = np.sqrt((xx - cen[0])**2 + (yy - cen[1])**2)
+    r = rr[~mask].ravel()  # radius in pix
+    z = img[~mask].ravel()  # pixel intensity
+    r_core = np.int(3 * seeing/pixel_scale) # core radius in pix
+
+    # Decide the outermost radial bin r_max before going into the background
+    bkg_cumsum = np.arange(1, len(z)+1, 1) * np.median(back)
+    z_diff =  abs(z.cumsum() - bkg_cumsum)
+    n_pix_max = len(z) - np.argmin(abs(z_diff - 0.0001 * z_diff[-1]))
+    r_max = np.sqrt(n_pix_max/np.pi)
+    r_max = np.min([img.shape[0]//2, r_max])
+    
+    if verbose:
+        print("Maximum R: %d (pix)"%np.int(r_max))    
+    
+    if xunit == "arcsec":
+        r = r * pixel_scale   # radius in arcsec
+        r_core = r_core * pixel_scale
+        r_max = r_max * pixel_scale
+        
+    d_r = dr * pixel_scale if xunit == "arcsec" else dr
+    
+    if mock:
+        clip = lambda z: sigma_clip((z), sigma=3, maxiters=5)
+    else:
+        clip = lambda z: 10**sigma_clip(np.log10(z+1e-10), sigma=3, maxiters=5)
+        
+    if bins is None:
+        # Radial bins: discrete/linear within r_core + log beyond it
+        if core_undersample:  
+            # for undersampled core, bin in individual pixels 
+            bins_inner = np.unique(r[r<r_core]) + 1e-3
+        else: 
+            bins_inner = np.linspace(0, r_core, int(min((r_core/d_r*2), 5))) + 1e-3
+
+        n_bin_outer = np.max([7, np.min([np.int(r_max/d_r/10), 50])])
+        if r_max > (r_core+d_r):
+            bins_outer = np.logspace(np.log10(r_core+d_r), np.log10(r_max-d_r), n_bin_outer)
+        else:
+            bins_outer = []
+        bins = np.concatenate([bins_inner, bins_outer])
+        _, bins = np.histogram(r, bins=bins)
+    
+    # Calculate binned 1d profile
+    r_rbin = np.array([])
+    z_rbin = np.array([])
+    zstd_rbin = np.array([])
+    for k, b in enumerate(bins[:-1]):
+        in_bin = (r>bins[k])&(r<bins[k+1])
+        
+        z_clip = clip(z[in_bin])
+        if len(z_clip)==0:
+            continue
+
+        zb = np.mean(z_clip)
+        zstd_b = np.std(z_clip)
+        
+        z_rbin = np.append(z_rbin, zb)
+        zstd_rbin = np.append(zstd_rbin, zstd_b)
+        r_rbin = np.append(r_rbin, np.mean(r[in_bin]))
+        
+        
+    logzerr_rbin = 0.434 * abs( zstd_rbin / (z_rbin-sky_mean))
+    
+    if plot:
+        if figsize is not None:
+            plt.figure(figsize=figsize)
+        if yunit == "Intensity":  
+            # plot radius in Intensity
+            plt.plot(r_rbin, np.log10(z_rbin), "-o", color=color,
+                     mec="k", lw=lw, ms=markersize, alpha=alpha, zorder=3, label=label) 
+            if scatter:
+                I = np.log10(z)
+                
+            if fill:
+                plt.fill_between(r_rbin, np.log10(z_rbin)-logzerr_rbin, np.log10(z_rbin)+logzerr_rbin,
+                                 color=color, alpha=0.2, zorder=1)
+            plt.ylabel("log Intensity")
+            plt.xscale("log")
+            plt.xlim(r_rbin[np.isfinite(r_rbin)][0]*0.8, r_rbin[np.isfinite(r_rbin)][-1]*1.2)
+
+        elif yunit == "SB":  
+            # plot radius in Surface Brightness
+            I_rbin = Intensity2SB(I=z_rbin, BKG=np.median(back),
+                                  ZP=ZP, pixel_scale=pixel_scale) + I_shift
+            I_sky = -2.5*np.log10(sky_std) + ZP + 2.5 * math.log10(pixel_scale**2)
+
+            plt.plot(r_rbin, I_rbin, "-o", mec="k",
+                     lw=lw, ms=markersize, color=color, alpha=alpha, zorder=3, label=label)   
+            if scatter:
+                I = Intensity2SB(I=z, BKG=np.median(back),
+                                 ZP=ZP, pixel_scale=pixel_scale) + I_shift
+                
+            if errorbar:
+                Ierr_rbin_up = I_rbin - Intensity2SB(I=z_rbin,
+                                                     BKG=np.median(back)-sky_std,
+                                                     ZP=ZP, pixel_scale=pixel_scale)
+                Ierr_rbin_lo = Intensity2SB(I=z_rbin-sky_std,
+                                            BKG=np.median(back)+sky_std,
+                                            ZP=ZP, pixel_scale=pixel_scale) - I_rbin
+                lolims = np.isnan(Ierr_rbin_lo)
+                uplims = np.isnan(Ierr_rbin_up)
+                Ierr_rbin_lo[lolims] = 4
+                Ierr_rbin_up[uplims] = 4
+                plt.errorbar(r_rbin, I_rbin, yerr=[Ierr_rbin_up, Ierr_rbin_lo],
+                             fmt='', ecolor=color, capsize=2, alpha=0.5)
+                
+            plt.ylabel("Surface Brightness [mag/arcsec$^2$]")        
+            plt.gca().invert_yaxis()
+            plt.xscale("log")
+            plt.xlim(r_rbin[np.isfinite(r_rbin)][0]*0.8,r_rbin[np.isfinite(r_rbin)][-1]*1.2)
+            plt.ylim(30,17)
+        
+        if scatter:
+            plt.scatter(r[r<3*r_core], I[r<3*r_core], color=color, 
+                        s=markersize/2, alpha=0.2, zorder=1)
+            plt.scatter(r[r>=3*r_core], I[r>=3*r_core], color=color,
+                        s=markersize/4, alpha=0.1, zorder=1)
+            
+        plt.xlabel("r [acrsec]") if xunit == "arcsec" else plt.xlabel("r [pix]")
+
+        # Decide the radius within which the intensity saturated for bright stars w/ intersity drop half
+        dz_rbin = np.diff(np.log10(z_rbin)) 
+        dz_cum = np.cumsum(dz_rbin)
+
+        if plot_line:
+            r_satr = r_rbin[np.argmax(dz_cum<-0.3)] + 1e-3
+            plt.axvline(r_satr,color="k",ls="--",alpha=0.9)
+            plt.axvline(r_core,color="k",ls=":",alpha=0.9)
+            plt.axhline(I_sky,color="gray",ls="-.",alpha=0.7)
+        
+    if yunit == "Intensity":
+        return r_rbin, z_rbin, logzerr_rbin
+    elif yunit == "SB": 
+        return r_rbin, I_rbin, None    
+
 
 ### 1D functions ###
 
