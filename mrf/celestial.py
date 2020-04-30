@@ -474,6 +474,10 @@ class Celestial(object):
             self.image = hdu[0].data
             self.shape = hdu[0].data.shape
             self.header = hdu[0].header
+            #### Remove redundant PC keywords ###
+            for i in self.header['PC*'].keys():
+                del self.header[i]
+            #####################################
             self.wcs = wcs.WCS(self.header)
             self.pixel_scale /= f
             hdu.close()
