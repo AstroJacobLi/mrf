@@ -846,7 +846,7 @@ def SBP_single(ell_fix, redshift, pixel_scale, zeropoint, ax=None, offset=0.0,
 def plot_PSF_model_1D(frac, f_core, f_aureole, psf_range=400,
                       yunit='Intensity', label='combined', log_scale=True,
                       ZP=27.1, pixel_scale=2.5, decompose=True):
-    from .modeling import Intensity2SB
+    from .utils import Intensity2SB
 
     r = np.logspace(0, np.log10(psf_range), 100)
     
@@ -888,7 +888,7 @@ def plot_PSF_model_galsim(psf, image_size=800, contrast=None,
                           figsize=(7,6), save=False, save_dir='.'):
     #contrast=None, figsize=(7,6), save=False, dir_name='.'
     """ Plot and 1D PSF model and Galsim 2D model averaged in 1D """
-    from .modeling import Intensity2SB, cal_profile_1d
+    from .utils import Intensity2SB, cal_profile_1d
     image_size = psf.image_size
     pixel_scale = psf.pixel_scale
     
