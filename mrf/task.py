@@ -98,6 +98,18 @@ class Config(object):
             if not name in self.starhalo.__dict__.keys():
                 setattr(self.starhalo, name, default[name])
 
+        # WIDE_PSF
+        default = {
+            'frac': 0.3,
+            'fwhm': 2.28,
+            'beta': 3,
+            'n_s': [3.44, 2.89, 2.07, 4],
+            'theta_s': [5, 64.6, 117.5, 1200]
+        }
+        for name in default.keys():
+            if not name in self.wide_psf.__dict__.keys():
+                setattr(self.wide_psf, name, default[name])
+
         # Clean
         default = {
             'clean_img': True,
@@ -588,7 +600,7 @@ class MrfTask():
         # 11. Build starhalo models and then subtract from "res" image
         if wide_psf:
             results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, 
-                            lowres_model, output_name, dir_lowres, skip_mast=skip_mast)
+                            lowres_model, output_name, dir_lowres, skip_mast=skip_mast, mast_catalog=mast_catalog)
         else:
             results = self._subtract_stackedPSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name)
         
@@ -964,7 +976,7 @@ class MrfTileMode():
         return self.logger 
     
     def run(self, max_size=8000, overlap=0.05, tile_dir='./Images/tile', 
-            skip_mast=False, skip_cut_tile=False, skip_rebin=False, skip_mrf=False, 
+            skip_mast=False, mast_catalog=f'./_ps1_cat.fits', skip_cut_tile=False, skip_rebin=False, skip_mrf=False, 
             skip_trim=False, stitch_method='swarp', show_panstarrs=False, verbose=True):
         """
         Run MRF task in "tile mode". 
@@ -1360,7 +1372,7 @@ class MrfTileMode():
                                        os.path.join(tile_dir, f"{target_name}-{high_res_source}-binned-g-tile-{i}.fits"),
                                        os.path.join(tile_dir, f"{target_name}-{high_res_source}-binned-r-tile-{i}.fits"), 
                                        "gal_cat.txt", 
-                                       output_name= os.path.join(tile_dir, f"{target_name}-{band}-tile-{i}"), 
+                                       output_name=os.path.join(tile_dir, f"{target_name}-{band}-tile-{i}"), 
                                        wide_psf=True,
                                        verbose=False, 
                                        skip_mast=True, 
