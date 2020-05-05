@@ -600,7 +600,7 @@ class MrfTask():
         # 11. Build starhalo models and then subtract from "res" image
         if wide_psf:
             results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, 
-                            lowres_model, output_name, dir_lowres, skip_mast=skip_mast, mast_catalog=mast_catalog)
+                            lowres_model, output_name, skip_mast=skip_mast, mast_catalog=mast_catalog)
         else:
             results = self._subtract_stackedPSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name)
         
@@ -716,7 +716,7 @@ class MrfTask():
         return results
 
     def _subtract_widePSF(self, results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, 
-                          dir_lowres, skip_mast=False, mast_catalog=None):
+                          skip_mast=False, mast_catalog=None):
         from astropy.coordinates import SkyCoord, match_coordinates_sky
         import astropy.units as u
         from mrf.celestial import Celestial, Star
@@ -848,9 +848,9 @@ class MrfTask():
         from astropy.table import MaskedColumn
         if isinstance(bright_star_cat['rMeanPSFMag'], MaskedColumn):
             mask = (~bright_star_cat.mask[config.lowres.band + 'MeanPSFMag'])
-            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16) & mask
+            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16.5) & mask
         else:
-            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16)
+            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16.5)
         x = bright_star_cat[flag][config.lowres.band + 'MeanPSFMag']
         y = -2.5 * np.log10(bright_star_cat[flag]['flux']) # or flux_ann
         pfit = np.polyfit(x, y, 2) # second-order polynomial
