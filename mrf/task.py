@@ -98,6 +98,18 @@ class Config(object):
             if not name in self.starhalo.__dict__.keys():
                 setattr(self.starhalo, name, default[name])
 
+        # WIDE_PSF
+        default = {
+            'frac': 0.3,
+            'fwhm': 2.28,
+            'beta': 3,
+            'n_s': [3.44, 2.89, 2.07, 4],
+            'theta_s': [5, 64.6, 117.5, 1200]
+        }
+        for name in default.keys():
+            if not name in self.wide_psf.__dict__.keys():
+                setattr(self.wide_psf, name, default[name])
+
         # Clean
         default = {
             'clean_img': True,
@@ -588,7 +600,7 @@ class MrfTask():
         # 11. Build starhalo models and then subtract from "res" image
         if wide_psf:
             results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, 
-                            lowres_model, output_name, dir_lowres, skip_mast=skip_mast)
+                            lowres_model, output_name, skip_mast=skip_mast, mast_catalog=mast_catalog)
         else:
             results = self._subtract_stackedPSF(results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name)
         
@@ -704,7 +716,7 @@ class MrfTask():
         return results
 
     def _subtract_widePSF(self, results, res, halosize, bright_star_cat, median_psf, lowres_model, output_name, 
-                          dir_lowres, skip_mast=False, mast_catalog=None):
+                          skip_mast=False, mast_catalog=None):
         from astropy.coordinates import SkyCoord, match_coordinates_sky
         import astropy.units as u
         from mrf.celestial import Celestial, Star
@@ -791,6 +803,7 @@ class MrfTask():
             if mast_catalog is None:
                 ps1_cat = Table.read('./_ps1_cat.fits')
             else:
+                logger.info(f"Load Pan-STARRS catalog as {mast_catalog}")
                 ps1_cat = Table.read(mast_catalog)
         else:
             ### Use Pan-STARRS catalog to normalize these bright stars
@@ -836,9 +849,9 @@ class MrfTask():
         from astropy.table import MaskedColumn
         if isinstance(bright_star_cat['rMeanPSFMag'], MaskedColumn):
             mask = (~bright_star_cat.mask[config.lowres.band + 'MeanPSFMag'])
-            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16) & mask
+            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16) & (bright_star_cat[config.lowres.band + 'MeanPSFMag'] > 0) & mask
         else:
-            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16)
+            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16) & (bright_star_cat[config.lowres.band + 'MeanPSFMag'] > 0)
         x = bright_star_cat[flag][config.lowres.band + 'MeanPSFMag']
         y = -2.5 * np.log10(bright_star_cat[flag]['flux']) # or flux_ann
         pfit = np.polyfit(x, y, 2) # second-order polynomial
@@ -964,7 +977,7 @@ class MrfTileMode():
         return self.logger 
     
     def run(self, max_size=8000, overlap=0.05, tile_dir='./Images/tile', 
-            skip_mast=False, skip_cut_tile=False, skip_rebin=False, skip_mrf=False, 
+            skip_mast=False, mast_catalog=f'./_ps1_cat.fits', skip_cut_tile=False, skip_rebin=False, skip_mrf=False, 
             skip_trim=False, stitch_method='swarp', show_panstarrs=False, verbose=True):
         """
         Run MRF task in "tile mode". 
@@ -975,7 +988,7 @@ class MrfTileMode():
                 If the size of high-res image is larger than this ``max_size``, "tile mode" will be activated.
             overlap (float): the fraction of overlaps among tiles.
             tile_dir (str): the directory of storing tile images and files.
-            skip_mask (bool): whether skip downloading PAN-STARRS catalog from MAST server. 
+            skip_mast (bool): whether skip downloading PAN-STARRS catalog from MAST server. 
                 If True, the code will use the existing catalog under the current directory. 
                 This is designed for the case when you need to tweak parameters and save some time.
             skip_cut_tile (bool): whether skip cropping the images to the designated (ra, dec, cutout_size). 
@@ -1360,7 +1373,7 @@ class MrfTileMode():
                                        os.path.join(tile_dir, f"{target_name}-{high_res_source}-binned-g-tile-{i}.fits"),
                                        os.path.join(tile_dir, f"{target_name}-{high_res_source}-binned-r-tile-{i}.fits"), 
                                        "gal_cat.txt", 
-                                       output_name= os.path.join(tile_dir, f"{target_name}-{band}-tile-{i}"), 
+                                       output_name=os.path.join(tile_dir, f"{target_name}-{band}-tile-{i}"), 
                                        wide_psf=True,
                                        verbose=False, 
                                        skip_mast=True, 
