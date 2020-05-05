@@ -803,6 +803,7 @@ class MrfTask():
             if mast_catalog is None:
                 ps1_cat = Table.read('./_ps1_cat.fits')
             else:
+                logger.info(f"Load Pan-STARRS catalog as {mast_catalog}")
                 ps1_cat = Table.read(mast_catalog)
         else:
             ### Use Pan-STARRS catalog to normalize these bright stars
@@ -848,9 +849,9 @@ class MrfTask():
         from astropy.table import MaskedColumn
         if isinstance(bright_star_cat['rMeanPSFMag'], MaskedColumn):
             mask = (~bright_star_cat.mask[config.lowres.band + 'MeanPSFMag'])
-            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16.5) & mask
+            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16) & (bright_star_cat[config.lowres.band + 'MeanPSFMag'] > 0) & mask
         else:
-            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16.5)
+            flag = (bright_star_cat[config.lowres.band + 'MeanPSFMag'] < 16) & (bright_star_cat[config.lowres.band + 'MeanPSFMag'] > 0)
         x = bright_star_cat[flag][config.lowres.band + 'MeanPSFMag']
         y = -2.5 * np.log10(bright_star_cat[flag]['flux']) # or flux_ann
         pfit = np.polyfit(x, y, 2) # second-order polynomial
@@ -987,7 +988,7 @@ class MrfTileMode():
                 If the size of high-res image is larger than this ``max_size``, "tile mode" will be activated.
             overlap (float): the fraction of overlaps among tiles.
             tile_dir (str): the directory of storing tile images and files.
-            skip_mask (bool): whether skip downloading PAN-STARRS catalog from MAST server. 
+            skip_mast (bool): whether skip downloading PAN-STARRS catalog from MAST server. 
                 If True, the code will use the existing catalog under the current directory. 
                 This is designed for the case when you need to tweak parameters and save some time.
             skip_cut_tile (bool): whether skip cropping the images to the designated (ra, dec, cutout_size). 
