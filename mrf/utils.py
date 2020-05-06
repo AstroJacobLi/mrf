@@ -410,9 +410,10 @@ def extract_obj(img, mask=None, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5
         input_data = data_sub
     else:
         input_data = img
-
-    mask = mask.copy(order='C')
-    mask = mask.astype(bool)
+    
+    if mask is not None:
+        mask = mask.copy(order='C')
+        mask = mask.astype(bool)
 
     objects, segmap = sep.extract(input_data,
                                   sigma,
@@ -474,8 +475,10 @@ def extract_obj(img, mask=None, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5
     # plot background-subtracted image
     if show_fig:
         fig, ax = plt.subplots(1,2, figsize=(12,6))
-
-        ax[0] = display_single(input_data, ax=ax[0], scale_bar_length=60, pixel_scale=pixel_scale)
+        if mask is not None:
+            ax[0] = display_single(input_data * (~mask.astype(bool)), ax=ax[0], scale_bar_length=60, pixel_scale=pixel_scale)
+        else:
+            ax[0] = display_single(input_data, ax=ax[0], scale_bar_length=60, pixel_scale=pixel_scale)
         from matplotlib.patches import Ellipse
         # plot an ellipse for each object
         for obj in objects:
