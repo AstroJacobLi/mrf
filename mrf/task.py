@@ -1427,7 +1427,7 @@ class MrfTileMode():
                 y_size = tiles_ylen[i]
 
                 # Make a Cutout2D on MRF-ed **image** using coordinates and angular size
-                hdu = fits.open( os.path.join(tile_dir, f'{target_name}-g-tile-{i}_halosub.fits') )[0] 
+                hdu = fits.open( os.path.join(tile_dir, f'{target_name}-{band}-tile-{i}_halosub.fits') )[0] 
                 w = wcs.WCS(hdu.header) 
 
                 try:
@@ -1604,7 +1604,7 @@ class MrfTileMode():
             array, footprint = reproject_and_coadd(filename_list, df_header,
                                                 shape_out = [imgsize, imgsize],
                                                 reproject_function=reproject_interp,
-                                                combine_function='mean', 
+                                                combine_function=combine_type, 
                                                 match_background=match_background,
                                                 background_reference=None)
             filename = '{}.fits'.format(os.path.join(output_dir, '_'.join([output_name, band])))
