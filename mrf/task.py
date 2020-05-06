@@ -1448,7 +1448,7 @@ class MrfTileMode():
                     continue
 
                 # Make a Cutout2D on MRF-ed **mask** using coordinates and angular size
-                hdu = fits.open( os.path.join(tile_dir, f'{target_name}-g-tile-{i}_mask.fits') )[0] 
+                hdu = fits.open( os.path.join(tile_dir, f'{target_name}-{band}-tile-{i}_mask.fits') )[0] 
                 w = wcs.WCS(hdu.header) 
 
                 try:
@@ -1605,7 +1605,7 @@ class MrfTileMode():
                                                 shape_out = [imgsize, imgsize],
                                                 reproject_function=reproject_interp,
                                                 combine_function='mean', 
-                                                match_background=True,
+                                                match_background=match_background,
                                                 background_reference=None)
             filename = '{}.fits'.format(os.path.join(output_dir, '_'.join([output_name, band])))
             
