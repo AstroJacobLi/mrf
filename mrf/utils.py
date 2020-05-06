@@ -410,15 +410,15 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
         input_data = img
 
     objects, segmap = sep.extract(input_data,
-                                sigma,
-                                err=bkg.rms(),
-                                segmentation_map=True,
-                                filter_type='matched',
-                                deblend_nthresh=deblend_nthresh,
-                                deblend_cont=deblend_cont,
-                                clean=True,
-                                clean_param=clean_param,
-                                minarea=minarea)
+                                  sigma,
+                                  err=bkg.rms(),
+                                  segmentation_map=True,
+                                  filter_type='matched',
+                                  deblend_nthresh=deblend_nthresh,
+                                  deblend_cont=deblend_cont,
+                                  clean=True,
+                                  clean_param=clean_param,
+                                  minarea=minarea)
 
     if verbose:
         if logger is not None:
@@ -950,7 +950,7 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
     # This excludes those objects who 1) are not stars; 2) are saturated or exotic.
     non_edge_flag = np.logical_and.reduce([(flux < flux_lim), (x > border),
                                             (x < nx - border), (y > border),
-                                            (y < ny - border), (ba > 0.6)]) # (fwhm < 10)
+                                            (y < ny - border), (ba > 0.7)]) # (fwhm < 10)
     good_cat = obj_cat[non_edge_flag]
     good_cat.sort('flux')
     good_cat.reverse()     

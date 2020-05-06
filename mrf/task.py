@@ -1495,7 +1495,7 @@ class MrfTileMode():
         
         from mrf.celestial import Celestial
         final = Celestial(img * (~msk), header=hdr)
-        final.save_to_fits(os.path.join(output_dir, f'{target_name}-final.fits'))
+        final.save_to_fits(os.path.join(output_dir, f'{target_name}-final-{band}.fits'))
         
         logger.info(f"MRF tile mode finished! The final image is saved as " + os.path.join(output_dir, f'{target_name}-final.fits'))
         
