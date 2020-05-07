@@ -1081,7 +1081,7 @@ class MrfTileMode():
             img_cutout(img, wcs.WCS(hdr), ra, dec, size=cutout_size, 
                        pixel_scale=high_res_pix_scale, 
                        img_header=hdr, 
-                       prefix=f'./Images/{target_name}-{high_res_source}-{band}');
+                       prefix=f'./Images/{target_name}-{high_res_source}-{filt}');
             hdu.close()
         
         ##### Download PAN-STARRS catalog #####
