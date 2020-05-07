@@ -362,7 +362,7 @@ def azimuthal_average(image, center=None, stddev=True, binsize=0.5, interpnan=Fa
 #########################################################################
 
 # evaluate_sky objects for a given image
-def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5, 
+def extract_obj(img, mask=None, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5, 
     deblend_nthresh=32, deblend_cont=0.005, clean_param=1.0, 
     sky_subtract=False, flux_auto=True, flux_aper=None, show_fig=True, 
     verbose=True, logger=None):
@@ -372,6 +372,8 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
 
     Parameters:
         img (numpy 2-D array): input image
+        mask (numpy 2-D array): Mask array. True values, or numeric values greater than maskthresh, are considered masked. 
+            Masking a pixel is equivalent to setting data to zero and noise (if present) to infinity.
         b (float): size of box
         f (float): size of convolving kernel
         sigma (float): detection threshold
@@ -408,17 +410,22 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
         input_data = data_sub
     else:
         input_data = img
+    
+    if mask is not None:
+        mask = mask.copy(order='C')
+        mask = mask.astype(bool)
 
     objects, segmap = sep.extract(input_data,
-                                sigma,
-                                err=bkg.rms(),
-                                segmentation_map=True,
-                                filter_type='matched',
-                                deblend_nthresh=deblend_nthresh,
-                                deblend_cont=deblend_cont,
-                                clean=True,
-                                clean_param=clean_param,
-                                minarea=minarea)
+                                  sigma,
+                                  mask=mask,
+                                  err=bkg.rms(),
+                                  segmentation_map=True,
+                                  filter_type='matched',
+                                  deblend_nthresh=deblend_nthresh,
+                                  deblend_cont=deblend_cont,
+                                  clean=True,
+                                  clean_param=clean_param,
+                                  minarea=minarea)
 
     if verbose:
         if logger is not None:
@@ -468,8 +475,10 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
     # plot background-subtracted image
     if show_fig:
         fig, ax = plt.subplots(1,2, figsize=(12,6))
-
-        ax[0] = display_single(input_data, ax=ax[0], scale_bar_length=60, pixel_scale=pixel_scale)
+        if mask is not None:
+            ax[0] = display_single(input_data * (~mask.astype(bool)), ax=ax[0], scale_bar_length=60, pixel_scale=pixel_scale)
+        else:
+            ax[0] = display_single(input_data, ax=ax[0], scale_bar_length=60, pixel_scale=pixel_scale)
         from matplotlib.patches import Ellipse
         # plot an ellipse for each object
         for obj in objects:
@@ -950,7 +959,7 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
     # This excludes those objects who 1) are not stars; 2) are saturated or exotic.
     non_edge_flag = np.logical_and.reduce([(flux < flux_lim), (x > border),
                                             (x < nx - border), (y > border),
-                                            (y < ny - border), (ba > 0.6)]) # (fwhm < 10)
+                                            (y < ny - border), (ba > 0.7)]) # (fwhm < 10)
     good_cat = obj_cat[non_edge_flag]
     good_cat.sort('flux')
     good_cat.reverse()     

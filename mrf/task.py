@@ -1081,7 +1081,7 @@ class MrfTileMode():
             img_cutout(img, wcs.WCS(hdr), ra, dec, size=cutout_size, 
                        pixel_scale=high_res_pix_scale, 
                        img_header=hdr, 
-                       prefix=f'./Images/{target_name}-{high_res_source}-{band}');
+                       prefix=f'./Images/{target_name}-{high_res_source}-{filt}');
             hdu.close()
         
         ##### Download PAN-STARRS catalog #####
@@ -1427,7 +1427,7 @@ class MrfTileMode():
                 y_size = tiles_ylen[i]
 
                 # Make a Cutout2D on MRF-ed **image** using coordinates and angular size
-                hdu = fits.open( os.path.join(tile_dir, f'{target_name}-g-tile-{i}_halosub.fits') )[0] 
+                hdu = fits.open( os.path.join(tile_dir, f'{target_name}-{band}-tile-{i}_halosub.fits') )[0] 
                 w = wcs.WCS(hdu.header) 
 
                 try:
@@ -1448,7 +1448,7 @@ class MrfTileMode():
                     continue
 
                 # Make a Cutout2D on MRF-ed **mask** using coordinates and angular size
-                hdu = fits.open( os.path.join(tile_dir, f'{target_name}-g-tile-{i}_mask.fits') )[0] 
+                hdu = fits.open( os.path.join(tile_dir, f'{target_name}-{band}-tile-{i}_mask.fits') )[0] 
                 w = wcs.WCS(hdu.header) 
 
                 try:
@@ -1495,7 +1495,7 @@ class MrfTileMode():
         
         from mrf.celestial import Celestial
         final = Celestial(img * (~msk), header=hdr)
-        final.save_to_fits(os.path.join(output_dir, f'{target_name}-final.fits'))
+        final.save_to_fits(os.path.join(output_dir, f'{target_name}-final-{band}.fits'))
         
         logger.info(f"MRF tile mode finished! The final image is saved as " + os.path.join(output_dir, f'{target_name}-final.fits'))
         
@@ -1604,8 +1604,8 @@ class MrfTileMode():
             array, footprint = reproject_and_coadd(filename_list, df_header,
                                                 shape_out = [imgsize, imgsize],
                                                 reproject_function=reproject_interp,
-                                                combine_function='mean', 
-                                                match_background=True,
+                                                combine_function=combine_type, 
+                                                match_background=match_background,
                                                 background_reference=None)
             filename = '{}.fits'.format(os.path.join(output_dir, '_'.join([output_name, band])))
             
