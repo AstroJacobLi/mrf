@@ -106,6 +106,8 @@ class Config(object):
             'n_s': [3.44, 2.89, 2.07, 4],
             'theta_s': [5, 64.6, 117.5, 1200]
         }
+        if 'wide_psf' not in self.__dict__:
+            self.wide_psf = Config({})
         for name in default.keys():
             if not name in self.wide_psf.__dict__.keys():
                 setattr(self.wide_psf, name, default[name])
