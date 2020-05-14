@@ -245,7 +245,7 @@ class MrfTask():
             if wide_psf == True:
                 bkgval = float(getattr(config.wide_psf, 'bkgval', lowres.header['BACKVAL']))
             else:
-                bkgval = float(config.lowres.header['BACKVAL'])
+                bkgval = float(lowres.header['BACKVAL'])
             logger.info('Subtract BACKVAL=%.1f of Dragonfly image', bkgval)
             lowres.image -= bkgval
         hdu.close()
