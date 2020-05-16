@@ -113,6 +113,7 @@ def display_single(img,
                    text_fontsize=30,
                    text_box=None,
                    text_facecolor='gray',
+                   text_x_offset=0.08,
                    text_y_offset=0.80,
                    text_color='w',
                    text_fontweight='normal'):
@@ -152,53 +153,59 @@ def display_single(img,
         ax: If the input ``ax`` is not ``None``.
 
     """
-
+    from PIL import Image, ImageOps
     if ax is None:
         fig = plt.figure(figsize=(xsize, ysize))
         ax1 = fig.add_subplot(111)
     else:
         ax1 = ax
 
-    # Stretch option
-    if stretch.strip() == 'arcsinh':
-        img_scale = np.arcsinh(img)
-    elif stretch.strip() == 'log':
-        if no_negative:
-            img[img <= 0.0] = 1.0E-10
-        img_scale = np.log(img)
-    elif stretch.strip() == 'log10':
-        if no_negative:
-            img[img <= 0.0] = 1.0E-10
-        img_scale = np.log10(img)
-    elif stretch.strip() == 'linear':
-        img_scale = img
+    if isinstance(img, Image.Image):
+        img = ImageOps.flip(img)
+        show = ax1.imshow(img, origin='lower', cmap=cmap,)
+        (img_size_x, img_size_y) = img.size
     else:
-        raise Exception("# Wrong stretch option.")
+        (img_size_x, img_size_y) = img.shape
+        # Stretch option
+        if stretch.strip() == 'arcsinh':
+            img_scale = np.arcsinh(img)
+        elif stretch.strip() == 'log':
+            if no_negative:
+                img[img <= 0.0] = 1.0E-10
+            img_scale = np.log(img)
+        elif stretch.strip() == 'log10':
+            if no_negative:
+                img[img <= 0.0] = 1.0E-10
+            img_scale = np.log10(img)
+        elif stretch.strip() == 'linear':
+            img_scale = img
+        else:
+            raise Exception("# Wrong stretch option.")
 
-    # Scale option
-    if scale.strip() == 'zscale':
-        try:
-            zmin, zmax = ZScaleInterval(contrast=contrast).get_limits(img_scale)
-        except IndexError:
-            # TODO: Deal with problematic image
-            zmin, zmax = -1.0, 1.0
-    elif scale.strip() == 'percentile':
-        try:
-            zmin, zmax = AsymmetricPercentileInterval(
-                lower_percentile=lower_percentile,
-                upper_percentile=upper_percentile).get_limits(img_scale)
-        except IndexError:
-            # TODO: Deal with problematic image
-            zmin, zmax = -1.0, 1.0
-    else:
-        zmin, zmax = np.nanmin(img_scale), np.nanmax(img_scale)
-    
-    if scale_manual is not None:
-        assert len(scale_manual) == 2, '# length of manual scale must be two!'
-        zmin, zmax = scale_manual
+        # Scale option
+        if scale.strip() == 'zscale':
+            try:
+                zmin, zmax = ZScaleInterval(contrast=contrast).get_limits(img_scale)
+            except IndexError:
+                # TODO: Deal with problematic image
+                zmin, zmax = -1.0, 1.0
+        elif scale.strip() == 'percentile':
+            try:
+                zmin, zmax = AsymmetricPercentileInterval(
+                    lower_percentile=lower_percentile,
+                    upper_percentile=upper_percentile).get_limits(img_scale)
+            except IndexError:
+                # TODO: Deal with problematic image
+                zmin, zmax = -1.0, 1.0
+        else:
+            zmin, zmax = np.nanmin(img_scale), np.nanmax(img_scale)
+        
+        if scale_manual is not None:
+            assert len(scale_manual) == 2, '# length of manual scale must be two!'
+            zmin, zmax = scale_manual
 
-    show = ax1.imshow(img_scale, origin='lower', cmap=cmap,
-                      vmin=zmin, vmax=zmax)
+        show = ax1.imshow(img_scale, origin='lower', cmap=cmap,
+                        vmin=zmin, vmax=zmax)
 
     # Hide ticks and tick labels
     ax1.tick_params(
@@ -210,7 +217,7 @@ def display_single(img,
     #ax1.axis('off')
 
     # Put scale bar on the image
-    (img_size_x, img_size_y) = img.shape
+    
     if physical_scale is not None:
         pixel_scale *= physical_scale
     if scale_bar:
@@ -235,14 +242,14 @@ def display_single(img,
             if scale_bar_length < 60:
                 scale_bar_text = r'$%d^{\prime\prime}$' % int(scale_bar_length)
             elif 60 < scale_bar_length < 3600:
-                scale_bar_text = r'$%d^{\prime}$' % int(scale_bar_length / 60)
+                scale_bar_text = r"%d arcmin" % int(scale_bar_length / 60) # r'$%d^{\prime}$'
             else: 
                 scale_bar_text = r'$%d^{\circ}$' % int(scale_bar_length / 3600)
         scale_bar_text_size = scale_bar_fontsize
 
         ax1.plot(
             [scale_bar_x_0, scale_bar_x_1], [scale_bar_y, scale_bar_y],
-            linewidth=3,
+            linewidth=5,
             c=scale_bar_color,
             alpha=scale_bar_alpha)
         ax1.text(
@@ -250,15 +257,17 @@ def display_single(img,
             scale_bar_text_y,
             scale_bar_text,
             fontsize=scale_bar_text_size,
+            fontweight=text_fontweight,
             horizontalalignment='center',
             color=scale_bar_color, 
             alpha=scale_bar_alpha)
     if add_text is not None:
-        text_x_0 = int(img_size_x*0.08)
+        text_x_0 = int(img_size_x*text_x_offset)
         text_y_0 = int(img_size_y*text_y_offset)
         ax1.text(text_x_0, text_y_0, add_text, 
+            horizontalalignment='left',
+            verticalalignment='top',
             fontsize=text_fontsize, color=text_color, bbox=text_box, fontweight=text_fontweight)
-
     # Put a color bar on the image
     if color_bar:
         ax_cbar = inset_axes(ax1,
@@ -315,6 +324,7 @@ def _display_single(img,
                    text_fontsize=30,
                    text_box=None,
                    text_facecolor='gray',
+                   text_x_offset=0.08,
                    text_y_offset=0.80,
                    text_color='w',
                    text_fontweight='normal'):
@@ -354,53 +364,59 @@ def _display_single(img,
         ax: If the input ``ax`` is not ``None``.
 
     """
-
+    from PIL import Image, ImageOps
     if ax is None:
         fig = plt.figure(figsize=(xsize, ysize))
         ax1 = fig.add_subplot(111)
     else:
         ax1 = ax
 
-    # Stretch option
-    if stretch.strip() == 'arcsinh':
-        img_scale = np.arcsinh(img)
-    elif stretch.strip() == 'log':
-        if no_negative:
-            img[img <= 0.0] = 1.0E-10
-        img_scale = np.log(img)
-    elif stretch.strip() == 'log10':
-        if no_negative:
-            img[img <= 0.0] = 1.0E-10
-        img_scale = np.log10(img)
-    elif stretch.strip() == 'linear':
-        img_scale = img
+    if isinstance(img, Image.Image):
+        img = ImageOps.flip(img)
+        show = ax1.imshow(img, origin='lower', cmap=cmap,)
+        (img_size_x, img_size_y) = img.size
     else:
-        raise Exception("# Wrong stretch option.")
+        (img_size_x, img_size_y) = img.shape
+        # Stretch option
+        if stretch.strip() == 'arcsinh':
+            img_scale = np.arcsinh(img)
+        elif stretch.strip() == 'log':
+            if no_negative:
+                img[img <= 0.0] = 1.0E-10
+            img_scale = np.log(img)
+        elif stretch.strip() == 'log10':
+            if no_negative:
+                img[img <= 0.0] = 1.0E-10
+            img_scale = np.log10(img)
+        elif stretch.strip() == 'linear':
+            img_scale = img
+        else:
+            raise Exception("# Wrong stretch option.")
 
-    # Scale option
-    if scale.strip() == 'zscale':
-        try:
-            zmin, zmax = ZScaleInterval(contrast=contrast).get_limits(img_scale)
-        except IndexError:
-            # TODO: Deal with problematic image
-            zmin, zmax = -1.0, 1.0
-    elif scale.strip() == 'percentile':
-        try:
-            zmin, zmax = AsymmetricPercentileInterval(
-                lower_percentile=lower_percentile,
-                upper_percentile=upper_percentile).get_limits(img_scale)
-        except IndexError:
-            # TODO: Deal with problematic image
-            zmin, zmax = -1.0, 1.0
-    else:
-        zmin, zmax = np.nanmin(img_scale), np.nanmax(img_scale)
-    
-    if scale_manual is not None:
-        assert len(scale_manual) == 2, '# length of manual scale must be two!'
-        zmin, zmax = scale_manual
+        # Scale option
+        if scale.strip() == 'zscale':
+            try:
+                zmin, zmax = ZScaleInterval(contrast=contrast).get_limits(img_scale)
+            except IndexError:
+                # TODO: Deal with problematic image
+                zmin, zmax = -1.0, 1.0
+        elif scale.strip() == 'percentile':
+            try:
+                zmin, zmax = AsymmetricPercentileInterval(
+                    lower_percentile=lower_percentile,
+                    upper_percentile=upper_percentile).get_limits(img_scale)
+            except IndexError:
+                # TODO: Deal with problematic image
+                zmin, zmax = -1.0, 1.0
+        else:
+            zmin, zmax = np.nanmin(img_scale), np.nanmax(img_scale)
+        
+        if scale_manual is not None:
+            assert len(scale_manual) == 2, '# length of manual scale must be two!'
+            zmin, zmax = scale_manual
 
-    show = ax1.imshow(img_scale, origin='lower', cmap=cmap,
-                      vmin=zmin, vmax=zmax)
+        show = ax1.imshow(img_scale, origin='lower', cmap=cmap,
+                        vmin=zmin, vmax=zmax)
 
     # Hide ticks and tick labels
     ax1.tick_params(
@@ -412,7 +428,7 @@ def _display_single(img,
     #ax1.axis('off')
 
     # Put scale bar on the image
-    (img_size_x, img_size_y) = img.shape
+    
     if physical_scale is not None:
         pixel_scale *= physical_scale
     if scale_bar:
@@ -452,13 +468,16 @@ def _display_single(img,
             scale_bar_text_y,
             scale_bar_text,
             fontsize=scale_bar_text_size,
+            fontweight=text_fontweight,
             horizontalalignment='center',
             color=scale_bar_color, 
             alpha=scale_bar_alpha)
     if add_text is not None:
-        text_x_0 = int(img_size_x*0.08)
+        text_x_0 = int(img_size_x*text_x_offset)
         text_y_0 = int(img_size_y*text_y_offset)
         ax1.text(text_x_0, text_y_0, add_text, 
+            horizontalalignment='left',
+            verticalalignment='top',
             fontsize=text_fontsize, color=text_color, bbox=text_box, fontweight=text_fontweight)
 
     # Put a color bar on the image
