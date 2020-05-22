@@ -67,7 +67,7 @@ Acknowledgement
 ---------------
 Many scripts and snippets are from [`kungpao`](https://github.com/dr-guangtou/kungpao) (written by [Song Huang](http://dr-guangtou.github.io)). [Qing Liu (U Toronto)](http://astro.utoronto.ca/~qliu) provided very useful functions for constructing wide-angle PSF, [Johnny Greco](http://johnnygreco.github.io) kindly shared his idea of the code structure. [Roberto Abraham](http://www.astro.utoronto.ca/~abraham/Web/Welcome.html) found the first few bugs of this package and provided useful solutions. Here we appreciate their help!
 
-This package makes use of [`numpy`](http://www.numpy.org), [`scipy`](https://www.scipy.org), [`matplotlib`](https://matplotlib.org), [`Astropy`](http://www.astropy.org), [`sep`](https://sep.readthedocs.io/en/v1.0.x/), [`SWarp`](http://www.astromatic.net/software/swarp), [`GalSim`](http://galsim-developers.github.io/GalSim/_build/html/index.html), [`Photutils`](https://photutils.readthedocs.io/en/stable/), [`reproject`](https://reproject.readthedocs.io), [`IRAF`](https://iraf-community.github.io).
+This package makes use of [`numpy`](http://www.numpy.org), [`scipy`](https://www.scipy.org), [`matplotlib`](https://matplotlib.org), [`Astropy`](http://www.astropy.org), [`sep`](https://sep.readthedocs.io/en/v1.0.x/), [`SWarp`](http://www.astromatic.net/software/swarp), [`GalSim`](http://galsim-developers.github.io/GalSim/_build/html/index.html), [`Photutils`](https://photutils.readthedocs.io/en/stable/), [`reproject`](https://reproject.readthedocs.io), [`IRAF (STScI)`](https://iraf-community.github.io). We thank the authors of these tools for their great efforts.
 
 
 Copyright 2019 [Pieter van Dokkum](http://pietervandokkum.com) and [Jiaxuan Li](http://astrojacobli.github.io).
