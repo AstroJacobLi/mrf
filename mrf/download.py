@@ -473,8 +473,12 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=
             hdu = fits.open(os.path.join(output_dir, file))
             img = hdu[1].data
             hdr = hdu[1].header
+            mask = hdu[2].data
+            mask_hdr = hdu[2].header
             hdr['XTENSION'] = 'IMAGE'
+            mask_hdr['XTENSION'] = 'IMAGE'
             hdu.close()
+            save_to_fits(img, os.path.join(output_dir, file), header=hdr);
             save_to_fits(img, os.path.join(output_dir, file), header=hdr);
 
     # Calculating image size in pixels
@@ -509,7 +513,7 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=
         f.write('#------------------------------ Miscellaneous ---------------------------------\n\nDELETE_TMPFILES        Y               # Delete temporary resampled FITS files\n                                       # (Y/N)?\nCOPY_KEYWORDS          OBJECT          # List of FITS keywords to propagate\n                                       # from the input to the output headers\nWRITE_FILEINFO         Y               # Write information about each input\n                                       # file in the output image header?\nWRITE_XML              N               # Write XML file (Y/N)?\nXML_NAME               swarp.xml       # Filename for XML output\nVERBOSE_TYPE           QUIET           # QUIET,NORMAL or FULL\n\nNTHREADS               0               # Number of simultaneous threads for\n                                       # the SMP version of SWarp\n                                       # 0 = automatic \n')
         f.write('EOT\n')
         f.write('SWarp ' + ' '.join(filenameset) + '\n\n')
-        f.write('rm ' + os.path.join(output_dir, '_*'))
+        #f.write('rm ' + os.path.join(output_dir, '_*'))
         f.close()
     
     filename = '{}.fits'.format(os.path.join(output_dir, '_'.join([output_name, band])))
@@ -522,9 +526,9 @@ def download_hsc_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, verbose=
         os.system('/bin/bash config_swarp.sh')
     print('# The image is save as ' + filename)
     ## Delete temporary catalog
-    if os.path.isfile('_survey_summary_hsc.fits'):
-        os.remove('_survey_summary_hsc.fits')
-        os.remove('config_swarp.sh')
+    #if os.path.isfile('_survey_summary_hsc.fits'):
+    #    os.remove('_survey_summary_hsc.fits')
+    #    os.remove('config_swarp.sh')
 
 
 ################# SDSS download related ##################
