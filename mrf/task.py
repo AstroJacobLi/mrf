@@ -106,6 +106,8 @@ class Config(object):
             'n_s': [3.44, 2.89, 2.07, 4],
             'theta_s': [5, 64.6, 117.5, 1200]
         }
+        if 'wide_psf' not in self.__dict__:
+            self.wide_psf = Config({})
         for name in default.keys():
             if not name in self.wide_psf.__dict__.keys():
                 setattr(self.wide_psf, name, default[name])
@@ -243,7 +245,7 @@ class MrfTask():
             if wide_psf == True:
                 bkgval = float(getattr(config.wide_psf, 'bkgval', lowres.header['BACKVAL']))
             else:
-                bkgval = float(config.lowres.header['BACKVAL'])
+                bkgval = float(lowres.header['BACKVAL'])
             logger.info('Subtract BACKVAL=%.1f of Dragonfly image', bkgval)
             lowres.image -= bkgval
         hdu.close()
@@ -422,6 +424,7 @@ class MrfTask():
         kernel_med, good_cat = Autokernel(img_hires, img_lowres, 
                                         int(f_magnify * config.kernel.kernel_size), 
                                         int(f_magnify * (config.kernel.kernel_size - config.kernel.kernel_edge)), 
+                                        object_cat_dir='_hires_obj_cat.fits',
                                         frac_maxflux=config.kernel.frac_maxflux, 
                                         show_figure=config.kernel.show_fig,
                                         nkernels=config.kernel.nkernel, logger=logger)

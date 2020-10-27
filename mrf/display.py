@@ -90,6 +90,7 @@ def display_single(img,
                    ax=None,
                    stretch='arcsinh',
                    scale='zscale',
+                   scale_manual=None,
                    contrast=0.25,
                    no_negative=False,
                    lower_percentile=1.0,
@@ -100,6 +101,7 @@ def display_single(img,
                    scale_bar_fontsize=20,
                    scale_bar_y_offset=0.5,
                    scale_bar_color='w',
+                   scale_bar_alpha=1.0,
                    scale_bar_loc='left',
                    color_bar=False,
                    color_bar_loc=1,
@@ -109,8 +111,12 @@ def display_single(img,
                    color_bar_color='w',
                    add_text=None,
                    text_fontsize=30,
+                   text_box=None,
+                   text_facecolor='gray',
+                   text_x_offset=0.08,
                    text_y_offset=0.80,
-                   text_color='w'):
+                   text_color='w',
+                   text_fontweight='normal'):
     """
     Display single image using ``arcsinh`` stretching, "zscale" scaling and ``viridis`` colormap as default. 
     This function is from ``kungpao`` https://github.com/dr-guangtou/kungpao.
@@ -134,60 +140,72 @@ def display_single(img,
         scale_bar_y_offset (float): Offset of scale bar on y-axis.
         scale_bar_fontsize (float): Fontsize of scale bar ticks.
         scale_bar_color (str): Color of scale bar.
+        scale_bar_alpha (float): alpha of scale bar.
         scale_bar_loc (str): Scale bar position, options are "left" and "right".
         color_bar (bool): Whether show colorbar or not.
         add_text (str): The text you want to add to the figure. Note that it is wrapped within ``$\mathrm{}$``.
         text_fontsize (float): Fontsize of text.
         text_y_offset (float): Offset of text on y-axis.
         text_color (str): Color of text.
+        text_box (dict): dictionary for box. Such as `dict(boxstyle='round', facecolor='wheat', alpha=0.5)`.
 
     Returns:
         ax: If the input ``ax`` is not ``None``.
 
     """
-
+    from PIL import Image, ImageOps
     if ax is None:
         fig = plt.figure(figsize=(xsize, ysize))
         ax1 = fig.add_subplot(111)
     else:
         ax1 = ax
 
-    # Stretch option
-    if stretch.strip() == 'arcsinh':
-        img_scale = np.arcsinh(img)
-    elif stretch.strip() == 'log':
-        if no_negative:
-            img[img <= 0.0] = 1.0E-10
-        img_scale = np.log(img)
-    elif stretch.strip() == 'log10':
-        if no_negative:
-            img[img <= 0.0] = 1.0E-10
-        img_scale = np.log10(img)
-    elif stretch.strip() == 'linear':
-        img_scale = img
+    if isinstance(img, Image.Image):
+        img = ImageOps.flip(img)
+        show = ax1.imshow(img, origin='lower', cmap=cmap,)
+        (img_size_x, img_size_y) = img.size
     else:
-        raise Exception("# Wrong stretch option.")
+        (img_size_x, img_size_y) = img.shape
+        # Stretch option
+        if stretch.strip() == 'arcsinh':
+            img_scale = np.arcsinh(img)
+        elif stretch.strip() == 'log':
+            if no_negative:
+                img[img <= 0.0] = 1.0E-10
+            img_scale = np.log(img)
+        elif stretch.strip() == 'log10':
+            if no_negative:
+                img[img <= 0.0] = 1.0E-10
+            img_scale = np.log10(img)
+        elif stretch.strip() == 'linear':
+            img_scale = img
+        else:
+            raise Exception("# Wrong stretch option.")
 
-    # Scale option
-    if scale.strip() == 'zscale':
-        try:
-            zmin, zmax = ZScaleInterval(contrast=contrast).get_limits(img_scale)
-        except IndexError:
-            # TODO: Deal with problematic image
-            zmin, zmax = -1.0, 1.0
-    elif scale.strip() == 'percentile':
-        try:
-            zmin, zmax = AsymmetricPercentileInterval(
-                lower_percentile=lower_percentile,
-                upper_percentile=upper_percentile).get_limits(img_scale)
-        except IndexError:
-            # TODO: Deal with problematic image
-            zmin, zmax = -1.0, 1.0
-    else:
-        zmin, zmax = np.nanmin(img_scale), np.nanmax(img_scale)
-    
-    show = ax1.imshow(img_scale, origin='lower', cmap=cmap,
-                      vmin=zmin, vmax=zmax)
+        # Scale option
+        if scale.strip() == 'zscale':
+            try:
+                zmin, zmax = ZScaleInterval(contrast=contrast).get_limits(img_scale)
+            except IndexError:
+                # TODO: Deal with problematic image
+                zmin, zmax = -1.0, 1.0
+        elif scale.strip() == 'percentile':
+            try:
+                zmin, zmax = AsymmetricPercentileInterval(
+                    lower_percentile=lower_percentile,
+                    upper_percentile=upper_percentile).get_limits(img_scale)
+            except IndexError:
+                # TODO: Deal with problematic image
+                zmin, zmax = -1.0, 1.0
+        else:
+            zmin, zmax = np.nanmin(img_scale), np.nanmax(img_scale)
+        
+        if scale_manual is not None:
+            assert len(scale_manual) == 2, '# length of manual scale must be two!'
+            zmin, zmax = scale_manual
+
+        show = ax1.imshow(img_scale, origin='lower', cmap=cmap,
+                        vmin=zmin, vmax=zmax)
 
     # Hide ticks and tick labels
     ax1.tick_params(
@@ -199,7 +217,7 @@ def display_single(img,
     #ax1.axis('off')
 
     # Put scale bar on the image
-    (img_size_x, img_size_y) = img.shape
+    
     if physical_scale is not None:
         pixel_scale *= physical_scale
     if scale_bar:
@@ -224,28 +242,32 @@ def display_single(img,
             if scale_bar_length < 60:
                 scale_bar_text = r'$%d^{\prime\prime}$' % int(scale_bar_length)
             elif 60 < scale_bar_length < 3600:
-                scale_bar_text = r'$%d^{\prime}$' % int(scale_bar_length / 60)
+                scale_bar_text = r"%d arcmin" % int(scale_bar_length / 60) # r'$%d^{\prime}$'
             else: 
                 scale_bar_text = r'$%d^{\circ}$' % int(scale_bar_length / 3600)
         scale_bar_text_size = scale_bar_fontsize
 
         ax1.plot(
             [scale_bar_x_0, scale_bar_x_1], [scale_bar_y, scale_bar_y],
-            linewidth=3,
+            linewidth=5,
             c=scale_bar_color,
-            alpha=1.0)
+            alpha=scale_bar_alpha)
         ax1.text(
             scale_bar_text_x,
             scale_bar_text_y,
             scale_bar_text,
             fontsize=scale_bar_text_size,
+            fontweight=text_fontweight,
             horizontalalignment='center',
-            color=scale_bar_color)
+            color=scale_bar_color, 
+            alpha=scale_bar_alpha)
     if add_text is not None:
-        text_x_0 = int(img_size_x*0.08)
+        text_x_0 = int(img_size_x*text_x_offset)
         text_y_0 = int(img_size_y*text_y_offset)
-        ax1.text(text_x_0, text_y_0, r'$\mathrm{'+add_text+'}$', fontsize=text_fontsize, color=text_color)
-
+        ax1.text(text_x_0, text_y_0, add_text, 
+            horizontalalignment='left',
+            verticalalignment='top',
+            fontsize=text_fontsize, color=text_color, bbox=text_box, fontweight=text_fontweight)
     # Put a color bar on the image
     if color_bar:
         ax_cbar = inset_axes(ax1,
@@ -290,6 +312,7 @@ def _display_single(img,
                    scale_bar_fontsize=20,
                    scale_bar_y_offset=0.5,
                    scale_bar_color='w',
+                   scale_bar_alpha=1.0,
                    scale_bar_loc='left',
                    color_bar=False,
                    color_bar_loc=1,
@@ -299,55 +322,101 @@ def _display_single(img,
                    color_bar_color='w',
                    add_text=None,
                    text_fontsize=30,
+                   text_box=None,
+                   text_facecolor='gray',
+                   text_x_offset=0.08,
                    text_y_offset=0.80,
-                   text_color='w'):
+                   text_color='w',
+                   text_fontweight='normal'):
+    """
+    Display single image using ``arcsinh`` stretching, "zscale" scaling and ``viridis`` colormap as default. 
+    This function is from ``kungpao`` https://github.com/dr-guangtou/kungpao.
 
+    Parameters:
+        img (numpy 2-D array): The image array.
+        pixel_scale (float): The pixel size, in unit of "arcsec/pixel".
+        physical_scale (bool): Whether show the image in physical scale.
+        xsize (int): Width of the image, default = 8. 
+        ysize (int): Height of the image, default = 8. 
+        ax (``matplotlib.pyplot.axes`` object): The user could provide axes on which the figure will be drawn.
+        stretch (str): Stretching schemes. Options are "arcsinh", "log", "log10" and "linear".
+        scale (str): Scaling schemes. Options are "zscale" and "percentile".
+        contrast (float): Contrast of figure.
+        no_negative (bool): If true, all negative pixels will be set to zero.
+        lower_percentile (float): Lower percentile, if using ``scale="percentile"``.
+        upper_percentile (float): Upper percentile, if using ``scale="percentile"``.
+        cmap (str): Colormap.
+        scale_bar (bool): Whether show scale bar or not.
+        scale_bar_length (float): The length of scale bar.
+        scale_bar_y_offset (float): Offset of scale bar on y-axis.
+        scale_bar_fontsize (float): Fontsize of scale bar ticks.
+        scale_bar_color (str): Color of scale bar.
+        scale_bar_alpha (float): alpha of scale bar.
+        scale_bar_loc (str): Scale bar position, options are "left" and "right".
+        color_bar (bool): Whether show colorbar or not.
+        add_text (str): The text you want to add to the figure. Note that it is wrapped within ``$\mathrm{}$``.
+        text_fontsize (float): Fontsize of text.
+        text_y_offset (float): Offset of text on y-axis.
+        text_color (str): Color of text.
+        text_box (dict): dictionary for box. Such as `dict(boxstyle='round', facecolor='wheat', alpha=0.5)`.
+
+    Returns:
+        ax: If the input ``ax`` is not ``None``.
+
+    """
+    from PIL import Image, ImageOps
     if ax is None:
         fig = plt.figure(figsize=(xsize, ysize))
         ax1 = fig.add_subplot(111)
     else:
         ax1 = ax
 
-    # Stretch option
-    if stretch.strip() == 'arcsinh':
-        img_scale = np.arcsinh(img)
-    elif stretch.strip() == 'log':
-        if no_negative:
-            img[img <= 0.0] = 1.0E-10
-        img_scale = np.log(img)
-    elif stretch.strip() == 'log10':
-        if no_negative:
-            img[img <= 0.0] = 1.0E-10
-        img_scale = np.log10(img)
-    elif stretch.strip() == 'linear':
-        img_scale = img
+    if isinstance(img, Image.Image):
+        img = ImageOps.flip(img)
+        show = ax1.imshow(img, origin='lower', cmap=cmap,)
+        (img_size_x, img_size_y) = img.size
     else:
-        raise Exception("# Wrong stretch option.")
+        (img_size_x, img_size_y) = img.shape
+        # Stretch option
+        if stretch.strip() == 'arcsinh':
+            img_scale = np.arcsinh(img)
+        elif stretch.strip() == 'log':
+            if no_negative:
+                img[img <= 0.0] = 1.0E-10
+            img_scale = np.log(img)
+        elif stretch.strip() == 'log10':
+            if no_negative:
+                img[img <= 0.0] = 1.0E-10
+            img_scale = np.log10(img)
+        elif stretch.strip() == 'linear':
+            img_scale = img
+        else:
+            raise Exception("# Wrong stretch option.")
 
-    # Scale option
-    if scale.strip() == 'zscale':
-        try:
-            zmin, zmax = ZScaleInterval(contrast=contrast).get_limits(img_scale)
-        except IndexError:
-            # TODO: Deal with problematic image
-            zmin, zmax = -1.0, 1.0
-    elif scale.strip() == 'percentile':
-        try:
-            zmin, zmax = AsymmetricPercentileInterval(
-                lower_percentile=lower_percentile,
-                upper_percentile=upper_percentile).get_limits(img_scale)
-        except IndexError:
-            # TODO: Deal with problematic image
-            zmin, zmax = -1.0, 1.0
-    else:
-        zmin, zmax = np.nanmin(img_scale), np.nanmax(img_scale)
-    
-    if scale_manual is not None:
-        assert len(scale_manual) == 2, '# length of manual scale must be two!'
-        zmin, zmax = scale_manual
+        # Scale option
+        if scale.strip() == 'zscale':
+            try:
+                zmin, zmax = ZScaleInterval(contrast=contrast).get_limits(img_scale)
+            except IndexError:
+                # TODO: Deal with problematic image
+                zmin, zmax = -1.0, 1.0
+        elif scale.strip() == 'percentile':
+            try:
+                zmin, zmax = AsymmetricPercentileInterval(
+                    lower_percentile=lower_percentile,
+                    upper_percentile=upper_percentile).get_limits(img_scale)
+            except IndexError:
+                # TODO: Deal with problematic image
+                zmin, zmax = -1.0, 1.0
+        else:
+            zmin, zmax = np.nanmin(img_scale), np.nanmax(img_scale)
+        
+        if scale_manual is not None:
+            assert len(scale_manual) == 2, '# length of manual scale must be two!'
+            zmin, zmax = scale_manual
 
-    show = ax1.imshow(img_scale, origin='lower', cmap=cmap,
-                      vmin=zmin, vmax=zmax)
+        show = ax1.imshow(img_scale, origin='lower', cmap=cmap,
+                        vmin=zmin, vmax=zmax)
 
     # Hide ticks and tick labels
     ax1.tick_params(
@@ -359,7 +428,7 @@ def _display_single(img,
     #ax1.axis('off')
 
     # Put scale bar on the image
-    (img_size_x, img_size_y) = img.shape
+    
     if physical_scale is not None:
         pixel_scale *= physical_scale
     if scale_bar:
@@ -393,18 +462,23 @@ def _display_single(img,
             [scale_bar_x_0, scale_bar_x_1], [scale_bar_y, scale_bar_y],
             linewidth=3,
             c=scale_bar_color,
-            alpha=1.0)
+            alpha=scale_bar_alpha)
         ax1.text(
             scale_bar_text_x,
             scale_bar_text_y,
             scale_bar_text,
             fontsize=scale_bar_text_size,
+            fontweight=text_fontweight,
             horizontalalignment='center',
-            color=scale_bar_color)
+            color=scale_bar_color, 
+            alpha=scale_bar_alpha)
     if add_text is not None:
-        text_x_0 = int(img_size_x*0.08)
+        text_x_0 = int(img_size_x*text_x_offset)
         text_y_0 = int(img_size_y*text_y_offset)
-        ax1.text(text_x_0, text_y_0, r'$\mathrm{'+add_text+'}$', fontsize=text_fontsize, color=text_color)
+        ax1.text(text_x_0, text_y_0, add_text, 
+            horizontalalignment='left',
+            verticalalignment='top',
+            fontsize=text_fontsize, color=text_color, bbox=text_box, fontweight=text_fontweight)
 
     # Put a color bar on the image
     if color_bar:

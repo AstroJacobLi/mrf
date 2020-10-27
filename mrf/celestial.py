@@ -489,10 +489,8 @@ class Celestial(object):
             if f > 1:
                 from scipy import ndimage
                 assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
-
-                nx_zoomed = (nx - 1) * f + 1
+                nx_zoomed = (nx - 1) * f + 1 
                 f_eff = nx_zoomed / nx
-
                 result = ndimage.zoom(self.image, f_eff, order=order)
                 result *= 1/(f_eff**2)  # Multiplying by this factor to conserve flux
                 self.header = self._resize_header_wcs(f)
@@ -646,11 +644,9 @@ class Celestial(object):
             if f > 1:
                 from scipy import ndimage
                 assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
-                
-                nx_zoomed = (nx - 1) * f + 1
+                nx_zoomed = (nx - 1) * f + 1 
                 f_eff = nx_zoomed / nx
-
-                result = ndimage.zoom(self.mask, f_eff, order=order)
+                result = ndimage.zoom(self.image, f_eff, order=order)
                 result *= 1/(f_eff**2)  # Multiplying by this factor to conserve flux
                 self.header = self._resize_header_wcs(self.mask, f)
                 self.header['CRPIX1'] += (1 - f * 1)
