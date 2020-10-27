@@ -256,7 +256,7 @@ class MrfTask():
             hdu = fits.open('_lowres_{}.fits'.format(int(f_magnify)))
             lowres = Celestial(hdu[0].data, header=hdu[0].header)
         else:
-            lowres.resize_image(f_magnify, method=config.fluxmodel.interp)
+            lowres.resize_image(f_magnify, method=config.fluxmodel.interp) 
             lowres.save_to_fits('_lowres_{}.fits'.format(int(f_magnify)))
 
         logger.info('Register high resolution image "{0}" with "{1}"'.format(dir_hires_b, dir_lowres))
@@ -1269,7 +1269,7 @@ class MrfTileMode():
                                                   position = center_coords, 
                                                   size = (y_size, x_size), 
                                                   wcs = wcs_lowres,
-                                                  mode = 'partial',
+                                                  mode = 'trim',
                                                   copy = True )  
 
                     tile_lowres = fits.PrimaryHDU( new_cutout_lowres.data, hdu_lowres.header )
@@ -1291,14 +1291,14 @@ class MrfTileMode():
                                          position = center_coords, 
                                          size = (y_size, x_size), 
                                          wcs = wcs_g,
-                                         mode = 'partial',
+                                         mode = 'trim',
                                          copy = True )
 
                 new_cutout_r = Cutout2D( hdu_r.data, 
                                          position = center_coords, 
                                          size = (y_size, x_size), 
                                          wcs = wcs_r,
-                                         mode = 'partial',
+                                         mode = 'trim',
                                          copy = True )        
 
                 tile_g = fits.PrimaryHDU( new_cutout_g.data, hdu_g.header )
@@ -1342,7 +1342,7 @@ class MrfTileMode():
                 hires_g = Celestial( hdu[0].data, header=hdu[0].header )
                 hdu.close()
 
-                hires_g.resize_image(0.5, method='iraf')
+                hires_g.resize_image(0.5, method=config.fluxmodel.interp)
                 hires_g.image = convolve( hires_g.image, Gaussian2DKernel(1) )
                 hires_g.save_to_fits( os.path.join(tile_dir, f"{target_name}-{high_res_source}-binned-g-tile-{i}.fits") )
 
@@ -1350,7 +1350,7 @@ class MrfTileMode():
                 hires_r = Celestial( hdu[0].data, header=hdu[0].header )
                 hdu.close()
 
-                hires_r.resize_image(0.5, method='iraf')
+                hires_r.resize_image(0.5, method=config.fluxmodel.interp)
                 hires_r.image = convolve( hires_r.image, Gaussian2DKernel(1) )
                 hires_r.save_to_fits( os.path.join(tile_dir, f"{target_name}-{high_res_source}-binned-r-tile-{i}.fits") )
 
@@ -1478,12 +1478,12 @@ class MrfTileMode():
         output_dir = tile_dir
         
         output_name = f'{target_name}-stitch'
-        filename_list = [os.path.join(tile_dir, f'{target_name}_{band}_final_tile_{i}.fits') for i in range(16)]
+        filename_list = [os.path.join(tile_dir, f'{target_name}_{band}_final_tile_{i}.fits') for i in range(N_tiles)]
         self._stitch(stitch_method, 'image', config, config.cutout_size, 
                      filename_list, output_dir, output_name, logger=logger)
         
         output_name = f'{target_name}-stitch-mask'
-        filename_list = [os.path.join(tile_dir, f'{target_name}_{band}_final_tile_{i}_mask.fits') for i in range(16)]
+        filename_list = [os.path.join(tile_dir, f'{target_name}_{band}_final_tile_{i}_mask.fits') for i in range(N_tiles)]
         self._stitch(stitch_method, 'mask', config, config.cutout_size, 
                      filename_list, output_dir, output_name, logger=logger)
         
@@ -1542,7 +1542,7 @@ class MrfTileMode():
             # Configure ``swarp``
             with open("config_swarp.sh","w+") as f:
                 # check if swarp is installed
-                f.write('for cmd in swarp; do\n')
+                f.write('for cmd in SWarp; do\n')
                 f.write('\t hasCmd=$(which ${cmd} 2>/dev/null)\n')
                 f.write('\t if [[ -z "${hasCmd}" ]]; then\n')
                 f.write('\t\t echo "This script requires ${cmd}, which is not in your \$PATH." \n')
@@ -1570,7 +1570,7 @@ class MrfTileMode():
                 f.write('#------------------------------ Memory management -----------------------------\n\nVMEM_DIR               .               # Directory path for swap files\nVMEM_MAX               2047            # Maximum amount of virtual memory (MB)\nMEM_MAX                2048            # Maximum amount of usable RAM (MB)\nCOMBINE_BUFSIZE        1024            # Buffer size for combine (MB)\n\n')
                 f.write('#------------------------------ Miscellaneous ---------------------------------\n\nDELETE_TMPFILES        Y               # Delete temporary resampled FITS files\n                                       # (Y/N)?\nCOPY_KEYWORDS          OBJECT          # List of FITS keywords to propagate\n                                       # from the input to the output headers\nWRITE_FILEINFO         Y               # Write information about each input\n                                       # file in the output image header?\nWRITE_XML              N               # Write XML file (Y/N)?\nXML_NAME               swarp.xml       # Filename for XML output\nVERBOSE_TYPE           QUIET           # QUIET,NORMAL or FULL\n\nNTHREADS               0               # Number of simultaneous threads for\n                                       # the SMP version of SWarp\n                                       # 0 = automatic \n')
                 f.write('EOT\n')
-                f.write('swarp ' + ' '.join(filename_list) + '\n\n')
+                f.write('SWarp ' + ' '.join(filename_list) + '\n\n')
                 f.write('rm ' + os.path.join(output_dir, '_*'))
                 f.close()
                 
