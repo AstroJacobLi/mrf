@@ -354,7 +354,7 @@ def download_decals_large(ra, dec, band, size=0.7*u.deg, radius=0.5*u.deg, layer
         filenameset.append(os.path.join(output_dir, file))
         if not os.path.isfile(file):
             download_decals_brick(obj['BRICKNAME'], band.lower(), output_name='_brick', 
-                                output_dir=output_dir, verbose=verbose)
+                                output_dir=output_dir, verbose=verbose, layer=layer)
             hdu = fits.open(os.path.join(output_dir, file))
             img = hdu[1].data
             hdr = hdu[1].header

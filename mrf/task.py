@@ -1399,6 +1399,11 @@ class MrfTileMode():
                     logger.info( ">>>>>>>>>>>>>>>>>>>> Timeout while retrieving PanSTARRS catalog =(")
                     continue
 
+                except:
+                    bad_tiles.append(i)
+                    logger.info( ">>>>>>>>>>>>>>>>>>>> Unknown error, skipping tile!")
+                    continue
+
         
         ##### Trim images and masks #####
         logger.info("Trim MRF-ed images and masks down to approximate extent of each tile")
