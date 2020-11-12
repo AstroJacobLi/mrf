@@ -980,8 +980,8 @@ class MrfTileMode():
         return self.logger 
     
     def run(self, max_size=8000, overlap=0.05, tile_dir='./Images/tile', 
-            skip_mast=False, mast_catalog=f'./_ps1_cat.fits', skip_cut_tile=False, skip_rebin=False, skip_mrf=False, 
-            skip_trim=False, stitch_method='swarp', show_panstarrs=False, verbose=True):
+            skip_mast=False, mast_catalog=f'./_ps1_cat.fits', skip_crop=False, skip_cut_tile=False, skip_rebin=False, 
+            skip_mrf=False, skip_trim=False, stitch_method='swarp', show_panstarrs=False, verbose=True):
         """
         Run MRF task in "tile mode". 
         Written by Colleen Gilhuly (U.Toronto) and Jiaxuan Li.
@@ -1065,27 +1065,28 @@ class MrfTileMode():
             os.mkdir('./Images/tile/')
         
         ##### Crop images to the "cutout_size", centered at "ra" and "dec" #####
-        logger.info(f'Crop images to {cutout_size} x {cutout_size} arcsec, centered at RA = {ra:.2f} and Dec = {dec:.2f}')
-        #--- low res ---#
-        hdu = fits.open(low_res_path)
-        img = hdu[0].data
-        hdr = hdu[0].header
-        img_cutout(img, wcs.WCS(hdr), ra, dec, size=cutout_size, 
-                   pixel_scale=low_res_pix_scale, img_header=hdr, 
-                   prefix=f'./Images/{target_name}-df-{band}');
-        hdu.close()
-        
-        #--- high res ---#
-        for filt in ['g', 'r']:
-            hdu = fits.open(high_res_path[filt])
+        if not skip_crop:
+            logger.info(f'Crop images to {cutout_size} x {cutout_size} arcsec, centered at RA = {ra:.2f} and Dec = {dec:.2f}')
+            #--- low res ---#
+            hdu = fits.open(low_res_path)
             img = hdu[0].data
             hdr = hdu[0].header
-            
             img_cutout(img, wcs.WCS(hdr), ra, dec, size=cutout_size, 
-                       pixel_scale=high_res_pix_scale, 
-                       img_header=hdr, 
-                       prefix=f'./Images/{target_name}-{high_res_source}-{filt}');
+                       pixel_scale=low_res_pix_scale, img_header=hdr, 
+                       prefix=f'./Images/{target_name}-df-{band}');
             hdu.close()
+        
+            #--- high res ---#
+            for filt in ['g', 'r']:
+                hdu = fits.open(high_res_path[filt])
+                img = hdu[0].data
+                hdr = hdu[0].header
+            
+                img_cutout(img, wcs.WCS(hdr), ra, dec, size=cutout_size, 
+                           pixel_scale=high_res_pix_scale, 
+                           img_header=hdr, 
+                           prefix=f'./Images/{target_name}-{high_res_source}-{filt}');
+                hdu.close()
         
         ##### Download PAN-STARRS catalog #####
         hdu = fits.open(f'./Images/{target_name}-df-{band}.fits')
@@ -1112,11 +1113,13 @@ class MrfTileMode():
                                  Column(data = w.wcs_world2pix(ps1_cat['raMean'], ps1_cat['decMean'], 0)[1], 
                                         name='y_ps1')])
             ps1_cat = ps1_cat[ps1_cat[band + 'MeanPSFMag'] != -999]
-            ps1_cat.write(f'./PS1-{target_name}-field.fits', overwrite=True)
+            mast_catalog = f'./PS1-{target_name}-field.fits'
+            ps1_cat.write(mast_catalog, overwrite=True)
+
         else:
-            assert os.path.isfile(f'./PS1-{target_name}-field.fits'), f"You don't have PAN-STARRS catalog saved as './PS1-{name}-field.fits'!"
-            logger.info(f"Load PAN-STARRS catalog from './PS1-{target_name}-field.fits'")
-            ps1_cat = Table.read(f'./PS1-{target_name}-field.fits')
+            assert os.path.isfile(mast_catalog), f"You don't have PAN-STARRS catalog saved as '{mast_catalog}'!"
+            logger.info(f"Load PAN-STARRS catalog from '{mast_catalog}'")
+            ps1_cat = Table.read(mast_catalog)
         
         if show_panstarrs:
             from mrf.display import draw_circles
@@ -1345,7 +1348,7 @@ class MrfTileMode():
                 hires_g = Celestial( hdu[0].data, header=hdu[0].header )
                 hdu.close()
 
-                hires_g.resize_image(0.5, method=config.fluxmodel.interp)
+                hires_g.resize_image(0.5, method="spline")
                 hires_g.image = convolve( hires_g.image, Gaussian2DKernel(1) )
                 hires_g.save_to_fits( os.path.join(tile_dir, f"{target_name}-{high_res_source}-binned-g-tile-{i}.fits") )
 
@@ -1353,7 +1356,7 @@ class MrfTileMode():
                 hires_r = Celestial( hdu[0].data, header=hdu[0].header )
                 hdu.close()
 
-                hires_r.resize_image(0.5, method=config.fluxmodel.interp)
+                hires_r.resize_image(0.5, method="spline")
                 hires_r.image = convolve( hires_r.image, Gaussian2DKernel(1) )
                 hires_r.save_to_fits( os.path.join(tile_dir, f"{target_name}-{high_res_source}-binned-r-tile-{i}.fits") )
 
@@ -1368,6 +1371,7 @@ class MrfTileMode():
             from urllib.error import HTTPError
             bad_tiles = []
 
+            import sys
             for i in range( 0, N_tiles - skipped ):
                 task = MrfTask( mrf_task_file ) ## Will this need to be tweaked for tiles?
                 try:
@@ -1380,7 +1384,7 @@ class MrfTileMode():
                                        wide_psf=True,
                                        verbose=False, 
                                        skip_mast=True, 
-                                       mast_catalog=f'./PS1-{target_name}-field.fits')
+                                       mast_catalog=mast_catalog)
                     elapsed = timeit.default_timer() - start_time
                     logger.info( f"--> MRF finished for tile {i+1}/{N_tiles} in {elapsed:.2f} seconds" )
 
@@ -1401,7 +1405,9 @@ class MrfTileMode():
 
                 except:
                     bad_tiles.append(i)
-                    logger.info( ">>>>>>>>>>>>>>>>>>>> Unknown error, skipping tile!")
+                    logger.info( ">>>>>>>>>>>>>>>>>>>> Unexpected error, skipping tile!")
+                #    e = sys.exc_info()[0]
+                #    print(e)
                     continue
 
         
