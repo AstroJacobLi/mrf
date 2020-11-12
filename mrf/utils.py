@@ -44,7 +44,7 @@ def phys_size(redshift, H0=70, Omegam=0.3, verbose=True):
     return physical_size
 
 # Cutout image
-def img_cutout(img, wcs, coord_1, coord_2, size=60.0, pixel_scale=2.5,
+def img_cutout(img, wcs, coord_1, coord_2, size=[60.0, 60.0], pixel_scale=2.5,
                pixel_unit=False, img_header=None, prefix='img_cutout', 
                out_dir=None, save=True):
     """
@@ -88,12 +88,13 @@ def img_cutout(img, wcs, coord_1, coord_2, size=60.0, pixel_scale=2.5,
     dy = -1.0 * (cen_y - int(cen_y))
 
     # Generate cutout
-    cutout = Cutout2D(img, cen_pos, cutout_size, wcs=wcs)
+    cutout = Cutout2D(img, cen_pos, cutout_size, wcs=wcs, mode='partial', fill_value=0)
 
     # Update the header
     cutout_header = cutout.wcs.to_header()
     if img_header is not None:
-        del img_header['COMMENT']
+        if 'COMMENT' in img_header:
+            del img_header['COMMENT']
         intersect = [k for k in img_header if k not in cutout_header]
         for keyword in intersect:
             cutout_header.set(keyword, img_header[keyword], img_header.comments[keyword])
@@ -152,13 +153,17 @@ def save_to_fits(img, fits_file, wcs=None, header=None, overwrite=True):
             for i in hdr:
                 if i in wcs_header:
                     hdr[i] = wcs_header[i]
-                if fnmatch.fnmatch(i, 'CD?_?'):
-                    hdr[i] = wcs_header['PC' + i.lstrip('CD')]
+                if 'PC*' in wcs_header:
+                    if fnmatch.fnmatch(i, 'CD?_?'):
+                        hdr[i] = wcs_header['PC' + i.lstrip('CD')]
             img_hdu.header = hdr
     elif wcs is not None:
         wcs_header = wcs.to_header()
+        wcs_header = fits.Header({'SIMPLE': True})
+        wcs_header.update(NAXIS1=img.shape[1], NAXIS2=img.shape[0])
+        for card in list(wcs.to_header().cards):
+            wcs_header.append(card)
         img_hdu.header = wcs_header
-
     else:
         img_hdu = fits.PrimaryHDU(img)
 
@@ -357,7 +362,7 @@ def azimuthal_average(image, center=None, stddev=True, binsize=0.5, interpnan=Fa
 #########################################################################
 
 # evaluate_sky objects for a given image
-def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5, 
+def extract_obj(img, mask=None, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5, 
     deblend_nthresh=32, deblend_cont=0.005, clean_param=1.0, 
     sky_subtract=False, flux_auto=True, flux_aper=None, show_fig=True, 
     verbose=True, logger=None):
@@ -367,6 +372,8 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
 
     Parameters:
         img (numpy 2-D array): input image
+        mask (numpy 2-D array): Mask array. True values, or numeric values greater than maskthresh, are considered masked. 
+            Masking a pixel is equivalent to setting data to zero and noise (if present) to infinity.
         b (float): size of box
         f (float): size of convolving kernel
         sigma (float): detection threshold
@@ -403,17 +410,23 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
         input_data = data_sub
     else:
         input_data = img
-
+    
+    if mask is not None:
+        mask = mask.copy(order='C')
+        mask = mask.astype(bool)
+    
+    sep.set_extract_pixstack(500000)
     objects, segmap = sep.extract(input_data,
-                                sigma,
-                                err=bkg.rms(),
-                                segmentation_map=True,
-                                filter_type='matched',
-                                deblend_nthresh=deblend_nthresh,
-                                deblend_cont=deblend_cont,
-                                clean=True,
-                                clean_param=clean_param,
-                                minarea=minarea)
+                                  sigma,
+                                  mask=mask,
+                                  err=bkg.rms(),
+                                  segmentation_map=True,
+                                  filter_type='matched',
+                                  deblend_nthresh=deblend_nthresh,
+                                  deblend_cont=deblend_cont,
+                                  clean=True,
+                                  clean_param=clean_param,
+                                  minarea=minarea)
 
     if verbose:
         if logger is not None:
@@ -463,8 +476,10 @@ def extract_obj(img, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5,
     # plot background-subtracted image
     if show_fig:
         fig, ax = plt.subplots(1,2, figsize=(12,6))
-
-        ax[0] = display_single(input_data, ax=ax[0], scale_bar_length=60, pixel_scale=pixel_scale)
+        if mask is not None:
+            ax[0] = display_single(input_data * (~mask.astype(bool)), ax=ax[0], scale_bar_length=60, pixel_scale=pixel_scale)
+        else:
+            ax[0] = display_single(input_data, ax=ax[0], scale_bar_length=60, pixel_scale=pixel_scale)
         from matplotlib.patches import Ellipse
         # plot an ellipse for each object
         for obj in objects:
@@ -945,7 +960,7 @@ def Autokernel(img_hires, img_lowres, s, d, object_cat_dir=None,
     # This excludes those objects who 1) are not stars; 2) are saturated or exotic.
     non_edge_flag = np.logical_and.reduce([(flux < flux_lim), (x > border),
                                             (x < nx - border), (y > border),
-                                            (y < ny - border), (ba > 0.6)]) # (fwhm < 10)
+                                            (y < ny - border), (ba > 0.7)]) # (fwhm < 10)
     good_cat = obj_cat[non_edge_flag]
     good_cat.sort('flux')
     good_cat.reverse()     
@@ -1535,6 +1550,167 @@ def compute_Rnorm(image, mask_field, cen, R=10, wid=0.5, mask_cross=True, displa
         plt.axvline(I_mean, color='k')
     
     return I_mean, I_med, I_std, np.sum(z), 0
+
+def cal_profile_1d(img, cen=None, mask=None, back=None, bins=None,
+                   color="steelblue", xunit="pix", yunit="Intensity",
+                   seeing=2.5, pixel_scale=2.5, ZP=27.1, sky_mean=884, sky_std=3, dr=1.5, 
+                   lw=2, alpha=0.7, markersize=5, I_shift=0, figsize=None,
+                   core_undersample=False, label=None, plot_line=False, mock=False,
+                   plot=True, scatter=False, fill=False, errorbar=False, verbose=False):
+    """Calculate 1d radial profile of a given star postage"""
+    if mask is None:
+        mask =  np.zeros_like(img, dtype=bool)
+    if back is None:     
+        back = np.ones_like(img) * sky_mean
+    if cen is None:
+        cen = (img.shape[0]-1)/2., (img.shape[1]-1)/2.
+        
+    yy, xx = np.indices((img.shape))
+    rr = np.sqrt((xx - cen[0])**2 + (yy - cen[1])**2)
+    r = rr[~mask].ravel()  # radius in pix
+    z = img[~mask].ravel()  # pixel intensity
+    r_core = np.int(3 * seeing/pixel_scale) # core radius in pix
+
+    # Decide the outermost radial bin r_max before going into the background
+    bkg_cumsum = np.arange(1, len(z)+1, 1) * np.median(back)
+    z_diff =  abs(z.cumsum() - bkg_cumsum)
+    n_pix_max = len(z) - np.argmin(abs(z_diff - 0.0001 * z_diff[-1]))
+    r_max = np.sqrt(n_pix_max/np.pi)
+    r_max = np.min([img.shape[0]//2, r_max])
+    
+    if verbose:
+        print("Maximum R: %d (pix)"%np.int(r_max))    
+    
+    if xunit == "arcsec":
+        r = r * pixel_scale   # radius in arcsec
+        r_core = r_core * pixel_scale
+        r_max = r_max * pixel_scale
+        
+    d_r = dr * pixel_scale if xunit == "arcsec" else dr
+    
+    if mock:
+        clip = lambda z: sigma_clip((z), sigma=3, maxiters=5)
+    else:
+        clip = lambda z: 10**sigma_clip(np.log10(z+1e-10), sigma=3, maxiters=5)
+        
+    if bins is None:
+        # Radial bins: discrete/linear within r_core + log beyond it
+        if core_undersample:  
+            # for undersampled core, bin in individual pixels 
+            bins_inner = np.unique(r[r<r_core]) + 1e-3
+        else: 
+            bins_inner = np.linspace(0, r_core, int(min((r_core/d_r*2), 5))) + 1e-3
+
+        n_bin_outer = np.max([7, np.min([np.int(r_max/d_r/10), 50])])
+        if r_max > (r_core+d_r):
+            bins_outer = np.logspace(np.log10(r_core+d_r), np.log10(r_max-d_r), n_bin_outer)
+        else:
+            bins_outer = []
+        bins = np.concatenate([bins_inner, bins_outer])
+        _, bins = np.histogram(r, bins=bins)
+    
+    # Calculate binned 1d profile
+    r_rbin = np.array([])
+    z_rbin = np.array([])
+    zstd_rbin = np.array([])
+    for k, b in enumerate(bins[:-1]):
+        in_bin = (r>bins[k])&(r<bins[k+1])
+        
+        z_clip = clip(z[in_bin])
+        if len(z_clip)==0:
+            continue
+
+        zb = np.mean(z_clip)
+        zstd_b = np.std(z_clip)
+        
+        z_rbin = np.append(z_rbin, zb)
+        zstd_rbin = np.append(zstd_rbin, zstd_b)
+        r_rbin = np.append(r_rbin, np.mean(r[in_bin]))
+        
+        
+    logzerr_rbin = 0.434 * abs( zstd_rbin / (z_rbin-sky_mean))
+    
+    if plot:
+        if figsize is not None:
+            plt.figure(figsize=figsize)
+        if yunit == "Intensity":  
+            # plot radius in Intensity
+            plt.plot(r_rbin, np.log10(z_rbin), "-o", color=color,
+                     mec="k", lw=lw, ms=markersize, alpha=alpha, zorder=3, label=label) 
+            if scatter:
+                I = np.log10(z)
+                
+            if fill:
+                plt.fill_between(r_rbin, np.log10(z_rbin)-logzerr_rbin, np.log10(z_rbin)+logzerr_rbin,
+                                 color=color, alpha=0.2, zorder=1)
+            plt.ylabel("log Intensity")
+            plt.xscale("log")
+            plt.xlim(r_rbin[np.isfinite(r_rbin)][0]*0.8, r_rbin[np.isfinite(r_rbin)][-1]*1.2)
+
+        elif yunit == "SB":  
+            # plot radius in Surface Brightness
+            I_rbin = Intensity2SB(I=z_rbin, BKG=np.median(back),
+                                  ZP=ZP, pixel_scale=pixel_scale) + I_shift
+            I_sky = -2.5*np.log10(sky_std) + ZP + 2.5 * math.log10(pixel_scale**2)
+
+            plt.plot(r_rbin, I_rbin, "-o", mec="k",
+                     lw=lw, ms=markersize, color=color, alpha=alpha, zorder=3, label=label)   
+            if scatter:
+                I = Intensity2SB(I=z, BKG=np.median(back),
+                                 ZP=ZP, pixel_scale=pixel_scale) + I_shift
+                
+            if errorbar:
+                Ierr_rbin_up = I_rbin - Intensity2SB(I=z_rbin,
+                                                     BKG=np.median(back)-sky_std,
+                                                     ZP=ZP, pixel_scale=pixel_scale)
+                Ierr_rbin_lo = Intensity2SB(I=z_rbin-sky_std,
+                                            BKG=np.median(back)+sky_std,
+                                            ZP=ZP, pixel_scale=pixel_scale) - I_rbin
+                lolims = np.isnan(Ierr_rbin_lo)
+                uplims = np.isnan(Ierr_rbin_up)
+                Ierr_rbin_lo[lolims] = 4
+                Ierr_rbin_up[uplims] = 4
+                plt.errorbar(r_rbin, I_rbin, yerr=[Ierr_rbin_up, Ierr_rbin_lo],
+                             fmt='', ecolor=color, capsize=2, alpha=0.5)
+                
+            plt.ylabel("Surface Brightness [mag/arcsec$^2$]")        
+            plt.gca().invert_yaxis()
+            plt.xscale("log")
+            plt.xlim(r_rbin[np.isfinite(r_rbin)][0]*0.8,r_rbin[np.isfinite(r_rbin)][-1]*1.2)
+            plt.ylim(30,17)
+        
+        if scatter:
+            plt.scatter(r[r<3*r_core], I[r<3*r_core], color=color, 
+                        s=markersize/2, alpha=0.2, zorder=1)
+            plt.scatter(r[r>=3*r_core], I[r>=3*r_core], color=color,
+                        s=markersize/4, alpha=0.1, zorder=1)
+            
+        plt.xlabel("r [acrsec]") if xunit == "arcsec" else plt.xlabel("r [pix]")
+
+        # Decide the radius within which the intensity saturated for bright stars w/ intersity drop half
+        dz_rbin = np.diff(np.log10(z_rbin)) 
+        dz_cum = np.cumsum(dz_rbin)
+
+        if plot_line:
+            r_satr = r_rbin[np.argmax(dz_cum<-0.3)] + 1e-3
+            plt.axvline(r_satr,color="k",ls="--",alpha=0.9)
+            plt.axvline(r_core,color="k",ls=":",alpha=0.9)
+            plt.axhline(I_sky,color="gray",ls="-.",alpha=0.7)
+        
+    if yunit == "Intensity":
+        return r_rbin, z_rbin, logzerr_rbin
+    elif yunit == "SB": 
+        return r_rbin, I_rbin, None    
+
+
+def Intensity2SB(I, BKG, ZP, pixel_scale=2.5):
+    """ Convert intensity to surface brightness (mag/arcsec^2) given the background value, zero point and pixel scale """
+    I = np.atleast_1d(I)
+    I[np.isnan(I)] = BKG
+    if np.any(I <= BKG):
+        I[I <= BKG] = np.nan
+    I_SB = -2.5 * np.log10(I - BKG) + ZP + 2.5 * np.log10(pixel_scale**2)
+    return I_SB
 
 
 ### API From http://ps1images.stsci.edu/ps1_dr2_api.html

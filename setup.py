@@ -36,6 +36,6 @@ setup(name='mrf',
 	install_requires=INSTALL_REQUIRES,
     include_package_data=True,
     zip_safe=False,
-    python_requires='>=2.7',
+    python_requires='>=3.6',
     use_scm_version=True,
     setup_requires=['setuptools_scm'])
