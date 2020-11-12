@@ -1626,4 +1626,3 @@ class MrfTileMode():
             hdu = save_to_fits(array, filename, wcs=wcs.WCS(df_header), overwrite=True)
             if logger is not None:
                 logger.info(f'The stitched {imgtype} is saved as {filename}')
->>>>>>> master
