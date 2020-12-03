@@ -410,6 +410,7 @@ class MrfTask():
         kernel_med, good_cat = Autokernel(img_hires, img_lowres, 
                                         int(f_magnify * config.kernel.kernel_size), 
                                         int(f_magnify * (config.kernel.kernel_size - config.kernel.kernel_edge)), 
+                                        object_cat_dir='_hires_obj_cat.fits',
                                         frac_maxflux=config.kernel.frac_maxflux, 
                                         show_figure=config.kernel.show_fig,
                                         nkernels=config.kernel.nkernel, logger=logger)
