@@ -414,7 +414,8 @@ def extract_obj(img, mask=None, b=64, f=3, sigma=5, pixel_scale=0.168, minarea=5
     if mask is not None:
         mask = mask.copy(order='C')
         mask = mask.astype(bool)
-
+    
+    sep.set_extract_pixstack(500000)
     objects, segmap = sep.extract(input_data,
                                   sigma,
                                   mask=mask,

@@ -258,7 +258,7 @@ class MrfTask():
             hdu = fits.open('_lowres_{}.fits'.format(int(f_magnify)))
             lowres = Celestial(hdu[0].data, header=hdu[0].header)
         else:
-            lowres.resize_image(f_magnify, method=config.fluxmodel.interp)
+            lowres.resize_image(f_magnify, method=config.fluxmodel.interp) 
             lowres.save_to_fits('_lowres_{}.fits'.format(int(f_magnify)))
 
         logger.info('Register high resolution image "{0}" with "{1}"'.format(dir_hires_b, dir_lowres))
@@ -980,8 +980,8 @@ class MrfTileMode():
         return self.logger 
     
     def run(self, max_size=8000, overlap=0.05, tile_dir='./Images/tile', 
-            skip_mast=False, mast_catalog=f'./_ps1_cat.fits', skip_cut_tile=False, skip_rebin=False, skip_mrf=False, 
-            skip_trim=False, stitch_method='swarp', show_panstarrs=False, verbose=True):
+            skip_mast=False, mast_catalog=f'./_ps1_cat.fits', skip_crop=False, skip_cut_tile=False, skip_rebin=False, 
+            skip_mrf=False, skip_trim=False, stitch_method='swarp', show_panstarrs=False, verbose=True):
         """
         Run MRF task in "tile mode". 
         Written by Colleen Gilhuly (U.Toronto) and Jiaxuan Li.
@@ -1065,27 +1065,28 @@ class MrfTileMode():
             os.mkdir('./Images/tile/')
         
         ##### Crop images to the "cutout_size", centered at "ra" and "dec" #####
-        logger.info(f'Crop images to {cutout_size} x {cutout_size} arcsec, centered at RA = {ra:.2f} and Dec = {dec:.2f}')
-        #--- low res ---#
-        hdu = fits.open(low_res_path)
-        img = hdu[0].data
-        hdr = hdu[0].header
-        img_cutout(img, wcs.WCS(hdr), ra, dec, size=cutout_size, 
-                   pixel_scale=low_res_pix_scale, img_header=hdr, 
-                   prefix=f'./Images/{target_name}-df-{band}');
-        hdu.close()
-        
-        #--- high res ---#
-        for filt in ['g', 'r']:
-            hdu = fits.open(high_res_path[filt])
+        if not skip_crop:
+            logger.info(f'Crop images to {cutout_size} x {cutout_size} arcsec, centered at RA = {ra:.2f} and Dec = {dec:.2f}')
+            #--- low res ---#
+            hdu = fits.open(low_res_path)
             img = hdu[0].data
             hdr = hdu[0].header
-            
             img_cutout(img, wcs.WCS(hdr), ra, dec, size=cutout_size, 
-                       pixel_scale=high_res_pix_scale, 
-                       img_header=hdr, 
-                       prefix=f'./Images/{target_name}-{high_res_source}-{filt}');
+                       pixel_scale=low_res_pix_scale, img_header=hdr, 
+                       prefix=f'./Images/{target_name}-df-{band}');
             hdu.close()
+        
+            #--- high res ---#
+            for filt in ['g', 'r']:
+                hdu = fits.open(high_res_path[filt])
+                img = hdu[0].data
+                hdr = hdu[0].header
+            
+                img_cutout(img, wcs.WCS(hdr), ra, dec, size=cutout_size, 
+                           pixel_scale=high_res_pix_scale, 
+                           img_header=hdr, 
+                           prefix=f'./Images/{target_name}-{high_res_source}-{filt}');
+                hdu.close()
         
         ##### Download PAN-STARRS catalog #####
         hdu = fits.open(f'./Images/{target_name}-df-{band}.fits')
@@ -1112,11 +1113,13 @@ class MrfTileMode():
                                  Column(data = w.wcs_world2pix(ps1_cat['raMean'], ps1_cat['decMean'], 0)[1], 
                                         name='y_ps1')])
             ps1_cat = ps1_cat[ps1_cat[band + 'MeanPSFMag'] != -999]
-            ps1_cat.write(f'./PS1-{target_name}-field.fits', overwrite=True)
+            mast_catalog = f'./PS1-{target_name}-field.fits'
+            ps1_cat.write(mast_catalog, overwrite=True)
+
         else:
-            assert os.path.isfile(f'./PS1-{target_name}-field.fits'), f"You don't have PAN-STARRS catalog saved as './PS1-{name}-field.fits'!"
-            logger.info(f"Load PAN-STARRS catalog from './PS1-{target_name}-field.fits'")
-            ps1_cat = Table.read(f'./PS1-{target_name}-field.fits')
+            assert os.path.isfile(mast_catalog), f"You don't have PAN-STARRS catalog saved as '{mast_catalog}'!"
+            logger.info(f"Load PAN-STARRS catalog from '{mast_catalog}'")
+            ps1_cat = Table.read(mast_catalog)
         
         if show_panstarrs:
             from mrf.display import draw_circles
@@ -1272,7 +1275,7 @@ class MrfTileMode():
                                                   position = center_coords, 
                                                   size = (y_size, x_size), 
                                                   wcs = wcs_lowres,
-                                                  mode = 'partial',
+                                                  mode = 'trim',
                                                   copy = True )  
 
                     tile_lowres = fits.PrimaryHDU( new_cutout_lowres.data, hdu_lowres.header )
@@ -1294,14 +1297,14 @@ class MrfTileMode():
                                          position = center_coords, 
                                          size = (y_size, x_size), 
                                          wcs = wcs_g,
-                                         mode = 'partial',
+                                         mode = 'trim',
                                          copy = True )
 
                 new_cutout_r = Cutout2D( hdu_r.data, 
                                          position = center_coords, 
                                          size = (y_size, x_size), 
                                          wcs = wcs_r,
-                                         mode = 'partial',
+                                         mode = 'trim',
                                          copy = True )        
 
                 tile_g = fits.PrimaryHDU( new_cutout_g.data, hdu_g.header )
@@ -1345,7 +1348,7 @@ class MrfTileMode():
                 hires_g = Celestial( hdu[0].data, header=hdu[0].header )
                 hdu.close()
 
-                hires_g.resize_image(0.5, method='iraf')
+                hires_g.resize_image(0.5, method="spline")
                 hires_g.image = convolve( hires_g.image, Gaussian2DKernel(1) )
                 hires_g.save_to_fits( os.path.join(tile_dir, f"{target_name}-{high_res_source}-binned-g-tile-{i}.fits") )
 
@@ -1353,7 +1356,7 @@ class MrfTileMode():
                 hires_r = Celestial( hdu[0].data, header=hdu[0].header )
                 hdu.close()
 
-                hires_r.resize_image(0.5, method='iraf')
+                hires_r.resize_image(0.5, method="spline")
                 hires_r.image = convolve( hires_r.image, Gaussian2DKernel(1) )
                 hires_r.save_to_fits( os.path.join(tile_dir, f"{target_name}-{high_res_source}-binned-r-tile-{i}.fits") )
 
@@ -1368,6 +1371,7 @@ class MrfTileMode():
             from urllib.error import HTTPError
             bad_tiles = []
 
+            import sys
             for i in range( 0, N_tiles - skipped ):
                 task = MrfTask( mrf_task_file ) ## Will this need to be tweaked for tiles?
                 try:
@@ -1380,7 +1384,7 @@ class MrfTileMode():
                                        wide_psf=True,
                                        verbose=False, 
                                        skip_mast=True, 
-                                       mast_catalog=f'./PS1-{target_name}-field.fits')
+                                       mast_catalog=mast_catalog)
                     elapsed = timeit.default_timer() - start_time
                     logger.info( f"--> MRF finished for tile {i+1}/{N_tiles} in {elapsed:.2f} seconds" )
 
@@ -1397,6 +1401,13 @@ class MrfTileMode():
                 except HTTPError:
                     bad_tiles.append(i)
                     logger.info( ">>>>>>>>>>>>>>>>>>>> Timeout while retrieving PanSTARRS catalog =(")
+                    continue
+
+                except:
+                    bad_tiles.append(i)
+                    logger.info( ">>>>>>>>>>>>>>>>>>>> Unexpected error, skipping tile!")
+                #    e = sys.exc_info()[0]
+                #    print(e)
                     continue
 
         
@@ -1481,12 +1492,12 @@ class MrfTileMode():
         output_dir = tile_dir
         
         output_name = f'{target_name}-stitch'
-        filename_list = [os.path.join(tile_dir, f'{target_name}_{band}_final_tile_{i}.fits') for i in range(16)]
+        filename_list = [os.path.join(tile_dir, f'{target_name}_{band}_final_tile_{i}.fits') for i in range(N_tiles)]
         self._stitch(stitch_method, 'image', config, config.cutout_size, 
                      filename_list, output_dir, output_name, logger=logger)
         
         output_name = f'{target_name}-stitch-mask'
-        filename_list = [os.path.join(tile_dir, f'{target_name}_{band}_final_tile_{i}_mask.fits') for i in range(16)]
+        filename_list = [os.path.join(tile_dir, f'{target_name}_{band}_final_tile_{i}_mask.fits') for i in range(N_tiles)]
         self._stitch(stitch_method, 'mask', config, config.cutout_size, 
                      filename_list, output_dir, output_name, logger=logger)
         
@@ -1545,7 +1556,7 @@ class MrfTileMode():
             # Configure ``swarp``
             with open("config_swarp.sh","w+") as f:
                 # check if swarp is installed
-                f.write('for cmd in swarp; do\n')
+                f.write('for cmd in SWarp; do\n')
                 f.write('\t hasCmd=$(which ${cmd} 2>/dev/null)\n')
                 f.write('\t if [[ -z "${hasCmd}" ]]; then\n')
                 f.write('\t\t echo "This script requires ${cmd}, which is not in your \$PATH." \n')
@@ -1573,7 +1584,7 @@ class MrfTileMode():
                 f.write('#------------------------------ Memory management -----------------------------\n\nVMEM_DIR               .               # Directory path for swap files\nVMEM_MAX               2047            # Maximum amount of virtual memory (MB)\nMEM_MAX                2048            # Maximum amount of usable RAM (MB)\nCOMBINE_BUFSIZE        1024            # Buffer size for combine (MB)\n\n')
                 f.write('#------------------------------ Miscellaneous ---------------------------------\n\nDELETE_TMPFILES        Y               # Delete temporary resampled FITS files\n                                       # (Y/N)?\nCOPY_KEYWORDS          OBJECT          # List of FITS keywords to propagate\n                                       # from the input to the output headers\nWRITE_FILEINFO         Y               # Write information about each input\n                                       # file in the output image header?\nWRITE_XML              N               # Write XML file (Y/N)?\nXML_NAME               swarp.xml       # Filename for XML output\nVERBOSE_TYPE           QUIET           # QUIET,NORMAL or FULL\n\nNTHREADS               0               # Number of simultaneous threads for\n                                       # the SMP version of SWarp\n                                       # 0 = automatic \n')
                 f.write('EOT\n')
-                f.write('swarp ' + ' '.join(filename_list) + '\n\n')
+                f.write('SWarp ' + ' '.join(filename_list) + '\n\n')
                 f.write('rm ' + os.path.join(output_dir, '_*'))
                 f.close()
                 
