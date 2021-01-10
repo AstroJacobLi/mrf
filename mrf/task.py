@@ -589,7 +589,7 @@ class MrfTask():
         median_psf = psf_bkgsub(median_psf, int(config.starhalo.edgesize))
         median_psf = convolve(median_psf, Box2DKernel(1))
         sclip = sigma_clip(stack_set, axis=0, maxiters=3)
-        sclip.data[sclip.mask] = np.nan
+        sclip[sclip.mask] = np.nan
         error_psf = np.nanstd(sclip.data, ddof=2, axis=0) / np.sqrt(np.sum(~np.isnan(sclip.data), axis=0))
         save_to_fits(median_psf, '_median_psf.fits');
         save_to_fits(error_psf, '_error_psf.fits');
@@ -652,7 +652,7 @@ class MrfTask():
         fig, [ax1, ax2, ax3] = plt.subplots(1, 3, figsize=(15, 8))
         hdu = fits.open(dir_lowres)
         lowres_image = hdu[0].data
-        ax1 = display_single(lowres_image, ax=ax1, scale_bar_length=300, 
+        ax1 = display_single(lowres_image, ax=ax1, scale_bar_length=30, 
                             scale_bar_y_offset=0.3, pixel_scale=config.lowres.pixel_scale, 
                             add_text='Lowres', text_y_offset=0.7)
         ax2 = display_single(lowres_model.image, ax=ax2, scale_bar=False, 

@@ -1060,9 +1060,9 @@ def psf_bkgsub(psf, edge):
         edge = 3
     ny, nx = psf.shape
     uni = np.ones_like(psf)
-    d = np.sum(psf) - np.sum(psf[edge: ny - edge, 
+    d = np.nansum(psf) - np.nansum(psf[edge: ny - edge, 
                                  edge: nx - edge])
-    u = np.sum(uni) - np.sum(uni[edge: ny - edge, 
+    u = np.nansum(uni) - np.nansum(uni[edge: ny - edge, 
                                  edge: nx - edge])
     d /= u # Now 'd' is the background value per pixel
     psf_sub = psf - d
