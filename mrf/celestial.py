@@ -425,19 +425,18 @@ class Celestial(object):
                 self.wcs = wcs.WCS(self.header)
                 #### Cautious! The following block could be wrong! ####
                 ## Probably you'll need extra shift of image
-                dshift = 2 * (1 - f * 1) % 0.5
-                self.shift_image(dshift, dshift, method='spline')
-                # We don't want to shift wcs.
-                self.header['CRPIX1'] -= dshift
-                self.header['CRPIX2'] -= dshift 
-                self.wcs = wcs.WCS(self.header)
+                # dshift = 2 * (1 - f * 1) % 0.5
+                # self.shift_image(dshift, dshift, method='spline')
+                # # We don't want to shift wcs.
+                # self.header['CRPIX1'] -= dshift
+                # self.header['CRPIX2'] -= dshift 
+                # self.wcs = wcs.WCS(self.header)
                 #### Cautious! The above block could be wrong! ####
 
             else:
-                from math import ceil
                 b = round(1 / f)
-                nxout = ceil(nx / b)
-                nyout = ceil(ny / b)
+                nxout = np.ceil(nx / b)
+                nyout = np.ceil(ny / b)
                 result = galimg.drawImage(scale=self.pixel_scale * b, 
                                           nx=nxout, ny=nyout)
                 self.header = self._resize_header_wcs(f)
@@ -451,12 +450,12 @@ class Celestial(object):
                 self.wcs = wcs.WCS(self.header)
                 #### Cautious! The following block could be wrong! ####
                 ## Probably you'll need extra shift of image
-                dshift = 0.5 - 1 / b / 2
-                self.shift_image(-dshift, -dshift, method='spline')
-                # We don't want to shift wcs.
-                self.header['CRPIX1'] -= dshift
-                self.header['CRPIX2'] -= dshift 
-                self.wcs = wcs.WCS(self.header)
+                # dshift = 0.5 - 1 / b / 2
+                # self.shift_image(-dshift, -dshift, method='spline')
+                # # We don't want to shift wcs.
+                # self.header['CRPIX1'] -= dshift
+                # self.header['CRPIX2'] -= dshift 
+                # self.wcs = wcs.WCS(self.header)
                 #### Cautious! The above block could be wrong! ####
             return self.image
 
@@ -489,7 +488,7 @@ class Celestial(object):
             if f > 1:
                 from scipy import ndimage
                 assert 0 < order <= 5 and isinstance(order, int), 'order of ' + method + ' must be within 0-5.'
-                nx_zoomed = (nx - 1) * f + 1 
+                nx_zoomed = int((nx - 1) * f + 1 )
                 f_eff = nx_zoomed / nx
                 result = ndimage.zoom(self.image, f_eff, order=order)
                 result *= 1/(f_eff**2)  # Multiplying by this factor to conserve flux
@@ -503,22 +502,24 @@ class Celestial(object):
                 self.pixel_scale /= f
                 self.wcs = wcs.WCS(self.header)
                 #### Cautious! The following block could be wrong! ####
-                ## Probably you'll need extra shift of image
-                dshift = 2 * (1 - f * 1) % 0.5
-                self.shift_image(dshift, dshift, method='spline')
-                # We don't want to shift wcs.
-                self.header['CRPIX1'] -= dshift
-                self.header['CRPIX2'] -= dshift 
-                self.wcs = wcs.WCS(self.header)
+                # ## Probably you'll need extra shift of image
+                # dshift = 2 * (1 - f * 1) % 0.5
+                # self.shift_image(dshift, dshift, method='spline')
+                # # We don't want to shift wcs.
+                # self.header['CRPIX1'] -= dshift
+                # self.header['CRPIX2'] -= dshift 
+                # self.wcs = wcs.WCS(self.header)
                 #### Cautious! The above block could be wrong! ####
             else:
                 b = round(1 / f)
-                ny_bin = int( ny / b )
-                nx_bin = int( nx / b )
-                shape = (ny_bin, b, nx_bin, b)
+                ny_bin = np.ceil( ny / b )
+                nx_bin = np.ceil( nx / b )
+                shape = (int(ny_bin), b, int(nx_bin), b)
                 x_crop = int( nx_bin * b )
                 y_crop = int( ny_bin * b )
-                result = self.image[0:y_crop, 0:x_crop].reshape(shape).sum(3).sum(1)
+                pad_size = [(y_crop - ny) // 2, (x_crop - nx) // 2]
+                temp = np.pad(self.image, pad_size)
+                result = temp.reshape(shape).sum(3).sum(1) #self.image[0:y_crop, 0:x_crop]
                 self.header = self._resize_header_wcs(f)
                 self.header['CRPIX1'] += 0.5 - 1 / b / 2
                 self.header['CRPIX2'] += 0.5 - 1 / b / 2
@@ -581,20 +582,19 @@ class Celestial(object):
                 self.header['NAXIS2'] = result.array.shape[0]
                 self.pixel_scale /= f
                 self.wcs = wcs.WCS(self.header)
-                #### Cautious! The following block could be wrong! ####
-                ## Probably you'll need extra shift of image
-                dshift = 2 * (1 - f * 1) % 0.5
-                self.shift_mask(dshift, dshift, method='spline')
-                # We don't want to shift wcs.
-                self.header['CRPIX1'] -= dshift
-                self.header['CRPIX2'] -= dshift 
-                self.wcs = wcs.WCS(self.header)
-                #### Cautious! The above block could be wrong! ####
+                # #### Cautious! The following block could be wrong! ####
+                # ## Probably you'll need extra shift of image
+                # dshift = 2 * (1 - f * 1) % 0.5
+                # self.shift_mask(dshift, dshift, method='spline')
+                # # We don't want to shift wcs.
+                # self.header['CRPIX1'] -= dshift
+                # self.header['CRPIX2'] -= dshift 
+                # self.wcs = wcs.WCS(self.header)
+                # #### Cautious! The above block could be wrong! ####
             else:
-                from math import ceil
                 b = round(1 / f)
-                nxout = ceil(nx / b)
-                nyout = ceil(ny / b)
+                nxout = np.ceil(nx / b)
+                nyout = np.ceil(ny / b)
                 result = galimg.drawImage(scale=self.pixel_scale * b, 
                                           nx=nxout, ny=nyout)
                 self.header = self._resize_header_wcs(self.mask, f)
@@ -606,15 +606,15 @@ class Celestial(object):
                 self.header['NAXIS2'] = result.array.shape[0]
                 self.pixel_scale *= b
                 self.wcs = wcs.WCS(self.header)
-                #### Cautious! The following block could be wrong! ####
-                ## Probably you'll need extra shift of image
-                dshift = 0.5 - 1 / b / 2
-                self.shift_image(-dshift, -dshift, method='spline')
-                # We don't want to shift wcs.
-                self.header['CRPIX1'] -= dshift
-                self.header['CRPIX2'] -= dshift 
-                self.wcs = wcs.WCS(self.header)
-                #### Cautious! The above block could be wrong! ####
+                # #### Cautious! The following block could be wrong! ####
+                # ## Probably you'll need extra shift of image
+                # dshift = 0.5 - 1 / b / 2
+                # self.shift_image(-dshift, -dshift, method='spline')
+                # # We don't want to shift wcs.
+                # self.header['CRPIX1'] -= dshift
+                # self.header['CRPIX2'] -= dshift 
+                # self.wcs = wcs.WCS(self.header)
+                # #### Cautious! The above block could be wrong! ####
 
             return self.mask
 
@@ -657,28 +657,30 @@ class Celestial(object):
                 self.header['NAXIS2'] = result.shape[0]
                 self.pixel_scale /= f
                 self.wcs = wcs.WCS(self.header)
-                #### Cautious! The following block could be wrong! ####
-                ## Probably you'll need extra shift of image
-                dshift = 2 * (1 - f * 1) % 0.5
-                self.shift_image(dshift, dshift, method='spline')
-                # We don't want to shift wcs.
-                self.header['CRPIX1'] -= dshift
-                self.header['CRPIX2'] -= dshift 
-                self.wcs = wcs.WCS(self.header)
-                #### Cautious! The above block could be wrong! ####
+                # #### Cautious! The following block could be wrong! ####
+                # ## Probably you'll need extra shift of image
+                # dshift = 2 * (1 - f * 1) % 0.5
+                # self.shift_image(dshift, dshift, method='spline')
+                # # We don't want to shift wcs.
+                # self.header['CRPIX1'] -= dshift
+                # self.header['CRPIX2'] -= dshift 
+                # self.wcs = wcs.WCS(self.header)
+                # #### Cautious! The above block could be wrong! ####
             else:
                 b = round(1 / f)
-                ny_bin = int( ny / b )
-                nx_bin = int( nx / b )
-                shape = (ny_bin, b, nx_bin, b)
+                ny_bin = np.ceil( ny / b )
+                nx_bin = np.ceil( nx / b )
+                shape = (int(ny_bin), b, int(nx_bin), b)
                 x_crop = int( nx_bin * b )
                 y_crop = int( ny_bin * b )
-                result = self.mask[0:y_crop, 0:x_crop].reshape(shape).sum(3).sum(1)
-                self.header = self._resize_header_wcs(self.image, f)
+                pad_size = [(y_crop - ny) // 2, (x_crop - nx) // 2]
+                temp = np.pad(self.mask, pad_size)
+                result = temp.reshape(shape).sum(3).sum(1) #self.image[0:y_crop, 0:x_crop]
+                self.header = self._resize_header_wcs(f)
                 self.header['CRPIX1'] += 0.5 - 1 / b / 2
                 self.header['CRPIX2'] += 0.5 - 1 / b / 2
                 self._mask = result
-                self.shape = self.image.shape
+                self.shape = self.mask.shape
                 self.header['NAXIS1'] = result.shape[1]
                 self.header['NAXIS2'] = result.shape[0]
                 self.pixel_scale *= b
