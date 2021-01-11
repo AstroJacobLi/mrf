@@ -176,7 +176,7 @@ class MrfTask():
             self.logger = logger
         return self.logger
 
-    def run(self, dir_lowres, dir_hires_b, dir_hires_r, certain_gal_cat, 
+    def run(self, dir_lowres, dir_hires_b, dir_hires_r, certain_gal_cat, median_psf_file=None, 
             wide_psf=True, output_name='mrf', verbose=True, skip_resize=False, 
             skip_SE=False, skip_mast=False, mast_catalog=None):
         """
@@ -506,7 +506,8 @@ class MrfTask():
         
         ra, dec = res.wcs.wcs_pix2world(objects['x'], objects['y'], 0)
         objects.add_columns([Column(data=ra, name='ra'), Column(data=dec, name='dec')])
-        
+        objects.sort(keys='flux', reverse=True)
+
         # Match two catalogs
         logger.info('Stack stars to get PSF model!')
         logger.info('    - Match detected objects with previously discard stars')
@@ -550,6 +551,8 @@ class MrfTask():
         psf_cat = psf_cat[:int(config.starhalo.n_stack)]
         logger.info('    - Get {} stars to be stacked!'.format(len(psf_cat)))
         setattr(results, 'psf_cat', psf_cat)
+        bright_star_cat = psf_cat
+        setattr(results, 'bright_star_cat', bright_star_cat)
 
         # Construct and stack `Stars`.
         size = 2 * halosize + 1
@@ -582,24 +585,29 @@ class MrfTask():
                 bad_indices.append(i)
                 logger.info(e)
                 print(e)
+        
+        if median_psf_file is not None:
+            median_psf = fits.open(median_psf_file)[0].data
+            setattr(results, 'PSF', median_psf)
+            logger.info('    - Median PSF is loaded!')
+        else:
+            from astropy.stats import sigma_clip
+            stack_set = np.delete(stack_set, bad_indices, axis=0)
+            median_psf = np.nanmedian(stack_set, axis=0)
+            median_psf = psf_bkgsub(median_psf, int(config.starhalo.edgesize))
+            median_psf = convolve(median_psf, Box2DKernel(1))
+            sclip = sigma_clip(stack_set, axis=0, maxiters=3)
+            sclip[sclip.mask] = np.nan
+            error_psf = np.nanstd(sclip.data, ddof=2, axis=0) / np.sqrt(np.sum(~np.isnan(sclip.data), axis=0))
+            save_to_fits(median_psf, '_median_psf.fits');
+            save_to_fits(error_psf, '_error_psf.fits');
 
-        from astropy.stats import sigma_clip
-        stack_set = np.delete(stack_set, bad_indices, axis=0)
-        median_psf = np.nanmedian(stack_set, axis=0)
-        median_psf = psf_bkgsub(median_psf, int(config.starhalo.edgesize))
-        median_psf = convolve(median_psf, Box2DKernel(1))
-        sclip = sigma_clip(stack_set, axis=0, maxiters=3)
-        sclip[sclip.mask] = np.nan
-        error_psf = np.nanstd(sclip.data, ddof=2, axis=0) / np.sqrt(np.sum(~np.isnan(sclip.data), axis=0))
-        save_to_fits(median_psf, '_median_psf.fits');
-        save_to_fits(error_psf, '_error_psf.fits');
-        
-        setattr(results, 'PSF', median_psf)
-        setattr(results, 'PSF_err', error_psf)
-        
-        logger.info('    - Stars are stacked successfully!')
-        save_to_fits(stack_set, '_stack_bright_stars.fits')
-        
+            setattr(results, 'PSF', median_psf)
+            setattr(results, 'PSF_err', error_psf)
+            
+            logger.info('    - Stars are stacked successfully!')
+            save_to_fits(stack_set, '_stack_bright_stars.fits')
+
         # 11. Build starhalo models and then subtract from "res" image
         if wide_psf:
             results = self._subtract_widePSF(results, res, halosize, bright_star_cat, median_psf, 
