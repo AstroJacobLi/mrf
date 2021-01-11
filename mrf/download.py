@@ -6,6 +6,7 @@ from astropy.io import fits
 import astropy.units as u
 from astropy.table import Table, Column
 from tqdm import tqdm
+import urllib
 from . import DECaLS_pixel_scale, HSC_pixel_scale
 
 __all__ = ["TqdmUpTo", "megapipe_query_sql", "get_megapipe_catalog", "overlap_fraction",
@@ -230,7 +231,6 @@ def download_decals_cutout(ra, dec, size, band, layer='dr8-south', pixel_unit=Fa
     Return:
         None
     '''
-    import urllib
 
     if pixel_unit is False:
         s = size / DECaLS_pixel_scale
@@ -238,7 +238,6 @@ def download_decals_cutout(ra, dec, size, band, layer='dr8-south', pixel_unit=Fa
         s = size
     
     URL = 'http://legacysurvey.org/viewer/fits-cutout?ra={0}&dec={1}&pixscale={2}&layer={3}&size={4:.0f}&bands={5}'.format(ra, dec, DECaLS_pixel_scale, layer, s, band)
-    
     filename = output_name + '_' + band + '.fits'
     if not os.path.isfile(filename):
         with TqdmUpTo(unit='B', unit_scale=True, miniters=1, desc=filename) as t:  # all optional kwargs
@@ -254,7 +253,8 @@ def download_decals_cutout(ra, dec, size, band, layer='dr8-south', pixel_unit=Fa
     elif os.path.isfile(filename) and not overwrite:
         print('!!!The image "' + output_dir + filename + '" already exists!!!')
     return
-    
+
+
 def download_decals_brick(brickname, band, layer='dr8-south', output_dir='./', 
                           output_name='DECaLS', overwrite=True, verbose=True):
     '''
