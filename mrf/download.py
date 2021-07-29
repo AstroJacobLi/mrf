@@ -275,9 +275,9 @@ def download_decals_brick(brickname, band, layer='dr8-south', output_dir='./',
     import urllib
 
     if layer == 'dr8-north':
-        URL = 'http://portal.nersc.gov/project/cosmo/data/legacysurvey/dr8/north/coadd/{0}/{1}/legacysurvey-{2}-image-{3}.fits.fz'.format(brickname[:3], brickname, brickname, band)
+        URL = 'https://portal.nersc.gov/project/cosmo/data/legacysurvey/dr8/north/coadd/{0}/{1}/legacysurvey-{2}-image-{3}.fits.fz'.format(brickname[:3], brickname, brickname, band)
     else:
-        URL = 'http://portal.nersc.gov/project/cosmo/data/legacysurvey/dr8/south/coadd/{0}/{1}/legacysurvey-{2}-image-{3}.fits.fz'.format(brickname[:3], brickname, brickname, band)
+        URL = 'https://portal.nersc.gov/project/cosmo/data/legacysurvey/dr8/south/coadd/{0}/{1}/legacysurvey-{2}-image-{3}.fits.fz'.format(brickname[:3], brickname, brickname, band)
 
     filename = output_name + '_' + brickname + '_' +  band + '.fits'
 
