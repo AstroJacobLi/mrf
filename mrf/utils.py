@@ -541,7 +541,7 @@ def Flux_Model(img, header, b=64, f=3, sigma=2.5, minarea=3,
     return objects, segmap, im_fluxes
 
 # Simply remove stars by masking them out
-def query_star(img, header, method='gaia', catalog_dir=None):
+def query_star(img, header, method='gaia', catalog_dir=None, bright_lim=17.5):
     """ 
     Query stars within a given field, return a catalog.
 
@@ -561,7 +561,7 @@ def query_star(img, header, method='gaia', catalog_dir=None):
         print('### Querying Gaia Data ###')
         gaia_stars, gaia_mask = imtools.gaia_star_mask(img, wcs.WCS(header), 
                                                        pix=header['CD2_2'] * 3600, 
-                                                       size_buffer=4, gaia_bright=bright_lim, 
+                                                       size_buffer=6, gaia_bright=bright_lim, 
                                                        factor_f=2.0, factor_b=1.2)
         return gaia_stars
     elif method.lower() == 'apass' or method.lower() == 'usno':

@@ -255,6 +255,54 @@ def download_decals_cutout(ra, dec, size, band, layer='dr8-south', pixel_unit=Fa
     return
 
 
+def download_decals_invvar(ra, dec, size, band, layer='ls-dr9', pixel_unit=False, 
+                    output_dir='./', output_name='DECaLS_img', overwrite=True):
+    '''
+    Download DECaLS small image cutout of a given image. Maximum size is 3000 * 3000 pix.
+    
+    Parameters:
+        ra (float): RA (degrees)
+        dec (float): DEC (degrees)
+        size (float): image size in pixel or arcsec. If pixel_unit = True, it's in pixel.
+        band (string): such as 'r' or 'g'
+        layer (string): data release of DECaLS. If your object is too north, try 'dr8-north'. 
+            For details, please check http://legacysurvey.org/dr8/description/.
+        pixel_unit (bool): If true, size will be in pixel unit.
+        output_dir (str): directory of output files.
+        output_name (str): prefix of output images. The suffix `.fits` will be appended automatically. 
+        overwrite (bool): overwrite files or not.
+
+    Return:
+        None
+    '''
+    import requests
+    from bs4 import BeautifulSoup
+
+    
+    URL = f'https://www.legacysurvey.org/viewer/data-for-radec/?ra={ra}&dec={dec}&layer={layer}'
+    res = requests.get(URL)
+    soup_data = BeautifulSoup(res.text, 'html.parser')
+    coadd_link =  [item['href'] for item in soup_data.findAll("a", string="Coadded images") if 'south' in item['href']][0]
+    bricknum = coadd_link.split('/')[-2]
+    invvar_URL = coadd_link + f'legacysurvey-{bricknum}-invvar-{band}.fits.fz'
+    
+    filename = output_name + '_' + band + '_invvar.fits'
+    if not os.path.isfile(filename):
+        with TqdmUpTo(unit='B', unit_scale=True, miniters=1, desc=filename) as t:  # all optional kwargs
+            urllib.request.urlretrieve(invvar_URL, filename=output_dir + filename,
+                                    reporthook=t.update_to, data=None)
+        print('# Downloading ' + filename + ' finished! ') 
+    elif os.path.isfile(filename) and overwrite:
+        os.remove(filename)
+        with TqdmUpTo(unit='B', unit_scale=True, miniters=1, desc=filename) as t:  # all optional kwargs
+            urllib.request.urlretrieve(invvar_URL, filename=output_dir + filename,
+                                    reporthook=t.update_to, data=None)
+        print('# Downloading ' + filename + ' finished! ')                            
+    elif os.path.isfile(filename) and not overwrite:
+        print('!!!The image "' + output_dir + filename + '" already exists!!!')
+    return
+
+
 def download_decals_brick(brickname, band, layer='dr8-south', output_dir='./', 
                           output_name='DECaLS', overwrite=True, verbose=True):
     '''
